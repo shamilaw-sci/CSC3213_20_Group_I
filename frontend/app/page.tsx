@@ -3,6 +3,9 @@ import Banner from "@/components/Banner";
 import WhySection from "@/components/WhySection";
 import Progress from "@/components/Progress";
 import Intro from "@/components/Intro";
+import ProductsList from "@/components/ProductsList";
+import DigitalTwin from "@/components/DigitalTwin";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
@@ -12,6 +15,9 @@ export default function Home() {
     <WhySection/>
     <Progress/>
     <Intro/>
+    <ProductsList/>
+    <DigitalTwin/>
+    <Footer/>
     </>
   );
 }
