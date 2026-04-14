@@ -4,7 +4,7 @@ export default function SplitSection() {
 
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12">
 
-        {/* LEFT SIDE */}
+        
         <div className="flex-1">
 
           <h2 className="text-4xl md:text-7xl font-bold bg-gradient-to-r from-blue-800 via-blue-700 to-pink-600 bg-clip-text text-transparent">
@@ -15,7 +15,7 @@ export default function SplitSection() {
             Our AI preserves your unique features while<br/> accurately rendering how clothes fit and drape on<br/> your body. Slide to compare the before and after
           </p>
 
-          {/* LIST POINTS */}
+          
           <ul className="mt-6 space-y-3 text-gray-700">
 
             <li className="flex items-start gap-2">
@@ -42,7 +42,7 @@ export default function SplitSection() {
 
         </div>
 
-        {/* RIGHT SIDE */}
+       
         <div className="flex-1 flex justify-center">
           <img
             src="image 5.png"
