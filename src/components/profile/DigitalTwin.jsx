@@ -1,32 +1,63 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
+
 
 export default function DigitalTwin() {
+
 
   const fileInputRef = useRef(null);
 
 
+  const [photo, setPhoto] = useState(null);
+  const [twinCreated, setTwinCreated] = useState(false);
+
+
+
   const handleChoosePhoto = () => {
+
     fileInputRef.current.click();
+
   };
+
 
 
   const handleFileChange = (event) => {
+
     const file = event.target.files[0];
 
-    if (file) {
-      console.log("Selected file:", file);
+
+    if(file){
+
+      const imageURL = URL.createObjectURL(file);
+
+      setPhoto(imageURL);
+
+      setTwinCreated(false);
+
     }
+
   };
 
 
+
+  const generateTwin = () => {
+
+    setTwinCreated(true);
+
+  };
+
+
+
   return (
+
     <div>
+
 
       <h2 className="text-2xl font-bold text-black mb-2">
         Your Digital Twin
       </h2>
+
 
       <p className="text-gray-600 mb-6">
         Upload a full-body photo for the most accurate virtual try-on results.
@@ -34,120 +65,210 @@ export default function DigitalTwin() {
       </p>
 
 
+
       <div className="grid md:grid-cols-2 gap-8">
 
 
-        {/* Upload Box */}
+
+        {/* Upload Section */}
+
         <div>
+
 
           <h3 className="text-lg font-semibold text-black mb-3">
             Profile Photo
           </h3>
 
 
-          <p className="text-gray-500 text-sm mb-4">
-            For best results, use a well-lit full-body photo
-          </p>
-
-
           <div
-            className="
-            border-2
-            border-dashed
-            border-gray-400
-            rounded-xl
-            h-72
-            flex
-            flex-col
-            items-center
-            justify-center
-            hover:border-violet-600
-            transition
-            "
+          className="
+          border-2
+          border-dashed
+          border-gray-400
+          rounded-xl
+          h-72
+          flex
+          flex-col
+          items-center
+          justify-center
+          "
           >
 
-            <p className="text-gray-500 mb-4">
-              📷
-            </p>
 
+          {
+            photo ? (
 
-            <p className="text-gray-600">
-              Click to upload or drag and drop
-            </p>
-
-
-            <p className="text-sm text-gray-400 mt-2">
-              PNG, JPG or JPEG (MAX. 10MB)
-            </p>
-
-
-            {/* Hidden file input */}
-            <input
-              type="file"
-              accept="image/png, image/jpeg"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              className="hidden"
-            />
-
-
-            <button
-              onClick={handleChoosePhoto}
+              <img
+              src={photo}
+              alt="Uploaded"
               className="
-              mt-5
-              bg-violet-600
-              text-white
-              px-5
-              py-2
+              h-56
               rounded-lg
-              hover:bg-violet-700
+              object-cover
               "
-            >
-              Choose Photo
-            </button>
+              />
+
+            )
+
+            :
+
+            (
+
+              <>
+
+              <p className="text-4xl">
+                📷
+              </p>
+
+
+              <p className="text-gray-600 mt-3">
+                No photo uploaded
+              </p>
+
+              </>
+
+            )
+          }
+
+
+
+
+          <input
+          type="file"
+          accept="image/png,image/jpeg"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+          />
+
+
+
+          <button
+          onClick={handleChoosePhoto}
+          className="
+          mt-4
+          bg-violet-600
+          text-white
+          px-5
+          py-2
+          rounded-lg
+          "
+          >
+
+          Choose Photo
+
+          </button>
+
 
 
           </div>
+
+
+
+
+          {
+            photo &&
+
+            <button
+            onClick={generateTwin}
+            className="
+            mt-5
+            bg-black
+            text-white
+            px-6
+            py-3
+            rounded-lg
+            "
+            >
+
+            Generate Digital Twin
+
+            </button>
+
+          }
+
 
         </div>
 
 
 
-        {/* Guidelines */}
+
+
+
+        {/* Twin Preview */}
+
         <div className="bg-gray-50 rounded-xl p-6">
 
-          <h3 className="text-lg font-semibold text-black mb-4">
-            Photo Guidelines
+
+          <h3 className="text-lg font-semibold mb-4">
+            Interactive Twin Model
           </h3>
 
 
-          <ul className="space-y-4">
 
-            <li className="flex gap-3 text-gray-700">
-              <span className="text-green-600 font-bold">✓</span>
-              Stand straight facing the camera
-            </li>
+          {
+            twinCreated ?
 
 
-            <li className="flex gap-3 text-gray-700">
-              <span className="text-green-600 font-bold">✓</span>
-              Wear fitted clothing
-            </li>
+            (
+
+            <div
+            className="
+            h-72
+            bg-gray-200
+            rounded-xl
+            flex
+            items-center
+            justify-center
+            "
+            >
+
+            <div className="text-center">
+
+            <p className="text-6xl">
+              👤
+            </p>
+
+            <p className="mt-3 font-semibold">
+              3D Avatar Created
+            </p>
 
 
-            <li className="flex gap-3 text-gray-700">
-              <span className="text-green-600 font-bold">✓</span>
-              Use good, even lighting
-            </li>
+            </div>
 
 
-            <li className="flex gap-3 text-gray-700">
-              <span className="text-green-600 font-bold">✓</span>
-              Plain background works best
-            </li>
+            </div>
+
+            )
 
 
-          </ul>
+            :
+
+            (
+
+            <div
+            className="
+            h-72
+            bg-gray-200
+            rounded-xl
+            flex
+            items-center
+            justify-center
+            "
+            >
+
+            <p className="text-gray-500">
+              Avatar Preview
+            </p>
+
+
+            </div>
+
+            )
+
+          }
+
+
 
         </div>
 
@@ -155,21 +276,49 @@ export default function DigitalTwin() {
       </div>
 
 
-      <button
-        className="
-        mt-8
-        bg-violet-600
-        text-white
-        px-8
-        py-3
-        rounded-lg
-        hover:bg-violet-700
-        "
-      >
-        Save Photo
-      </button>
+
+
+      {/* Guidelines */}
+
+      <div className="bg-gray-50 rounded-xl p-6 mt-8">
+
+
+      <h3 className="text-lg font-semibold mb-4">
+        Photo Guidelines
+      </h3>
+
+
+      <ul className="space-y-3">
+
+      <li>
+      ✓ Stand straight facing camera
+      </li>
+
+
+      <li>
+      ✓ Wear fitted clothing
+      </li>
+
+
+      <li>
+      ✓ Use good lighting
+      </li>
+
+
+      <li>
+      ✓ Plain background
+      </li>
+
+
+      </ul>
+
+
+      </div>
+
 
 
     </div>
+
   );
+
 }
