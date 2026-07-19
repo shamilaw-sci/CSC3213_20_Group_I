@@ -1,476 +1,439 @@
 "use client";
 
 import { useState } from "react";
+import Avatar from "@/components/profile/Avatar";
 
+export default function Measurements() {
 
-export default function Measurements(){
+  // ===============================
+  // Body Measurements State
+  // ===============================
+  const [body, setBody] = useState({
+    height: 140,
+    weight: 40,
+    chest: 70,
+    waist: 50,
+    hips: 70,
+    shoulder: 44,
+    skinColor: "#dfbeaa",
+  });
 
+  // ===============================
+  // Fit Score
+  // ===============================
+  const [fitScore, setFitScore] = useState(null);
 
-const [fitScore, setFitScore] = useState(null);
-const [selectedSize, setSelectedSize] = useState("M");
+  // ===============================
+  // Selected Garment Size
+  // ===============================
+  const [selectedSize, setSelectedSize] = useState("M");
 
+  // ===============================
+  // Calculate Fit Score
+  // ===============================
+  const calculateFitScore = () => {
 
+    const user = {
+      chest: body.chest,
+      waist: body.waist,
+      hips: body.hips,
+    };
 
-const calculateFitScore = () => {
+    // Example garment
+    const garment = {
+      chest: 90,
+      waist: 70,
+      hips: 96,
+    };
 
+    const chestEase = garment.chest - user.chest;
+    const waistEase = garment.waist - user.waist;
+    const hipEase = garment.hips - user.hips;
 
-  // User body measurements
-  const user = {
-    chest:70,
-    waist:50,
-    hips:70
+    let score = 100;
+
+    if (chestEase < 15 || chestEase > 30) score -= 15;
+    if (waistEase < 15 || waistEase > 30) score -= 15;
+    if (hipEase < 20 || hipEase > 35) score -= 15;
+
+    setFitScore(score);
   };
 
+  return (
 
-  // Selected garment measurements
-  const garment = {
-    chest:90,
-    waist:70,
-    hips:96
-  };
+    <div className="space-y-6">{
+      /* ===========================
+          Interactive Twin Model
+      ============================ */}
 
+      <div className="border rounded-xl p-6 bg-white shadow-sm">
 
+        <h2 className="text-2xl font-bold text-black">
+          Interactive Twin Model
+        </h2>
 
-  let score = 100;
+        <p className="text-gray-500 mt-1 mb-6">
+          Calibrate your exact measurements to get accurate sizes across brands.
+        </p>
 
+        <div className="grid lg:grid-cols-2 gap-8">
 
+          {/* Avatar */}
+          <div className="flex flex-col items-center">
 
-  const chestEase =
-  garment.chest - user.chest;
+            <Avatar body={body} />
 
+            <h3 className="font-semibold text-lg mt-4">
+              3D Silhouette
+            </h3>
 
-  const waistEase =
-  garment.waist - user.waist;
+            <div className="flex gap-2 mt-4">
 
+              <span className="bg-green-100 text-green-700 text-sm px-3 py-1 rounded-full">
+                Perfect Ease
+              </span>
 
-  const hipEase =
-  garment.hips - user.hips;
+              <span className="bg-yellow-100 text-yellow-700 text-sm px-3 py-1 rounded-full">
+                Loose Fit
+              </span>
 
+              <span className="bg-red-100 text-red-700 text-sm px-3 py-1 rounded-full">
+                Tight Fit
+              </span>
 
+            </div>
 
-  // Check fitting range
+            <div className="flex gap-6 mt-5 text-sm font-medium">
 
-  if(chestEase < 15 || chestEase > 30)
-  {
-    score -= 15;
-  }
+              <span>
+                H: {body.height} cm
+              </span>
 
+              <span>
+                W: {body.weight} kg
+              </span>
 
-  if(waistEase < 15 || waistEase > 30)
-  {
-    score -= 15;
-  }
+            </div>
 
+          </div>
 
-  if(hipEase < 20 || hipEase > 35)
-  {
-    score -= 15;
-  }
+          {/* Fit Score */}
+          <div className="flex flex-col justify-center">
 
+            <h3 className="text-xl font-semibold">
+              Fit Compatibility Score
+            </h3>
 
+            <p className="text-6xl font-bold text-violet-600 mt-5">
 
-  setFitScore(score);
+              {fitScore === null ? "--" : `${fitScore}%`}
 
-};
+            </p>
 
+            <p className="mt-4 text-gray-600">
 
+              Size
 
+              <span className="font-bold text-black mx-1">
+                {selectedSize}
+              </span>
 
-return(
+              recommendation is
 
-<div>
+              <span className="font-semibold text-violet-600 ml-1">
+                Strict Alignment Advisory
+              </span>
 
+            </p>
 
+            <button
 
-<h2 className="text-2xl font-bold text-black mb-4">
-Realtime Sizing Avatar
-</h2>
+              onClick={calculateFitScore}
 
+              className="
+                mt-8
+                bg-violet-600
+                hover:bg-violet-700
+                text-white
+                px-6
+                py-3
+                rounded-lg
+                transition
+              "
 
+            >
 
-<p className="text-gray-600 mb-6">
-Calibrate your exact measurements to get accurate sizes across brands.
-</p>
+              Calculate Fit
 
+            </button>
 
+          </div>
 
+        </div>
 
+      </div>
+            {/* ===========================
+          Body Measurements
+      ============================ */}
 
-{/* Avatar Section */}
+      <div className="border rounded-xl p-6 bg-white shadow-sm">
 
-<div className="
-border
-rounded-xl
-p-6
-mb-6
-">
+        <h2 className="text-2xl font-bold">
+          Body Measurements (cm)
+        </h2>
 
+        <p className="text-gray-500 mt-2 mb-6">
+          Calibrate your exact measurements to get accurate sizes across brands.
+        </p>
 
-<h3 className="text-xl font-semibold mb-4">
-Interactive Twin Model
-</h3>
+        {/* Gender */}
 
+        <div className="flex gap-3 mb-8">
 
+          <button className="px-4 py-2 rounded-full bg-violet-600 text-white">
+            Female
+          </button>
 
-<div className="grid md:grid-cols-2 gap-6">
+          <button className="px-4 py-2 rounded-full border">
+            Male
+          </button>
 
+          <button className="px-4 py-2 rounded-full border">
+            Unisex
+          </button>
 
+        </div>
 
-{/* 3D Avatar */}
+        <div className="space-y-6">
 
-<div
-className="
-h-80
-bg-gray-100
-rounded-xl
-flex
-flex-col
-items-center
-justify-center
-"
->
+          {/* Height */}
 
+          <div>
 
-<p className="text-6xl">
-👤
-</p>
+            <div className="flex justify-between mb-2">
+              <span className="font-medium">Height</span>
+              <span>{body.height} cm</span>
+            </div>
 
+            <input
+              type="range"
+              min="140"
+              max="210"
+              value={body.height}
+              onChange={(e)=>
+                setBody({
+                  ...body,
+                  height:Number(e.target.value)
+                })
+              }
+              className="w-full"
+            />
 
-<p className="font-semibold mt-3">
-3D Silhouette
-</p>
+          </div>
 
+          {/* Weight */}
 
-<div className="flex gap-3 mt-5">
+          <div>
 
-<button className="bg-green-200 px-3 py-2 rounded">
-Perfect Ease
-</button>
+            <div className="flex justify-between mb-2">
+              <span className="font-medium">Weight</span>
+              <span>{body.weight} kg</span>
+            </div>
 
+            <input
+              type="range"
+              min="40"
+              max="120"
+              value={body.weight}
+              onChange={(e)=>
+                setBody({
+                  ...body,
+                  weight:Number(e.target.value)
+                })
+              }
+              className="w-full"
+            />
 
-<button className="bg-yellow-200 px-3 py-2 rounded">
-Loose Fit
-</button>
+          </div>
 
+          {/* Chest */}
 
-<button className="bg-red-200 px-3 py-2 rounded">
-Tight Fit
-</button>
+          <div>
 
+            <div className="flex justify-between mb-2">
+              <span className="font-medium">
+                Chest Circumference
+              </span>
 
-</div>
+              <span>{body.chest} cm</span>
 
+            </div>
 
-</div>
+            <input
+              type="range"
+              min="70"
+              max="130"
+              value={body.chest}
+              onChange={(e)=>
+                setBody({
+                  ...body,
+                  chest:Number(e.target.value)
+                })
+              }
+              className="w-full"
+            />
 
+            <p className="text-sm text-gray-500 mt-2">
+              Garment Chest: 90 cm (+20 cm ease)
+            </p>
 
+          </div>
 
+          {/* Waist */}
 
+          <div>
 
-{/* Score */}
+            <div className="flex justify-between mb-2">
+              <span className="font-medium">
+                Waist Circumference
+              </span>
 
-<div>
+              <span>{body.waist} cm</span>
 
+            </div>
 
-<h3 className="font-semibold">
-Fit Compatibility Score
-</h3>
+            <input
+              type="range"
+              min="50"
+              max="120"
+              value={body.waist}
+              onChange={(e)=>
+                setBody({
+                  ...body,
+                  waist:Number(e.target.value)
+                })
+              }
+              className="w-full"
+            />
 
+            <p className="text-sm text-gray-500 mt-2">
+              Garment Waist: 70 cm (+20 cm ease)
+            </p>
 
+          </div>
 
-<p className="text-5xl font-bold text-violet-600 mt-4">
+          {/* Hips */}
 
-{
-fitScore ? `${fitScore}%` : "--"
-}
+          <div>
 
-</p>
+            <div className="flex justify-between mb-2">
+              <span className="font-medium">
+                Hips Circumference
+              </span>
 
+              <span>{body.hips} cm</span>
 
+            </div>
 
-<p className="mt-4">
-Size {selectedSize} recommendation
-</p>
+            <input
+              type="range"
+              min="70"
+              max="140"
+              value={body.hips}
+              onChange={(e)=>
+                setBody({
+                  ...body,
+                  hips:Number(e.target.value)
+                })
+              }
+              className="w-full"
+            />
 
+            <p className="text-sm text-gray-500 mt-2">
+              Garment Hips: 96 cm (+26 cm ease)
+            </p>
 
+          </div>
 
-<button
-onClick={calculateFitScore}
-className="
-mt-5
-bg-violet-600
-text-white
-px-5
-py-3
-rounded-lg
-"
->
+          {/* Shoulder */}
 
-Calculate Fit
+          <div>
 
-</button>
+            <div className="flex justify-between mb-2">
+              <span className="font-medium">
+                Shoulder Width
+              </span>
 
+              <span>{body.shoulder} cm</span>
 
-</div>
+            </div>
 
+            <input
+              type="range"
+              min="35"
+              max="60"
+              value={body.shoulder}
+              onChange={(e)=>
+                setBody({
+                  ...body,
+                  shoulder:Number(e.target.value)
+                })
+              }
+              className="w-full"
+            />
 
+          </div>
 
-</div>
+          {/* Skin Tone */}
 
+          <div>
 
-</div>
+            <h4 className="font-medium mb-3">
+              Skin Tone
+            </h4>
 
+            <div className="flex gap-3">
 
+              {[
+                "#f7d7c4",
+                "#dfbeaa",
+                "#c58f70",
+                "#8c593c",
+                "#5a3825",
+              ].map((color)=>(
 
+                <button
 
+                  key={color}
 
+                  onClick={()=>
+                    setBody({
+                      ...body,
+                      skinColor:color
+                    })
+                  }
 
+                  className={`w-8 h-8 rounded-full border-2 ${
+                    body.skinColor===color
+                      ? "border-violet-600"
+                      : "border-gray-300"
+                  }`}
 
-{/* Measurements */}
+                  style={{
+                    backgroundColor:color
+                  }}
 
-<div className="
-border
-rounded-xl
-p-6
-">
+                />
 
+              ))}
 
-<h3 className="text-xl font-semibold mb-4">
-Body Measurements (cm)
-</h3>
+            </div>
 
+          </div>
 
+        </div>
 
-
-<div className="grid md:grid-cols-2 gap-4">
-
-
-<input
-value="Height: 140 cm"
-readOnly
-className="border p-3 rounded-lg text-black"
-/>
-
-
-
-<input
-value="Weight: 40 kg"
-readOnly
-className="border p-3 rounded-lg text-black"
-/>
-
-
-
-<input
-value="Chest Circumference: 70 cm"
-readOnly
-className="border p-3 rounded-lg text-black"
-/>
-
-
-
-<input
-value="Garment Chest: 90 cm (+20 cm ease)"
-readOnly
-className="border p-3 rounded-lg text-black"
-/>
-
-
-
-<input
-value="Waist Circumference: 50 cm"
-readOnly
-className="border p-3 rounded-lg text-black"
-/>
-
-
-
-<input
-value="Garment Waist: 70 cm (+20 cm ease)"
-readOnly
-className="border p-3 rounded-lg text-black"
-/>
-
-
-
-<input
-value="Hips Circumference: 70 cm"
-readOnly
-className="border p-3 rounded-lg text-black"
-/>
-
-
-
-<input
-value="Garment Hips: 96 cm (+26 cm ease)"
-readOnly
-className="border p-3 rounded-lg text-black"
-/>
-
-
-
-<input
-value="Shoulder Width: 44 cm"
-readOnly
-className="border p-3 rounded-lg text-black"
-/>
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-{/* Try On */}
-
-<div className="
-border
-rounded-xl
-p-6
-mt-6
-">
-
-
-<h3 className="text-xl font-semibold">
-Currently Fitting Over Twin:
-</h3>
-
-
-<p className="mt-3 font-semibold">
-Aura Silk Wrap Dress
-</p>
-
-
-<p>
-Brand: Aura Atelier
-</p>
-
-
-
-
-<h4 className="mt-5">
-Change Try-On Size
-</h4>
-
-
-<div className="flex gap-3 mt-3">
-
-
-{
-["S","M","L","XL"].map(size=>(
-
-<button
-
-key={size}
-
-onClick={()=>setSelectedSize(size)}
-
-className={`
-px-5
-py-2
-border
-rounded-lg
-${
-selectedSize===size
-?
-"bg-violet-600 text-white"
-:
-""
-}
-`}
-
->
-
-{size}
-
-</button>
-
-
-))
-
-}
-
-
-</div>
-
-
-
-<p className="mt-4">
-Fits chest loose, waist loose!
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-
-{/* Recommendations */}
-
-<div className="
-border
-rounded-xl
-p-6
-mt-6
-">
-
-
-<h3 className="text-xl font-semibold">
-Smart Size Profile Recommendations
-</h3>
-
-
-
-<p className="text-gray-600 mt-2">
-Based on your dynamic measurements, we automated your best size across brands.
-</p>
-
-
-
-<div className="space-y-3 mt-5">
-
-
-<div className="border p-4 rounded-lg flex justify-between">
-<span>Aura Silk Wrap Dress</span>
-<span>S - 57% fit</span>
-</div>
-
-
-
-<div className="border p-4 rounded-lg flex justify-between">
-<span>Metis Heavyweight Tee</span>
-<span>S - 50% fit</span>
-</div>
-
-
-
-<div className="border p-4 rounded-lg flex justify-between">
-<span>Suede Cafe Racer Jacket</span>
-<span>S - 50% fit</span>
-</div>
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-</div>
-
-);
-
+      </div>
+    </div>
+  );
 }

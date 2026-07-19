@@ -20,9 +20,11 @@ export default function Header() {
         </nav>
 
        <div className="flex items-center gap-4">
-  <Link href="/login" className="text-black hover:text-violet-600">
+  <Link href="/login">
+  <button className="bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700">
     Sign In
-  </Link>
+  </button>
+</Link>
 
   <ShoppingCart className="w-5 h-5 text-black cursor-pointer hover:text-violet-600" />
 </div>
