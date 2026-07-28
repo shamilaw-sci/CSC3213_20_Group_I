@@ -1,7 +1,6 @@
 "use client";
 
-
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 // Use relative imports to avoid module alias issues in this file
 import Navbar from "../components/Navbar";
 import SearchFilterBar from "../components/SearchFilterBar";

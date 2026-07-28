@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, User } from "lucide-react";
+import { User } from "lucide-react";
+import CartButton from "@/features/cart/components/CartButton";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -12,40 +13,54 @@ const navLinks = [
 
 export default function Navbar() {
   return (
-    <nav className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200">
-      <div className="flex items-center gap-8">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="w-7 h-7 rounded-md bg-gradient-to-br from-indigo-500 to-purple-600" />
-          <span className="font-semibold text-gray-900">Universal AI</span>
+    <nav className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+            AI
+          </div>
+
+          <div>
+            <h1 className="text-lg font-bold text-gray-900">
+              Universal AI
+            </h1>
+            <p className="text-xs text-gray-500">
+              Fitting Room
+            </p>
+          </div>
         </Link>
 
-        <div className="hidden md:flex items-center gap-6 text-sm">
+        {/* Navigation */}
+        <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
-              className={
-                link.label === "Explore"
-                  ? "text-indigo-600 font-medium"
-                  : "text-gray-500 hover:text-gray-900"
-              }
+              className="text-sm font-medium text-gray-600 hover:text-indigo-600 transition"
             >
               {link.label}
             </Link>
           ))}
         </div>
-      </div>
 
-      <div className="flex items-center gap-4">
-        <button className="text-gray-500 hover:text-gray-900" aria-label="Cart">
-          <ShoppingCart size={20} />
-        </button>
-        <button
-          className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white"
-          aria-label="Profile"
-        >
-          <User size={16} />
-        </button>
+        {/* Right Section */}
+        <div className="flex items-center gap-4">
+
+          {/* Shopping Cart */}
+          <CartButton />
+
+          {/* Profile */}
+          <button
+            className="w-10 h-10 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition"
+            aria-label="Profile"
+          >
+            <User size={18} />
+          </button>
+
+        </div>
+
       </div>
     </nav>
   );
