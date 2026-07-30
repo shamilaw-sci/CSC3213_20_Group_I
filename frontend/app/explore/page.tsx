@@ -8,6 +8,7 @@ import CategoryTabs from "../components/CategoryTabs";
 import ProductGrid from "../components/ProductGrid";
 import { products } from "../data/products";
 
+
 export default function ExplorePage() {
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
