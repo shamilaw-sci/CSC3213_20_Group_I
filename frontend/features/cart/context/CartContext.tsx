@@ -7,20 +7,31 @@ import React, {
   useState,
   ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 
-import { CartContextType, CartItem, CartState } from "../types/cart";
+import {
+  CartContextType,
+  CartItem,
+  CartState,
+} from "../types/cart";
 
-const CartContext = createContext<CartContextType | undefined>(undefined);
+export const CartContext =
+  createContext<CartContextType | undefined>(undefined);
 
 interface CartProviderProps {
   children: ReactNode;
 }
 
-export function CartProvider({ children }: CartProviderProps) {
-  const [cart, setCart] = useState<CartState>({
-    items: [],
-    isOpen: false,
-  });
+export function CartProvider({
+  children,
+}: CartProviderProps) {
+  const router = useRouter();
+
+  const [cart, setCart] =
+    useState<CartState>({
+      items: [],
+      isOpen: false,
+    });
 
   // --------------------------
   // Drawer Controls
@@ -51,9 +62,14 @@ export function CartProvider({ children }: CartProviderProps) {
   // Add Item
   // --------------------------
 
-  const addToCart = (item: Omit<CartItem, "quantity">) => {
+  const addToCart = (
+    item: Omit<CartItem, "quantity">
+  ) => {
     setCart((prev) => {
-      const existing = prev.items.find((p) => p.id === item.id);
+      const existing =
+        prev.items.find(
+          (p) => p.id === item.id
+        );
 
       if (existing) {
         return {
@@ -61,7 +77,10 @@ export function CartProvider({ children }: CartProviderProps) {
           isOpen: true,
           items: prev.items.map((p) =>
             p.id === item.id
-              ? { ...p, quantity: p.quantity + 1 }
+              ? {
+                  ...p,
+                  quantity: p.quantity + 1,
+                }
               : p
           ),
         };
@@ -82,28 +101,35 @@ export function CartProvider({ children }: CartProviderProps) {
   };
 
   // --------------------------
-  // Remove
+  // Remove Item
   // --------------------------
 
-  const removeFromCart = (id: number) => {
+  const removeFromCart = (
+    id: number
+  ) => {
     setCart((prev) => ({
       ...prev,
-      items: prev.items.filter((item) => item.id !== id),
+      items: prev.items.filter(
+        (item) => item.id !== id
+      ),
     }));
   };
 
   // --------------------------
-  // Increase Qty
+  // Increase Quantity
   // --------------------------
 
-  const increaseQuantity = (id: number) => {
+  const increaseQuantity = (
+    id: number
+  ) => {
     setCart((prev) => ({
       ...prev,
       items: prev.items.map((item) =>
         item.id === id
           ? {
               ...item,
-              quantity: item.quantity + 1,
+              quantity:
+                item.quantity + 1,
             }
           : item
       ),
@@ -111,10 +137,12 @@ export function CartProvider({ children }: CartProviderProps) {
   };
 
   // --------------------------
-  // Decrease Qty
+  // Decrease Quantity
   // --------------------------
 
-  const decreaseQuantity = (id: number) => {
+  const decreaseQuantity = (
+    id: number
+  ) => {
     setCart((prev) => ({
       ...prev,
       items: prev.items
@@ -122,11 +150,14 @@ export function CartProvider({ children }: CartProviderProps) {
           item.id === id
             ? {
                 ...item,
-                quantity: item.quantity - 1,
+                quantity:
+                  item.quantity - 1,
               }
             : item
         )
-        .filter((item) => item.quantity > 0),
+        .filter(
+          (item) => item.quantity > 0
+        ),
     }));
   };
 
@@ -142,19 +173,36 @@ export function CartProvider({ children }: CartProviderProps) {
   };
 
   // --------------------------
+  // Go To Checkout
+  // --------------------------
+
+  const goToCheckout = () => {
+    if (cart.items.length === 0) {
+      return;
+    }
+
+    closeCart();
+
+    router.push("/checkout");
+  };
+
+  // --------------------------
   // Totals
   // --------------------------
 
   const totalItems = useMemo(() => {
     return cart.items.reduce(
-      (sum, item) => sum + item.quantity,
+      (sum, item) =>
+        sum + item.quantity,
       0
     );
   }, [cart.items]);
 
   const totalPrice = useMemo(() => {
     return cart.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
+      (sum, item) =>
+        sum +
+        item.price * item.quantity,
       0
     );
   }, [cart.items]);
@@ -163,14 +211,18 @@ export function CartProvider({ children }: CartProviderProps) {
     <CartContext.Provider
       value={{
         cart,
+
         openCart,
         closeCart,
         toggleCart,
+
         addToCart,
         removeFromCart,
         increaseQuantity,
         decreaseQuantity,
         clearCart,
+        goToCheckout,
+
         totalItems,
         totalPrice,
       }}
@@ -181,11 +233,12 @@ export function CartProvider({ children }: CartProviderProps) {
 }
 
 // --------------------------
-// Hook
+// Custom Hook
 // --------------------------
 
 export function useCartContext() {
-  const context = useContext(CartContext);
+  const context =
+    useContext(CartContext);
 
   if (!context) {
     throw new Error(

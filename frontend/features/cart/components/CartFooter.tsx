@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useCart } from "../hooks/useCart";
 
 export default function CartFooter() {
-  const { totalPrice } = useCart();
+  const { totalPrice, closeCart } = useCart();
 
   // Fixed delivery charge
   const deliveryFee = 10;
@@ -12,7 +13,6 @@ export default function CartFooter() {
 
   return (
     <div className="border-t bg-white p-6">
-
       {/* Subtotal */}
       <div className="flex justify-between items-center mb-3">
         <span className="text-gray-500">
@@ -40,7 +40,6 @@ export default function CartFooter() {
 
       {/* Total */}
       <div className="flex justify-between items-center mb-6">
-
         <span className="text-lg font-bold">
           Total
         </span>
@@ -48,17 +47,31 @@ export default function CartFooter() {
         <span className="text-2xl font-extrabold text-indigo-600">
           ${grandTotal.toFixed(2)}
         </span>
-
       </div>
 
-      {/* Checkout Button */}
-
-      <button
-        className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-cyan-400 text-white font-bold text-lg hover:opacity-90 transition"
+      {/* Proceed To Checkout */}
+      <Link
+        href="/checkout"
+        onClick={closeCart}
+        className="
+          w-full
+          py-4
+          rounded-2xl
+          bg-gradient-to-r
+          from-indigo-500
+          to-cyan-400
+          text-white
+          font-bold
+          text-lg
+          hover:opacity-90
+          transition
+          flex
+          items-center
+          justify-center
+        "
       >
         Proceed To Checkout
-      </button>
-
+      </Link>
     </div>
   );
 }

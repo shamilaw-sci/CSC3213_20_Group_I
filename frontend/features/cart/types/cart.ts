@@ -19,6 +19,7 @@ export interface CartContextType {
   openCart: () => void;
   closeCart: () => void;
   toggleCart: () => void;
+  goToCheckout: () => void;
 
   addToCart: (item: Omit<CartItem, "quantity">) => void;
 
