@@ -1,0 +1,1 @@
+//garments and categories management page, list of garments and categories, add garment/category, edit garment/category, delete garment/category
