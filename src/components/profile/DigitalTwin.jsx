@@ -10,18 +10,13 @@ export default function DigitalTwin() {
   const [photo, setPhoto] = useState(null);
   const [twinCreated, setTwinCreated] = useState(false);
 
-  // ===============================
   // Choose Photo
-  // ===============================
 
   const handleChoosePhoto = () => {
     fileInputRef.current.click();
   };
 
-
-  // ===============================
   // Handle Photo Upload
-  // ===============================
 
   const handleFileChange = (event) => {
 
@@ -38,10 +33,8 @@ export default function DigitalTwin() {
 
   };
 
-
-  // ===============================
   // Generate Twin
-  // ===============================
+  
 
   const generateTwin = () => {
 
@@ -50,9 +43,8 @@ export default function DigitalTwin() {
   };
 
 
-  // ===============================
   // Close Preview
-  // ===============================
+  
 
   const closePreview = () => {
 
@@ -65,9 +57,9 @@ export default function DigitalTwin() {
 
     <div>
 
-      {/* =====================================
+      {/*
           PAGE HEADER
-      ====================================== */}
+     */}
 
       <h2 className="text-2xl font-bold text-black mb-2">
         Your Digital Twin
@@ -79,18 +71,10 @@ export default function DigitalTwin() {
       </p>
 
 
-      {/* =====================================
-          MAIN CONTENT
-          LEFT = PHOTO
-          RIGHT = GUIDELINES
-      ====================================== */}
 
       <div className="grid md:grid-cols-2 gap-8">
 
 
-        {/* =====================================
-            LEFT SIDE - PROFILE PHOTO
-        ====================================== */}
 
         <div className="border rounded-2xl p-6 bg-white shadow-sm">
 
