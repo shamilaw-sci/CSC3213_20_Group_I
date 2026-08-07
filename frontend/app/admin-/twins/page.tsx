@@ -1,1 +1,0 @@
-//digital twin monitoring page, list of twins, add twin, edit twin, delete twin

@@ -1,19 +1,22 @@
 //digital twin monitoring page, list of twins, add twin, edit twin, delete twin
 //digital twin monitoring page, list of twins, add twin, edit twin, delete twin
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { X, User, UserCheck } from "lucide-react";
-import { garments } from "../../data/garments";
 import Link from "next/link";
 
 
 export default function garmentPreviewPage(){
     const [selectedGarment, setSelectedGarment] = useState<any>(null);
+    const [garments, setGarments] = useState<any[]>([]);
+    const [error, setError] = useState("");
+    useEffect(() => { void (async () => { try { const response = await fetch('/api/garments'); if (!response.ok) throw new Error((await response.json()).error); setGarments(await response.json()); } catch (e) { setError(e instanceof Error ? e.message : 'Could not load garments.'); } })(); }, []);
 
     return(
         <div>
             <div>
+                {error && <p className="rounded bg-red-50 p-3 text-red-700">{error}</p>}
                 <div>
                     <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
                         {garments.map((garment) => (

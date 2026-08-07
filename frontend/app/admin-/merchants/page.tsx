@@ -1,1 +1,0 @@
-//merchant management page, list of merchants, add merchant, edit merchant, delete merchant

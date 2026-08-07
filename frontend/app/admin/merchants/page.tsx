@@ -2,21 +2,24 @@
 //merchant management page, list of merchants, add merchant, edit merchant, delete merchant
 "use client";
 
-import { merchants } from "../../data/merchants";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+type Merchant = { id: string; name: string; email: string; storeName: string; status: string; products: number; image: string | null };
 
 export default function MerchantPage() {
-    const [merchantList, setMerchantList] = useState(merchants);
-    const [showForm, setShowForm] = useState(false);
-    const [selectedMerchant, setSelectedMerchant] = useState<any>(null);
+    const [merchantList, setMerchantList] = useState<Merchant[]>([]);
+    const [selectedMerchant, setSelectedMerchant] = useState<Merchant | null>(null);
+    const [error, setError] = useState("");
+    useEffect(() => { void (async () => { try { const response = await fetch('/api/merchants'); if (!response.ok) throw new Error((await response.json()).error); setMerchantList(await response.json()); } catch (e) { setError(e instanceof Error ? e.message : 'Could not load merchants.'); } })(); }, []);
 
   return (
     <div>
 
 
       <div className="grid grid-cols-1 gap-4">
-        {merchants.map((merchant) => (
+        {error && <p className="rounded bg-red-50 p-3 text-red-700">{error}</p>}
+        {merchantList.map((merchant) => (
           <div
             key={merchant.id}
             className="flex items-center gap-4 bg-white p-4 rounded shadow cursor-pointer hover:shadow-lg transition"
@@ -70,7 +73,6 @@ export default function MerchantPage() {
     </div>
   );
 }
-
 
 
 

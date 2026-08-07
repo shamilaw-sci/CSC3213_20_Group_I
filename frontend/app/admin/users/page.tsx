@@ -1,9 +1,10 @@
 //user management page, list of users, add user, edit user, delete user
 //user management page, list of users, add user, edit user, delete user
 "use client";
-import { users as initialUsers} from '../../data/users';
-import {MoreHorizontal, Edit , Trash , User, UserCheck} from 'lucide-react';
-import { useState } from 'react';
+import { Trash, User, UserCheck} from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+type UserRecord = { userId: string; name: string; email: string; role: string; createdAt: string; lastLogin: string | null; twinsCreated: number };
 
 
 //Time format function
@@ -24,7 +25,14 @@ function getTimeAgo(dateString: string) {
 }
 //Main component
 export default function Userpage(){
-    const [users , setUsers] = useState(initialUsers);
+    const [users , setUsers] = useState<UserRecord[]>([]);
+    const [error, setError] = useState("");
+
+    useEffect(() => { void loadUsers(); }, []);
+    const loadUsers = async () => {
+        try { const response = await fetch('/api/users'); if (!response.ok) throw new Error((await response.json()).error); setUsers(await response.json()); }
+        catch (e) { setError(e instanceof Error ? e.message : 'Could not load users.'); }
+    };
 
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -40,10 +48,14 @@ export default function Userpage(){
         setIsDeleteOpen(false);
     };
     
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (selectedUser) {
-            setUsers(users.filter((u) => u.userId !== selectedUser.userId));
-            closeModal();
+            try {
+                const response = await fetch(`/api/users/${selectedUser.userId}`, { method: 'DELETE' });
+                if (!response.ok) throw new Error((await response.json()).error);
+                setUsers((current) => current.filter((u) => u.userId !== selectedUser.userId));
+                closeModal();
+            } catch (e) { setError(e instanceof Error ? e.message : 'Could not delete user.'); }
         }
     };
     //Edit user function
@@ -56,6 +68,7 @@ export default function Userpage(){
     return(
         <div className="p-6 bg-white rounded-2xl shadow">
             <h1 className="text-3xl font-bold mb-5">User Details</h1>
+            {error && <p className="mb-4 rounded bg-red-50 p-3 text-red-700">{error}</p>}
             <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left mt-4 p-5 border border-gray-300">
 
@@ -115,7 +128,7 @@ export default function Userpage(){
                             </td>
                             {/* user last login */}
                             <td className="p-2 text-gray-500">
-                                  {getTimeAgo(user.lastLogin)}
+                                  {user.lastLogin ? getTimeAgo(user.lastLogin) : "Never"}
                             </td>
                             {/* user twins created */}
                             <td className="p-2 text-center">{user.twinsCreated}</td>
@@ -168,4 +181,3 @@ export default function Userpage(){
 
     )
 }
-
