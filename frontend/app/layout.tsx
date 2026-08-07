@@ -1,27 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-import { CartProvider } from "@/features/cart/context/CartContext";
-import CartDrawer from "@/features/cart/components/CartDrawer";
-
-import { ProfileProvider } from "@/features/profile/context/ProfileContext";
-
-import { TryOnProvider } from "@/features/try-on/context/TryOnContext";
-import TryOnModal from "@/features/try-on/components/TryOnModal";
-
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
 
 export const metadata: Metadata = {
   title: "explore_of_next",
@@ -36,30 +24,11 @@ export default function RootLayout({
 }) {
 
   return (
-    <html lang="en">
-
-      <body>
-
-        <CartProvider>
-
-          <ProfileProvider>
-
-            <TryOnProvider>
-
-              {children}
-
-              <CartDrawer />
-
-              <TryOnModal />
-
-            </TryOnProvider>
-
-          </ProfileProvider>
-
-        </CartProvider>
-
-      </body>
-
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
 }
