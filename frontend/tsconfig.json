@@ -32,3 +32,4 @@
 , "app/admin/components/usergrowthChart.jsx"  ],
   "exclude": ["node_modules"]
 }
+
