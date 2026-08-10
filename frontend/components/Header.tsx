@@ -74,10 +74,17 @@ export default function Header() {
           </a>
         </PopoverGroup>
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          <a href="/login" className="text-sm/6 font-semibold text-white">
-            Log in <span aria-hidden="true">&rarr;</span>
-          </a>
+          <div className="flex items-center gap-4">
+            <a href="/login" className="text-sm/6 font-semibold text-white">
+              Log in <span aria-hidden="true">&rarr;</span>
+            </a>
+
+            <a href="/register" className="text-sm/6 font-semibold text-white">
+              Register <span aria-hidden="true">&rarr;</span>
+            </a>
+          </div>
         </div>
+        
       </nav>
       <Dialog open={mobileMenuOpen} onClose={setMobileMenuOpen} className="lg:hidden">
         <div className="fixed inset-0 z-50" />
