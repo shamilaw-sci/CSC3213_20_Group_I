@@ -69,7 +69,7 @@ export default function Header() {
           <a href="#" className="text-sm/6 font-semibold text-white">
             Dashboard
           </a>
-          <a href="#" className="text-sm/6 font-semibold text-white">
+          <a href="/merchant" className="text-sm/6 font-semibold text-white">
             How It Works
           </a>
         </PopoverGroup>
