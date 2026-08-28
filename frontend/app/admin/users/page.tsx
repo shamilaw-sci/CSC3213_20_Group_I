@@ -1,5 +1,4 @@
 //user management page, list of users, add user, edit user, delete user
-//user management page, list of users, add user, edit user, delete user
 "use client";
 import { Trash, User, UserCheck} from 'lucide-react';
 import { useEffect, useState } from 'react';

@@ -1,5 +1,4 @@
 //merchant management page, list of merchants, add merchant, edit merchant, delete merchant
-//merchant management page, list of merchants, add merchant, edit merchant, delete merchant
 "use client";
 
 import Image from "next/image";

@@ -1,5 +1,4 @@
 //shared sidebar & top bar
-//shared sidebar & top bar
 //this will contain the layout of the admin dashboard, including the sidebar and main content area
 
 import '../globals.css';
