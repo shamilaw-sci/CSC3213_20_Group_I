@@ -45,7 +45,6 @@ export function ProfileProvider({
       waist: 0,
       hips: 0,
       shoulder: 0,
-      inseam: 0,
       skinColor: "#dfbeaa",
       gender: "Unisex",
     },

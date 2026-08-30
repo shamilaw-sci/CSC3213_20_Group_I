@@ -27,7 +27,6 @@ export interface Measurements {
   waist: number;
   hips: number;
   shoulder: number;
-  inseam: number;
   skinColor: string;
   gender: "Female" | "Male" | "Unisex";
 }

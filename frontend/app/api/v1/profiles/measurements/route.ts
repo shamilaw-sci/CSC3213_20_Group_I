@@ -12,12 +12,12 @@ export const runtime = "nodejs";
 const numberOrNull = z.number().min(0).max(300).nullable();
 const measurementSchema = z.object({
   height: numberOrNull, weight: numberOrNull, chest: numberOrNull, waist: numberOrNull,
-  hips: numberOrNull, shoulder: numberOrNull, inseam: numberOrNull,
+  hips: numberOrNull, shoulder: numberOrNull,
 });
 
-function formatMeasurement(measurement: { heightCm: { toString(): string } | null; weightKg: { toString(): string } | null; chestCm: { toString(): string } | null; waistCm: { toString(): string } | null; hipsCm: { toString(): string } | null; shoulderCm: { toString(): string } | null; inseamCm: { toString(): string } | null } | null) {
+function formatMeasurement(measurement: { heightCm: { toString(): string } | null; weightKg: { toString(): string } | null; chestCm: { toString(): string } | null; waistCm: { toString(): string } | null; hipsCm: { toString(): string } | null; shoulderCm: { toString(): string } | null } | null) {
   const number = (value: { toString(): string } | null) => value ? Number(value.toString()) : 0;
-  return { height: number(measurement?.heightCm ?? null), weight: number(measurement?.weightKg ?? null), chest: number(measurement?.chestCm ?? null), waist: number(measurement?.waistCm ?? null), hips: number(measurement?.hipsCm ?? null), shoulder: number(measurement?.shoulderCm ?? null), inseam: number(measurement?.inseamCm ?? null) };
+  return { height: number(measurement?.heightCm ?? null), weight: number(measurement?.weightKg ?? null), chest: number(measurement?.chestCm ?? null), waist: number(measurement?.waistCm ?? null), hips: number(measurement?.hipsCm ?? null), shoulder: number(measurement?.shoulderCm ?? null) };
 }
 
 export async function GET() {
@@ -37,7 +37,7 @@ export async function PUT(request: Request) {
   const profile = await prisma.profile.findUnique({ where: { userId: current.session.userId } });
   if (!profile) return NextResponse.json({ message: "Profile not found." }, { status: 404 });
   const input = parsed.data;
-  const values = { heightCm: input.height, weightKg: input.weight, chestCm: input.chest, waistCm: input.waist, hipsCm: input.hips, shoulderCm: input.shoulder, inseamCm: input.inseam };
+  const values = { heightCm: input.height, weightKg: input.weight, chestCm: input.chest, waistCm: input.waist, hipsCm: input.hips, shoulderCm: input.shoulder };
   const measurement = await prisma.measurement.upsert({ where: { profileId: profile.profileId }, create: { measurementId: randomUUID(), profileId: profile.profileId, ...values, updatedAt: new Date() }, update: { ...values, updatedAt: new Date() } });
   return NextResponse.json({ measurements: formatMeasurement(measurement) });
 }

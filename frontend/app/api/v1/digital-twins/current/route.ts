@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   if (!isJpeg && !isPng) return NextResponse.json({ message: "The uploaded file is not a valid PNG or JPEG image." }, { status: 400 });
   const twinId = randomUUID();
   const filePath = await saveEncryptedTwin(twinId, image);
-  const snapshot = profile.measurement ? { height: profile.measurement.heightCm?.toString(), weight: profile.measurement.weightKg?.toString(), chest: profile.measurement.chestCm?.toString(), waist: profile.measurement.waistCm?.toString(), hips: profile.measurement.hipsCm?.toString(), shoulder: profile.measurement.shoulderCm?.toString(), inseam: profile.measurement.inseamCm?.toString() } : null;
+  const snapshot = profile.measurement ? { height: profile.measurement.heightCm?.toString(), weight: profile.measurement.weightKg?.toString(), chest: profile.measurement.chestCm?.toString(), waist: profile.measurement.waistCm?.toString(), hips: profile.measurement.hipsCm?.toString(), shoulder: profile.measurement.shoulderCm?.toString() } : null;
   const now = new Date();
 
   try {

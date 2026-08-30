@@ -2,7 +2,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Save, Sparkles } from "lucide-react";
+import { Save } from "lucide-react";
 
 import { useProfile } from "../hooks/useProfile";
 import Avatar from "./Avatar";
@@ -16,7 +16,7 @@ const charts: Record<(typeof sizes)[number], { chest: number; waist: number; hip
 };
 const fields = [
   ["height", "Height", 100, 250], ["weight", "Weight", 40, 140], ["chest", "Chest circumference", 1, 140],
-  ["waist", "Waist circumference", 50, 130], ["hips", "Hip circumference", 65, 150], ["shoulder", "Shoulder width", 30, 65], ["inseam", "Inseam", 55, 100],
+  ["waist", "Waist circumference", 50, 130], ["hips", "Hip circumference", 65, 150], ["shoulder", "Shoulder width", 30, 65],
 ] as const;
 
 function calculateFitScore(body: { chest: number; waist: number; hips: number; shoulder: number }, size: (typeof sizes)[number]) {
