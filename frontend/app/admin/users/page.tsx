@@ -1,3 +1,4 @@
+/** WBS-1.x | Owner: S/21/315 | Branch: feature/s21-315-auth-access | Scope: Authentication, users and access control. */
 //user management page, list of users, add user, edit user, delete user
 //user management page, list of users, add user, edit user, delete user
 "use client";
