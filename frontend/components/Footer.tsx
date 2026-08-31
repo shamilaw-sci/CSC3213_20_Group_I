@@ -1,6 +1,7 @@
+/** WBS-Shared | Owner: All members | Branch: reviewed integration branch | Scope: Shared application foundation. */
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300 px-6 py-12">
+    <footer className="bg-gradient-to-r from-[#32105f] to-[#2563eb] text-indigo-100 px-6 py-12">
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10">
 
@@ -45,7 +46,7 @@ export default function Footer() {
               placeholder="Enter email"
               className="w-full px-3 py-2 rounded-l-lg bg-gray-800 text-white outline-none"
             />
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700">
+            <button className="px-4 py-2 bg-white text-indigo-800 rounded-r-lg font-semibold hover:bg-indigo-50">
               Subscribe
             </button>
           </div>

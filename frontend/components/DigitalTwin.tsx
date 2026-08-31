@@ -1,3 +1,6 @@
+/** WBS-2.x | Owner: S/21/063 | Branch: feature/s21-063-profile-digital-twin | Scope: Profile, Digital Twin, storage and privacy. */
+import Link from "next/link";
+
 export default function DigitalTwin() {
   return (
     <div className="bg-gradient-to-r from-blue-400 to-purple-600 py-20 px-6">
@@ -19,9 +22,9 @@ export default function DigitalTwin() {
 
         
         <div className="mt-8 mb-10  ">
-          <button className="px-6 py-3 border border-white text-white rounded-lg hover:bg-blue-600 hover:text-white transition">
+          <Link href="/profile" className="inline-block px-6 py-3 border border-white text-white rounded-lg hover:bg-blue-600 hover:text-white transition">
             Get Started
-          </button>
+          </Link>
         </div>
 
       </div>

@@ -1,3 +1,4 @@
+/** WBS-Shared | Owner: All members | Branch: reviewed integration branch | Scope: Shared application foundation. */
 export default function SplitSection() {
   return (
     <div className="w-full bg-white py-16 px-6 md:px-20">

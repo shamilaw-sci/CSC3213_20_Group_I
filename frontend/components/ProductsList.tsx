@@ -1,8 +1,11 @@
+/** WBS-3.x | Owner: S/21/501 | Branch: feature/s21-501-catalogue-merchants | Scope: Catalogue, merchants, comparison and redirects. */
+import Link from "next/link";
+
 const products = [
   {
     id: 1,
     name: 'Basic Tee',
-    href: '#',
+    href: '/explore',
     imageSrc: 'https://tailwindcss.com/plus-assets/img/ecommerce-images/product-page-01-related-product-01.jpg',
     imageAlt: "Front of men's Basic Tee in black.",
     price: '$35',
@@ -11,7 +14,7 @@ const products = [
   {
     id: 2,
     name: 'Basic Tee',
-    href: '#',
+    href: '/explore',
     imageSrc: 'https://tailwindcss.com/plus-assets/img/ecommerce-images/product-page-01-related-product-02.jpg',
     imageAlt: "Front of men's Basic Tee in white.",
     price: '$35',
@@ -20,7 +23,7 @@ const products = [
   {
     id: 3,
     name: 'Basic Tee',
-    href: '#',
+    href: '/explore',
     imageSrc: 'https://tailwindcss.com/plus-assets/img/ecommerce-images/product-page-01-related-product-03.jpg',
     imageAlt: "Front of men's Basic Tee in dark gray.",
     price: '$35',
@@ -29,7 +32,7 @@ const products = [
   {
     id: 4,
     name: 'Artwork Tee',
-    href: '#',
+    href: '/explore',
     imageSrc: 'https://tailwindcss.com/plus-assets/img/ecommerce-images/product-page-01-related-product-04.jpg',
     imageAlt: "Front of men's Artwork Tee in peach with white and brown dots forming an isometric cube.",
     price: '$35',
@@ -73,9 +76,9 @@ export default function ProductsList() {
         </div>
       </div>
          <div className="flex justify-center">
-             <button className="px-6 py-3 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition">
+             <Link href="/explore" className="px-6 py-3 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition">
                 Explore All Items
-            </button>
+            </Link>
         </div>
     </div>
   )

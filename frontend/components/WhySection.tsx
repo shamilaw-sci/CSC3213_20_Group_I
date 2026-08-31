@@ -1,3 +1,4 @@
+/** WBS-Shared | Owner: All members | Branch: reviewed integration branch | Scope: Shared application foundation. */
 import { ArrowPathIcon, CloudArrowUpIcon, FingerPrintIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 
 const features = [

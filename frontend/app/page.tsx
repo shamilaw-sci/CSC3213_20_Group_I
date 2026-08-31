@@ -1,3 +1,4 @@
+/** WBS-Shared | Owner: All members | Branch: reviewed integration branch | Scope: Shared application foundation. */
 import Header from "@/components/Header";
 import Banner from "@/components/Banner";
 import WhySection from "@/components/WhySection";

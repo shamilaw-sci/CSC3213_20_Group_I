@@ -1,91 +1,30 @@
+/** WBS-1.x | Owner: S/21/315 | Branch: feature/s21-315-auth-access | Scope: Authentication, users and access control. */
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
+
+import { useAuth } from "@/features/auth/context/AuthContext";
+
 export default function Login() {
-  return (
-    <>
-      <div className="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8 bg-gradient-to-r from-purple-400 to-pink-300 ">
-        
-        {/* 🔥 MODERN LOGIN CARD WRAPPER */}
-        <div className="sm:mx-auto sm:w-full sm:max-w-sm border border-gray-200 rounded-2xl shadow-lg bg-white/80 backdrop-blur-md p-8 hover:shadow-indigo-200 transition-all duration-300">
-          
-          {/* LOGO + TITLE */}
-          <div className="text-center">
-            <img
-              alt="Your Company"
-              src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500"
-              className="mx-auto h-10 w-auto"
-            />
+  const { login } = useAuth();
+  const router = useRouter();
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-            <h2 className="mt-6 text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
-              Sign in to your account
-            </h2>
-          </div>
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    setError("");
+    setIsSubmitting(true);
+    try {
+      const signedInUser = await login(String(data.get("email") ?? ""), String(data.get("password") ?? ""));
+      router.push(signedInUser.role === "ADMIN" ? "/admin" : signedInUser.role === "MERCHANT" ? "/merchant" : "/explore");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not sign in.");
+    } finally { setIsSubmitting(false); }
+  }
 
-          {/* FORM */}
-          <form action="#" method="POST" className="space-y-6 mt-8">
-
-            {/* EMAIL */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-
-              <div className="mt-2">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition"
-                />
-              </div>
-            </div>
-
-            {/* PASSWORD */}
-            <div>
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Password
-                </label>
-
-                <a href="#" className="text-sm font-semibold text-indigo-500 hover:text-indigo-700">
-                  Forgot password?
-                </a>
-              </div>
-
-              <div className="mt-2">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition"
-                />
-              </div>
-            </div>
-
-            {/* BUTTON */}
-            <div>
-              <button
-                type="submit"
-                className="w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 shadow-md hover:shadow-indigo-300 transition"
-              >
-                Sign in
-              </button>
-            </div>
-
-          </form>
-
-          {/* FOOTER */}
-          <p className="mt-6 text-center text-sm text-gray-500">
-            Not a member?{" "}
-            <a href="#" className="font-semibold text-indigo-500 hover:text-indigo-700">
-              Start a 14 day free trial
-            </a>
-          </p>
-
-        </div>
-      </div>
-    </>
-  )
+  return <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-700 via-purple-600 to-pink-500 px-4 py-10"><section className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl sm:p-8"><Link href="/" className="text-sm font-bold text-indigo-600">← TryVora</Link><h1 className="mt-6 text-3xl font-bold text-gray-900">Welcome back</h1><p className="mt-2 text-gray-600">Sign in to access your fitting room.</p><form onSubmit={handleSubmit} className="mt-7 space-y-5"><label className="block text-sm font-semibold text-gray-700">Email<input name="email" type="email" autoComplete="email" required className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-3 text-gray-900 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200" /></label><label className="block text-sm font-semibold text-gray-700">Password<input name="password" type="password" autoComplete="current-password" required className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-3 text-gray-900 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200" /></label>{error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}<button disabled={isSubmitting} className="w-full rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">{isSubmitting ? "Signing in…" : "Sign in"}</button></form><p className="mt-6 text-center text-sm text-gray-600">No account yet? <Link href="/register" className="font-bold text-indigo-600">Create one</Link></p><p className="mt-4 text-center text-xs text-gray-400">Your session is stored in a secure HTTP-only cookie.</p></section></main>;
 }

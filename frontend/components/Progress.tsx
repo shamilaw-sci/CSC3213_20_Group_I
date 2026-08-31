@@ -1,6 +1,7 @@
+/** WBS-Shared | Owner: All members | Branch: reviewed integration branch | Scope: Shared application foundation. */
 export default function Progress() {
   return (
-    <div className="bg-gradient-to-r from-purple-100 to-white py-24 sm:py-32">
+    <div id="how-it-works" className="bg-gradient-to-r from-purple-100 to-white py-24 sm:py-32">
 
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         
