@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -12,7 +13,7 @@ export default function CheckoutPage() {
 
 
   return (
-    <main className="min-h-screen bg-gray-50 py-10">
+    <main className="tv-page py-10">
 
       <div className="max-w-7xl mx-auto px-6">
 
