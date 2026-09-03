@@ -1,3 +1,4 @@
+/** WBS-3.x | Owner: S/21/501 | Branch: feature/s21-501-catalogue-merchants | Scope: Catalogue, merchants, comparison and redirects. */
 "use client";
 
 import React, {
@@ -105,7 +106,7 @@ export function CartProvider({
   // --------------------------
 
   const removeFromCart = (
-    id: number
+    id: string | number
   ) => {
     setCart((prev) => ({
       ...prev,
@@ -120,7 +121,7 @@ export function CartProvider({
   // --------------------------
 
   const increaseQuantity = (
-    id: number
+    id: string | number
   ) => {
     setCart((prev) => ({
       ...prev,
@@ -141,7 +142,7 @@ export function CartProvider({
   // --------------------------
 
   const decreaseQuantity = (
-    id: number
+    id: string | number
   ) => {
     setCart((prev) => ({
       ...prev,
