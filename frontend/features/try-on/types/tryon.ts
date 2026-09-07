@@ -1,5 +1,5 @@
 export interface TryOnProduct {
-  id: number;
+  id: string | number;
   title: string;
   image: string;
   category: string;
