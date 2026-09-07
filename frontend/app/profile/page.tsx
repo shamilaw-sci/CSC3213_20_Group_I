@@ -1,3 +1,4 @@
+/** WBS-Shared | Owner: All members | Branch: reviewed integration branch | Scope: Shared application foundation. */
 "use client";
 
 import Navbar from "@/app/components/Navbar";
@@ -13,7 +14,7 @@ export default function ProfilePage() {
   const { profile } = useProfile();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="tv-page">
 
       {/* Navbar */}
       <Navbar />

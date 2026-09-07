@@ -1,197 +1,72 @@
+/** WBS-2.2 | Owner: S/21/063 | Branch: feature/s21-063-profile-digital-twin | Profile account interface. */
 "use client";
 
-import { useState } from "react";
-import { Save } from "lucide-react";
+import { CheckCircle2, Mail, MapPin, Save, ShieldCheck, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-interface AccountForm {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  dateOfBirth: string;
-  gender: string;
-  country: string;
-}
+import { useAuth } from "@/features/auth/context/AuthContext";
+import { useProfile } from "../hooks/useProfile";
+import type { Account } from "../types/profile";
+
+const fields: Array<{ key: keyof Account; label: string; type: string; placeholder: string; span?: string }> = [
+  { key: "firstName", label: "First name", type: "text", placeholder: "Jane" },
+  { key: "lastName", label: "Last name", type: "text", placeholder: "Doe" },
+  { key: "email", label: "Email address", type: "email", placeholder: "jane@example.com" },
+  { key: "phone", label: "Phone number", type: "tel", placeholder: "+94 77 123 4567" },
+  { key: "dateOfBirth", label: "Date of birth", type: "date", placeholder: "" },
+  { key: "country", label: "Country", type: "text", placeholder: "Sri Lanka", span: "md:col-span-2" },
+];
 
 export default function AccountTab() {
-  const [form, setForm] = useState<AccountForm>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    dateOfBirth: "",
-    gender: "",
-    country: "",
-  });
+  const { profile, updateAccount, saveProfile } = useProfile();
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement
-    >
-  ) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
-  };
+  useEffect(() => {
+    if (!user || profile.account.email) return;
+    const [firstName = "", ...rest] = user.name.split(" ");
+    updateAccount({ firstName, lastName: rest.join(" "), email: user.email });
+  }, [profile.account.email, updateAccount, user]);
 
-  const handleSave = () => {
-    console.log(form);
+  async function save() {
+    setError("");
+    try {
+      await saveProfile();
+      setSaved(true);
+      window.setTimeout(() => setSaved(false), 3000);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not save account details.");
+    }
+  }
 
-    // TODO
-    // Save to Backend / Context
-
-    alert("Profile updated successfully!");
-  };
+  async function deleteAccount() {
+    if (!window.confirm("Delete your TryVora account? This will sign you out and revoke your active sessions.")) return;
+    setError("");
+    const response = await fetch("/api/v1/profiles/me", { method: "DELETE" });
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({})) as { message?: string };
+      setError(result.message ?? "Could not delete your account.");
+      return;
+    }
+    await logout();
+    router.replace("/");
+  }
 
   return (
-    <div className="space-y-8">
-
-      {/* Header */}
-      <div>
-        <h2 className="text-3xl font-bold text-gray-900">
-          Account Settings
-        </h2>
-
-        <p className="text-gray-500 mt-2">
-          Manage your personal information and account details.
-        </p>
-      </div>
-
-      {/* Form */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          {/* First Name */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              First Name
-            </label>
-
-            <input
-              type="text"
-              name="firstName"
-              value={form.firstName}
-              onChange={handleChange}
-              placeholder="John"
-              className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
-          </div>
-
-          {/* Last Name */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Last Name
-            </label>
-
-            <input
-              type="text"
-              name="lastName"
-              value={form.lastName}
-              onChange={handleChange}
-              placeholder="Doe"
-              className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Email
-            </label>
-
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="john@example.com"
-              className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
-          </div>
-
-          {/* Phone */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Phone Number
-            </label>
-
-            <input
-              type="tel"
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-              placeholder="+94 71 234 5678"
-              className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
-          </div>
-
-          {/* Date of Birth */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Date of Birth
-            </label>
-
-            <input
-              type="date"
-              name="dateOfBirth"
-              value={form.dateOfBirth}
-              onChange={handleChange}
-              className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
-          </div>
-
-          {/* Gender */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Gender
-            </label>
-
-            <select
-              name="gender"
-              value={form.gender}
-              onChange={handleChange}
-              className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-            >
-              <option value="">Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-
-          {/* Country */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-2">
-              Country
-            </label>
-
-            <input
-              type="text"
-              name="country"
-              value={form.country}
-              onChange={handleChange}
-              placeholder="Sri Lanka"
-              className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
-          </div>
-
-        </div>
-
-        {/* Save Button */}
-        <div className="flex justify-end mt-8">
-          <button
-            onClick={handleSave}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition"
-          >
-            <Save size={18} />
-            Save Changes
-          </button>
-        </div>
-
-      </div>
-
+    <div className="space-y-7">
+      <section className="rounded-3xl bg-gradient-to-r from-indigo-700 via-violet-700 to-fuchsia-600 p-6 text-white shadow-lg sm:p-8">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-4"><div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15"><UserRound size={29} /></div><div><h2 className="text-2xl font-bold">Account & privacy</h2><p className="mt-1 text-sm text-white/80">Your details support a personalised fitting-room experience.</p></div></div><div className="rounded-xl bg-white/15 px-4 py-3 text-sm"><ShieldCheck className="mr-2 inline" size={17} />Demo profile data stays in this browser session.</div></div>
+      </section>
+        <section className="tv-card p-6 sm:p-8">
+        <div className="flex items-start gap-3"><Mail className="mt-0.5 text-indigo-600" size={21} /><div><h3 className="text-xl font-bold text-gray-900">Personal information</h3><p className="mt-1 text-sm text-gray-500">Keep your contact information up to date.</p></div></div>
+        <div className="mt-7 grid gap-5 md:grid-cols-2">{fields.map((field) => <label key={field.key} className={`block ${field.span ?? ""}`}><span className="mb-2 block text-sm font-semibold text-gray-700">{field.label}</span><input type={field.type} value={profile.account[field.key]} placeholder={field.placeholder} onChange={(event) => updateAccount({ [field.key]: event.target.value } as Partial<Account>)} className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 outline-none transition focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100" /></label>)}</div>
+        <div className="mt-8 flex flex-col gap-3 border-t border-gray-100 pt-6 sm:flex-row sm:items-center sm:justify-between"><p className="flex items-center gap-2 text-sm text-gray-500"><MapPin size={16} /> Measurements and image settings are managed in their own tabs.</p><div className="flex flex-col-reverse gap-3 sm:flex-row"><button type="button" onClick={deleteAccount} className="rounded-xl border border-rose-200 px-5 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-50">Delete account</button><button type="button" onClick={save} className="tv-button inline-flex items-center justify-center gap-2 px-5 py-3"><Save size={18} /> Save changes</button></div></div>
+        {saved && <p role="status" className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-sm font-medium text-emerald-800"><CheckCircle2 size={18} /> Account changes saved for this session.</p>}
+        {error && <p role="alert" className="mt-4 rounded-xl bg-rose-50 p-3 text-sm font-medium text-rose-800">{error}</p>}
+      </section>
     </div>
   );
 }
