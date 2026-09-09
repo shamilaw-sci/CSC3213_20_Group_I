@@ -154,7 +154,11 @@ export function ProfileProvider({
   // -----------------------------
 
   const saveMeasurements = async () => {
-    const measurements = Object.fromEntries(Object.entries(profile.measurements).filter(([key]) => !["skinColor", "gender"].includes(key)).map(([key, value]) => [key, value || null]));
+    const measurements = Object.fromEntries(
+      Object.entries(profile.measurements)
+        .filter(([key]) => key !== "skinColor")
+        .map(([key, value]) => [key, value || null]),
+    );
     const measurementResponse = await fetch("/api/v1/profiles/measurements", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
