@@ -7,6 +7,11 @@ import { requireAuthenticatedUser } from "@/server/auth/authorization";
 import { prisma } from "@/server/db/prisma";
 import { removeEncryptedTwin, saveEncryptedTwin } from "@/server/storage/digital-twin-storage";
 
+import {
+  DigitalTwinImageError,
+  processDigitalTwinImage,
+} from "@/server/images/digital-twin-image";
+
 export const runtime = "nodejs";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -36,10 +41,38 @@ export async function POST(request: Request) {
   if (!profile) return NextResponse.json({ message: "Create a profile before uploading a digital twin." }, { status: 409 });
   const image = Buffer.from(await file.arrayBuffer());
   const isJpeg = image.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]));
-  const isPng = image.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
-  if (!isJpeg && !isPng) return NextResponse.json({ message: "The uploaded file is not a valid PNG or JPEG image." }, { status: 400 });
+  const isPng = image
+    .subarray(0, 8)
+    .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+
+  if (!isJpeg && !isPng) {
+    return NextResponse.json(
+      { message: "The uploaded file is not a valid PNG or JPEG image." },
+      { status: 400 },
+    );
+  }
+
+  let processedImage;
+
+  try {
+    processedImage = await processDigitalTwinImage(image);
+  } catch (error) {
+    if (error instanceof DigitalTwinImageError) {
+      return NextResponse.json(
+        { message: error.message },
+        { status: 400 },
+      );
+    }
+
+    throw error;
+  }
+
   const twinId = randomUUID();
-  const filePath = await saveEncryptedTwin(twinId, image);
+  const filePath = await saveEncryptedTwin(
+    twinId,
+    processedImage.buffer,
+  );
+
   const snapshot = profile.measurement ? { height: profile.measurement.heightCm?.toString(), weight: profile.measurement.weightKg?.toString(), chest: profile.measurement.chestCm?.toString(), waist: profile.measurement.waistCm?.toString(), hips: profile.measurement.hipsCm?.toString(), shoulder: profile.measurement.shoulderCm?.toString() } : null;
   const now = new Date();
 
