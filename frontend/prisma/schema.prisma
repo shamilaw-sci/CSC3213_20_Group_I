@@ -1,0 +1,464 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model auditlog {
+  auditLogId String   @id @db.Char(36)
+  adminId    String?  @db.Char(36)
+  action     String   @db.VarChar(150)
+  entityType String?  @db.VarChar(100)
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?  @db.VarChar(45)
+  userAgent  String?  @db.VarChar(512)
+  timestamp  DateTime @default(now())
+  user       user?    @relation(fields: [adminId], references: [userId], map: "AuditLog_adminId_fkey")
+
+  @@index([action, timestamp], map: "AuditLog_action_timestamp_idx")
+  @@index([adminId, timestamp], map: "AuditLog_adminId_timestamp_idx")
+  @@index([entityType, entityId], map: "AuditLog_entityType_entityId_idx")
+}
+
+model category {
+  categoryId  String    @id @db.Char(36)
+  name        String    @unique(map: "Category_name_key") @db.VarChar(100)
+  slug        String    @unique(map: "Category_slug_key") @db.VarChar(120)
+  description String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  product     product[]
+}
+
+model comparison {
+  comparisonId   String           @id @db.Char(36)
+  userId         String?          @db.Char(36)
+  guestSessionId String?          @db.Char(36)
+  name           String?          @db.VarChar(150)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime
+  guestsession   guestsession?    @relation(fields: [guestSessionId], references: [guestSessionId], onDelete: Cascade, map: "Comparison_guestSessionId_fkey")
+  user           user?            @relation(fields: [userId], references: [userId], onDelete: Cascade, map: "Comparison_userId_fkey")
+  comparisonitem comparisonitem[]
+
+  @@index([guestSessionId, updatedAt], map: "Comparison_guestSessionId_updatedAt_idx")
+  @@index([userId, updatedAt], map: "Comparison_userId_updatedAt_idx")
+}
+
+model comparisonitem {
+  comparisonItemId String     @id @db.Char(36)
+  comparisonId     String     @db.Char(36)
+  productId        String     @db.Char(36)
+  addedAt          DateTime   @default(now())
+  comparison       comparison @relation(fields: [comparisonId], references: [comparisonId], onDelete: Cascade, map: "ComparisonItem_comparisonId_fkey")
+  product          product    @relation(fields: [productId], references: [productId], onDelete: Cascade, map: "ComparisonItem_productId_fkey")
+
+  @@unique([comparisonId, productId], map: "ComparisonItem_comparisonId_productId_key")
+  @@index([productId], map: "ComparisonItem_productId_idx")
+}
+
+model digitaltwin {
+  digitalTwinId        String             @id @db.Char(36)
+  userId               String             @db.Char(36)
+  encryptedImagePath   String             @db.VarChar(2048)
+  previewImagePath     String?            @db.VarChar(2048)
+  measurementsSnapshot Json?
+  encryptionKeyVersion Int                @default(1)
+  status               digitaltwin_status @default(PROCESSING)
+  processingError      String?            @db.Text
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime
+  deletedAt            DateTime?
+  user                 user               @relation(fields: [userId], references: [userId], onDelete: Cascade, map: "DigitalTwin_userId_fkey")
+  tryonsession         tryonsession[]
+
+  @@index([createdAt], map: "DigitalTwin_createdAt_idx")
+  @@index([userId, status], map: "DigitalTwin_userId_status_idx")
+}
+
+model favorite {
+  favoriteId String   @id @db.Char(36)
+  userId     String   @db.Char(36)
+  productId  String   @db.Char(36)
+  createdAt  DateTime @default(now())
+  product    product  @relation(fields: [productId], references: [productId], onDelete: Cascade, map: "Favorite_productId_fkey")
+  user       user     @relation(fields: [userId], references: [userId], onDelete: Cascade, map: "Favorite_userId_fkey")
+
+  @@unique([userId, productId], map: "Favorite_userId_productId_key")
+  @@index([productId], map: "Favorite_productId_idx")
+}
+
+model feedback {
+  feedbackId                       String          @id @db.Char(36)
+  userId                           String?         @db.Char(36)
+  guestSessionId                   String?         @db.Char(36)
+  tryOnSessionId                   String?         @db.Char(36)
+  resolvedById                     String?         @db.Char(36)
+  type                             feedback_type   @default(GENERAL)
+  status                           feedback_status @default(OPEN)
+  rating                           Int?
+  subject                          String?         @db.VarChar(200)
+  message                          String          @db.Text
+  resolutionNotes                  String?         @db.Text
+  createdAt                        DateTime        @default(now())
+  updatedAt                        DateTime
+  resolvedAt                       DateTime?
+  guestsession                     guestsession?   @relation(fields: [guestSessionId], references: [guestSessionId], map: "Feedback_guestSessionId_fkey")
+  user_feedback_resolvedByIdTouser user?           @relation("feedback_resolvedByIdTouser", fields: [resolvedById], references: [userId], map: "Feedback_resolvedById_fkey")
+  tryonsession                     tryonsession?   @relation(fields: [tryOnSessionId], references: [tryOnSessionId], map: "Feedback_tryOnSessionId_fkey")
+  user_feedback_userIdTouser       user?           @relation("feedback_userIdTouser", fields: [userId], references: [userId], map: "Feedback_userId_fkey")
+
+  @@index([guestSessionId], map: "Feedback_guestSessionId_fkey")
+  @@index([resolvedById], map: "Feedback_resolvedById_fkey")
+  @@index([status, createdAt], map: "Feedback_status_createdAt_idx")
+  @@index([tryOnSessionId], map: "Feedback_tryOnSessionId_idx")
+  @@index([userId, createdAt], map: "Feedback_userId_createdAt_idx")
+}
+
+model guestsession {
+  guestSessionId   String             @id @db.Char(36)
+  tokenHash        String             @unique(map: "GuestSession_tokenHash_key") @db.Char(64)
+  expiryDate       DateTime
+  lastUsedAt       DateTime?
+  convertedAt      DateTime?
+  convertedUserId  String?            @db.Char(36)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  comparison       comparison[]
+  feedback         feedback[]
+  user             user?              @relation(fields: [convertedUserId], references: [userId], map: "GuestSession_convertedUserId_fkey")
+  merchantredirect merchantredirect[]
+  tryonsession     tryonsession[]
+
+  @@index([convertedUserId], map: "GuestSession_convertedUserId_idx")
+  @@index([expiryDate], map: "GuestSession_expiryDate_idx")
+}
+
+model measurement {
+  measurementId String   @id @db.Char(36)
+  profileId     String   @unique(map: "Measurement_profileId_key") @db.Char(36)
+  heightCm      Decimal? @db.Decimal(6, 2)
+  weightKg      Decimal? @db.Decimal(6, 2)
+  chestCm       Decimal? @db.Decimal(6, 2)
+  waistCm       Decimal? @db.Decimal(6, 2)
+  hipsCm        Decimal? @db.Decimal(6, 2)
+  shoulderCm    Decimal? @db.Decimal(6, 2)
+  inseamCm      Decimal? @db.Decimal(6, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime
+  profile       profile  @relation(fields: [profileId], references: [profileId], onDelete: Cascade, map: "Measurement_profileId_fkey")
+}
+
+model merchant {
+  merchantId         String             @id @db.Char(36)
+  userId             String?            @unique(map: "Merchant_userId_key") @db.Char(36)
+  storeName          String             @db.VarChar(150)
+  email              String             @unique(map: "Merchant_email_key")
+  address            String?            @db.VarChar(500)
+  merchantLogo       String?            @db.VarChar(2048)
+  websiteUrl         String?            @db.VarChar(2048)
+  apiBaseUrl         String?            @db.VarChar(2048)
+  encryptedApiConfig Json?
+  status             merchant_status    @default(PENDING)
+  lastSyncedAt       DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime
+  businessCategory   String?            @db.VarChar(100)
+  ownerName          String?            @db.VarChar(150)
+  phone              String?            @db.VarChar(32)
+  socialMediaUrl     String?            @db.VarChar(2048)
+  storeDescription   String?            @db.Text
+  termsAcceptedAt    DateTime?
+  user               user?              @relation(fields: [userId], references: [userId], map: "Merchant_userId_fkey")
+  merchantredirect   merchantredirect[]
+  product            product[]
+  subscription       subscription?
+
+  @@index([status, createdAt], map: "Merchant_status_createdAt_idx")
+}
+
+model merchantredirect {
+  merchantRedirectId String        @id @db.Char(36)
+  userId             String?       @db.Char(36)
+  guestSessionId     String?       @db.Char(36)
+  productId          String        @db.Char(36)
+  merchantId         String        @db.Char(36)
+  destinationUrl     String        @db.VarChar(2048)
+  source             String?       @db.VarChar(100)
+  createdAt          DateTime      @default(now())
+  guestsession       guestsession? @relation(fields: [guestSessionId], references: [guestSessionId], map: "MerchantRedirect_guestSessionId_fkey")
+  merchant           merchant      @relation(fields: [merchantId], references: [merchantId], onDelete: Cascade, map: "MerchantRedirect_merchantId_fkey")
+  product            product       @relation(fields: [productId], references: [productId], onDelete: Cascade, map: "MerchantRedirect_productId_fkey")
+  user               user?         @relation(fields: [userId], references: [userId], map: "MerchantRedirect_userId_fkey")
+
+  @@index([guestSessionId, createdAt], map: "MerchantRedirect_guestSessionId_createdAt_idx")
+  @@index([merchantId, createdAt], map: "MerchantRedirect_merchantId_createdAt_idx")
+  @@index([productId, createdAt], map: "MerchantRedirect_productId_createdAt_idx")
+  @@index([userId, createdAt], map: "MerchantRedirect_userId_createdAt_idx")
+}
+
+model passwordresettoken {
+  passwordResetTokenId String    @id @db.Char(36)
+  userId               String    @db.Char(36)
+  tokenHash            String    @unique(map: "PasswordResetToken_tokenHash_key") @db.Char(64)
+  expiryDate           DateTime
+  usedAt               DateTime?
+  createdAt            DateTime  @default(now())
+  user                 user      @relation(fields: [userId], references: [userId], onDelete: Cascade, map: "PasswordResetToken_userId_fkey")
+
+  @@index([userId, expiryDate], map: "PasswordResetToken_userId_expiryDate_idx")
+}
+
+model product {
+  productId        String             @id @db.Char(36)
+  merchantId       String             @db.Char(36)
+  categoryId       String             @db.Char(36)
+  externalId       String?
+  productName      String             @db.VarChar(200)
+  description      String?            @db.Text
+  price            Decimal            @db.Decimal(12, 2)
+  currency         String             @default("USD") @db.Char(3)
+  primaryImageUrl  String?            @db.VarChar(2048)
+  merchantUrl      String             @db.VarChar(2048)
+  status           product_status     @default(ACTIVE)
+  metadata         Json?
+  lastSyncedAt     DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  comparisonitem   comparisonitem[]
+  favorite         favorite[]
+  merchantredirect merchantredirect[]
+  category         category           @relation(fields: [categoryId], references: [categoryId], map: "Product_categoryId_fkey")
+  merchant         merchant           @relation(fields: [merchantId], references: [merchantId], onDelete: Cascade, map: "Product_merchantId_fkey")
+  productimage     productimage[]
+  productvariant   productvariant[]
+  tryonsession     tryonsession[]
+
+  @@unique([merchantId, externalId], map: "Product_merchantId_externalId_key")
+  @@index([categoryId, status], map: "Product_categoryId_status_idx")
+  @@index([merchantId, status], map: "Product_merchantId_status_idx")
+  @@index([price], map: "Product_price_idx")
+  @@index([productName], map: "Product_productName_idx")
+}
+
+model productimage {
+  productImageId String   @id @db.Char(36)
+  productId      String   @db.Char(36)
+  imageUrl       String   @db.VarChar(2048)
+  altText        String?  @db.VarChar(255)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  product        product  @relation(fields: [productId], references: [productId], onDelete: Cascade, map: "ProductImage_productId_fkey")
+
+  @@index([productId, sortOrder], map: "ProductImage_productId_sortOrder_idx")
+}
+
+model productvariant {
+  productVariantId String         @id @db.Char(36)
+  productId        String         @db.Char(36)
+  sku              String
+  size             String?        @db.VarChar(50)
+  color            String?        @db.VarChar(100)
+  price            Decimal?       @db.Decimal(12, 2)
+  stockQuantity    Int?           @default(0)
+  metadata         Json?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime
+  product          product        @relation(fields: [productId], references: [productId], onDelete: Cascade, map: "ProductVariant_productId_fkey")
+  tryonsession     tryonsession[]
+
+  @@unique([productId, sku], map: "ProductVariant_productId_sku_key")
+  @@index([productId, size, color], map: "ProductVariant_productId_size_color_idx")
+}
+
+model profile {
+  profileId   String       @id @db.Char(36)
+  userId      String       @unique(map: "Profile_userId_key") @db.Char(36)
+  phone       String?      @db.VarChar(32)
+  dateOfBirth DateTime?    @db.Date
+  gender      String?      @db.VarChar(32)
+  country     String?      @db.VarChar(100)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime
+  measurement measurement?
+  user        user         @relation(fields: [userId], references: [userId], onDelete: Cascade, map: "Profile_userId_fkey")
+}
+
+model session {
+  sessionId  String       @id @db.Char(36)
+  userId     String       @db.Char(36)
+  tokenHash  String       @unique(map: "Session_tokenHash_key") @db.Char(64)
+  type       session_type @default(TEMPORARY)
+  expiryDate DateTime
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  ipAddress  String?      @db.VarChar(45)
+  userAgent  String?      @db.VarChar(512)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime
+  user       user         @relation(fields: [userId], references: [userId], onDelete: Cascade, map: "Session_userId_fkey")
+
+  @@index([expiryDate, revokedAt], map: "Session_expiryDate_revokedAt_idx")
+  @@index([userId, expiryDate], map: "Session_userId_expiryDate_idx")
+}
+
+model subscription {
+  subscriptionId   String              @id @db.Char(36)
+  merchantId       String              @unique @db.Char(36)
+  plan             subscription_plan   @default(FREE)
+  status           subscription_status @default(DEMO_ACTIVE)
+  startedAt        DateTime            @default(now())
+  renewalDate      DateTime?
+  paymentReference String?             @db.VarChar(255)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime
+  merchant         merchant            @relation(fields: [merchantId], references: [merchantId], onDelete: Cascade)
+}
+
+model tryonresult {
+  tryOnResultId   String       @id @db.Char(36)
+  tryOnSessionId  String       @unique(map: "TryOnResult_tryOnSessionId_key") @db.Char(36)
+  resultImagePath String       @db.VarChar(2048)
+  processingMs    Int?
+  metadata        Json?
+  createdAt       DateTime     @default(now())
+  tryonsession    tryonsession @relation(fields: [tryOnSessionId], references: [tryOnSessionId], onDelete: Cascade, map: "TryOnResult_tryOnSessionId_fkey")
+}
+
+model tryonsession {
+  tryOnSessionId   String              @id @db.Char(36)
+  userId           String?             @db.Char(36)
+  guestSessionId   String?             @db.Char(36)
+  digitalTwinId    String?             @db.Char(36)
+  productId        String              @db.Char(36)
+  productVariantId String?             @db.Char(36)
+  sourceImagePath  String?             @db.VarChar(2048)
+  status           tryonsession_status @default(PENDING)
+  errorMessage     String?             @db.Text
+  requestMetadata  Json?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime
+  feedback         feedback[]
+  tryonresult      tryonresult?
+  digitaltwin      digitaltwin?        @relation(fields: [digitalTwinId], references: [digitalTwinId], map: "TryOnSession_digitalTwinId_fkey")
+  guestsession     guestsession?       @relation(fields: [guestSessionId], references: [guestSessionId], map: "TryOnSession_guestSessionId_fkey")
+  product          product             @relation(fields: [productId], references: [productId], onDelete: Cascade, map: "TryOnSession_productId_fkey")
+  productvariant   productvariant?     @relation(fields: [productVariantId], references: [productVariantId], map: "TryOnSession_productVariantId_fkey")
+  user             user?               @relation(fields: [userId], references: [userId], map: "TryOnSession_userId_fkey")
+
+  @@index([digitalTwinId], map: "TryOnSession_digitalTwinId_fkey")
+  @@index([guestSessionId, createdAt], map: "TryOnSession_guestSessionId_createdAt_idx")
+  @@index([productId, createdAt], map: "TryOnSession_productId_createdAt_idx")
+  @@index([productVariantId], map: "TryOnSession_productVariantId_fkey")
+  @@index([status, createdAt], map: "TryOnSession_status_createdAt_idx")
+  @@index([userId, createdAt], map: "TryOnSession_userId_createdAt_idx")
+}
+
+model user {
+  userId                               String               @id @db.Char(36)
+  userName                             String               @db.VarChar(100)
+  userEmail                            String               @unique(map: "User_userEmail_key")
+  passwordHash                         String               @db.VarChar(255)
+  role                                 user_role            @default(CUSTOMER)
+  status                               user_status          @default(ACTIVE)
+  emailVerifiedAt                      DateTime?
+  lastLoginAt                          DateTime?
+  createdAt                            DateTime             @default(now())
+  updatedAt                            DateTime
+  deletedAt                            DateTime?
+  auditlog                             auditlog[]
+  comparison                           comparison[]
+  digitaltwin                          digitaltwin[]
+  favorite                             favorite[]
+  feedback_feedback_resolvedByIdTouser feedback[]           @relation("feedback_resolvedByIdTouser")
+  feedback_feedback_userIdTouser       feedback[]           @relation("feedback_userIdTouser")
+  guestsession                         guestsession[]
+  merchant                             merchant?
+  merchantredirect                     merchantredirect[]
+  passwordresettoken                   passwordresettoken[]
+  profile                              profile?
+  session                              session[]
+  tryonsession                         tryonsession[]
+
+  @@index([createdAt], map: "User_createdAt_idx")
+  @@index([role, status], map: "User_role_status_idx")
+}
+
+enum subscription_plan {
+  FREE
+  STANDARD
+  PRO
+}
+
+enum session_type {
+  TEMPORARY
+  PERSISTENT
+}
+
+enum subscription_status {
+  DEMO_ACTIVE
+  ACTIVE
+  CANCELLED
+}
+
+enum user_role {
+  CUSTOMER
+  MERCHANT
+  ADMIN
+}
+
+enum feedback_type {
+  GENERAL
+  BUG_REPORT
+  PRODUCT
+  DIGITAL_TWIN
+  VIRTUAL_TRY_ON
+}
+
+enum user_status {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum digitaltwin_status {
+  PROCESSING
+  READY
+  FAILED
+  DELETED
+}
+
+enum feedback_status {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  CLOSED
+}
+
+enum tryonsession_status {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum merchant_status {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REJECTED
+}
+
+enum product_status {
+  DRAFT
+  ACTIVE
+  OUT_OF_STOCK
+  ARCHIVED
+}
