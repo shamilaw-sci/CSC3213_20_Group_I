@@ -5,8 +5,11 @@ import { NextResponse } from "next/server";
 
 import { requireAuthenticatedUser } from "@/server/auth/authorization";
 import { prisma } from "@/server/db/prisma";
-import { removeEncryptedTwin, saveEncryptedTwin } from "@/server/storage/digital-twin-storage";
-
+import {
+  digitalTwinStoragePath,
+  removeEncryptedTwin,
+  saveEncryptedTwin,
+} from "@/server/storage/digital-twin-storage";
 import {
   DigitalTwinImageError,
   processDigitalTwinImage,
@@ -69,42 +72,117 @@ export async function POST(request: Request) {
     );
   }
 
-  let processedImage;
-
-  try {
-    processedImage = await processDigitalTwinImage(image);
-  } catch (error) {
-    if (error instanceof DigitalTwinImageError) {
-      return NextResponse.json(
-        { message: error.message },
-        { status: 400 },
-      );
-    }
-
-    throw error;
-  }
-
   const twinId = randomUUID();
-  const filePath = await saveEncryptedTwin(
-    twinId,
-    processedImage.buffer,
-  );
-
+  const filePath = digitalTwinStoragePath(twinId);
   const snapshot = profile.measurement ? { height: profile.measurement.heightCm?.toString(), weight: profile.measurement.weightKg?.toString(), chest: profile.measurement.chestCm?.toString(), waist: profile.measurement.waistCm?.toString(), hips: profile.measurement.hipsCm?.toString(), shoulder: profile.measurement.shoulderCm?.toString() } : null;
-  const now = new Date();
+  const processingStartedAt = new Date();
+
+  await prisma.digitaltwin.create({
+    data: {
+      digitalTwinId: twinId,
+      userId: access.user.id,
+      encryptedImagePath: filePath,
+      measurementsSnapshot: snapshot ?? undefined,
+      status: "PROCESSING",
+      processingError: null,
+      updatedAt: processingStartedAt,
+    },
+  });
 
   try {
+    const processedImage = await processDigitalTwinImage(image);
+    await saveEncryptedTwin(twinId, processedImage.buffer);
+    const readyAt = new Date();
+
     const twin = await prisma.$transaction(async (tx) => {
-      const previousTwins = await tx.digitaltwin.findMany({ where: { userId: access.user.id, status: "READY", deletedAt: null } });
-      await tx.digitaltwin.updateMany({ where: { userId: access.user.id, status: "READY", deletedAt: null }, data: { status: "DELETED", deletedAt: now, updatedAt: now } });
-      const created = await tx.digitaltwin.create({ data: { digitalTwinId: twinId, userId: access.user.id, encryptedImagePath: filePath, measurementsSnapshot: snapshot ?? undefined, status: "READY", updatedAt: now } });
+      const previousTwins = await tx.digitaltwin.findMany({
+        where: {
+          userId: access.user.id,
+          status: "READY",
+          deletedAt: null,
+        },
+        select: {
+          encryptedImagePath: true,
+          previewImagePath: true,
+        },
+      });
+
+      await tx.digitaltwin.updateMany({
+        where: {
+          userId: access.user.id,
+          status: "READY",
+          deletedAt: null,
+        },
+        data: {
+          status: "DELETED",
+          deletedAt: readyAt,
+          updatedAt: readyAt,
+        },
+      });
+
+      const created = await tx.digitaltwin.update({
+        where: { digitalTwinId: twinId },
+        data: {
+          status: "READY",
+          processingError: null,
+          updatedAt: readyAt,
+        },
+      });
+
       return { created, previousTwins };
     });
-    await Promise.all(twin.previousTwins.map((previous) => removeEncryptedTwin(previous.encryptedImagePath)));
-    return NextResponse.json({ twin: twinResponse(twin.created, access.user.id) }, { status: 201 });
+
+    const previousPaths = twin.previousTwins.flatMap((previous) => [
+      previous.encryptedImagePath,
+      ...(previous.previewImagePath &&
+      previous.previewImagePath !== previous.encryptedImagePath
+        ? [previous.previewImagePath]
+        : []),
+    ]);
+
+    const cleanupResults = await Promise.allSettled(
+      previousPaths.map((previousPath) =>
+        removeEncryptedTwin(previousPath),
+      ),
+    );
+
+    return NextResponse.json(
+      {
+        twin: twinResponse(twin.created, access.user.id),
+        cleanupPending: cleanupResults.some(
+          (result) => result.status === "rejected",
+        ),
+      },
+      { status: 201 },
+    );
   } catch (error) {
-    await removeEncryptedTwin(filePath);
-    throw error;
+    await removeEncryptedTwin(filePath).catch(() => undefined);
+
+    const processingError =
+      error instanceof DigitalTwinImageError
+        ? error.message
+        : "Digital Twin image processing failed.";
+
+    await prisma.digitaltwin
+      .update({
+        where: { digitalTwinId: twinId },
+        data: {
+          status: "FAILED",
+          processingError,
+          updatedAt: new Date(),
+        },
+      })
+      .catch(() => undefined);
+
+    return NextResponse.json(
+      { message: processingError },
+      {
+        status:
+          error instanceof DigitalTwinImageError
+            ? 400
+            : 500,
+      },
+    );
   }
 }
 
