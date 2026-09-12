@@ -12,20 +12,37 @@ import {
   processDigitalTwinImage,
 } from "@/server/images/digital-twin-image";
 
+import { createSignedDigitalTwinImageUrl } from "@/server/storage/digital-twin-signed-url";
+
 export const runtime = "nodejs";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const supportedTypes = new Set(["image/jpeg", "image/png"]);
 
-function twinResponse(twin: { digitalTwinId: string; status: string; createdAt: Date }) {
-  return { id: twin.digitalTwinId, status: twin.status, createdAt: twin.createdAt, imageUrl: `/api/v1/digital-twins/${twin.digitalTwinId}/image` };
+function twinResponse(
+  twin: {
+    digitalTwinId: string;
+    status: string;
+    createdAt: Date;
+  },
+  userId: string,
+) {
+  return {
+    id: twin.digitalTwinId,
+    status: twin.status,
+    createdAt: twin.createdAt,
+    imageUrl: createSignedDigitalTwinImageUrl({
+      digitalTwinId: twin.digitalTwinId,
+      userId,
+    }),
+  };
 }
 
 export async function GET() {
   const access = await requireAuthenticatedUser(["CUSTOMER", "MERCHANT", "ADMIN"]);
   if ("error" in access) return access.error;
   const twin = await prisma.digitaltwin.findFirst({ where: { userId: access.user.id, status: "READY", deletedAt: null }, orderBy: { createdAt: "desc" } });
-  return NextResponse.json({ twin: twin ? twinResponse(twin) : null });
+  return NextResponse.json({ twin: twin ? twinResponse(twin, access.user.id) : null });
 }
 
 export async function POST(request: Request) {
@@ -84,7 +101,7 @@ export async function POST(request: Request) {
       return { created, previousTwins };
     });
     await Promise.all(twin.previousTwins.map((previous) => removeEncryptedTwin(previous.encryptedImagePath)));
-    return NextResponse.json({ twin: twinResponse(twin.created) }, { status: 201 });
+    return NextResponse.json({ twin: twinResponse(twin.created, access.user.id) }, { status: 201 });
   } catch (error) {
     await removeEncryptedTwin(filePath);
     throw error;
