@@ -40,3 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 node_modules/
+
+# generated Prisma client
+/app/generated/
+
+# safe environment template
+!.env.example
