@@ -1,3 +1,4 @@
+/** WBS-2.4 | Owner: S/21/063 | Branch: feature/s21-063-profile-digital-twin | Digital Twin photo guidance. */
 "use client";
 
 import {
@@ -27,7 +28,7 @@ const guidelines = [
   {
     icon: <Shirt size={22} className="text-pink-500" />,
     title: "Wear Fitted Clothes",
-    description: "Avoid oversized clothing for more accurate body measurements.",
+    description: "Avoid oversized clothing for better fitting visualization.",
   },
 ];
 
@@ -40,7 +41,7 @@ export default function PhotoGuidelines() {
       </h2>
 
       <p className="text-gray-500 mb-6">
-        Follow these recommendations to generate a more accurate AI Digital Twin.
+        Follow these simple recommendations for a clear Digital Twin photo.
       </p>
 
       <div className="space-y-5">

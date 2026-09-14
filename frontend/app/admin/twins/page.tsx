@@ -1,4 +1,4 @@
-//digital twin monitoring page, list of twins, add twin, edit twin, delete twin
+/** WBS-2.x | Owner: S/21/063 | Branch: feature/s21-063-profile-digital-twin | Scope: Profile, Digital Twin, storage and privacy. */
 //digital twin monitoring page, list of twins, add twin, edit twin, delete twin
 "use client";
 import { useEffect, useState } from "react";

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 
+=======
+//user management page, list of users, add user, edit user, delete user
+>>>>>>> origin/developer
 "use client";
 import { Trash, User, UserCheck} from 'lucide-react';
 import { useEffect, useState } from 'react';
