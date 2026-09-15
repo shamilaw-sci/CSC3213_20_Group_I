@@ -25,20 +25,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    const controller = new AbortController();
     async function restoreSession() {
       try {
-        const response = await fetch("/api/v1/auth/session", { cache: "no-store" });
-        if (response.ok) setUser((await readJson(response)).user ?? null);
+        const response = await fetch("/api/v1/auth/session", { cache: "no-store", signal: controller.signal });
+        if (response.ok) {
+          const body = await readJson(response);
+          if (!controller.signal.aborted) setUser(body.user ?? null);
+        }
+      } catch {
+        // Keep sign-in available when session restoration fails or is aborted.
       } finally {
-        setReady(true);
+        if (!controller.signal.aborted) setReady(true);
       }
     }
     void restoreSession();
+    return () => controller.abort();
   }, []);
 
   async function register(account: RegisterAccount) {
     const response = await fetch("/api/v1/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(account) });
-    setUser((await readJson(response)).user ?? null);
+    const registeredUser = (await readJson(response)).user;
+    if (!registeredUser) throw new Error("Could not start a user session.");
+    setUser(registeredUser);
   }
 
   async function login(email: string, password: string, rememberMe = false) {

@@ -1,4 +1,36 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useRef, useState, type FormEvent } from "react";
+import { useAuth } from "@/features/auth/context/AuthContext";
+
 export default function Login() {
+  const { login } = useAuth();
+  const router = useRouter();
+  const submitting = useRef(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (submitting.current) return;
+    const data = new FormData(event.currentTarget);
+    submitting.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      const user = await login(String(data.get("email") ?? ""), String(data.get("password") ?? ""), data.get("rememberMe") === "on");
+      router.replace(user.role === "ADMIN" ? "/admin" : "/profile");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign-in failed. Please try again.");
+    } finally {
+      submitting.current = false;
+      setBusy(false);
+    }
+  }
+
   return (
     <>
       <div className="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8 bg-gradient-to-r from-purple-400 to-pink-300 ">
@@ -20,7 +52,7 @@ export default function Login() {
           </div>
 
           {/* FORM */}
-          <form action="#" method="POST" className="space-y-6 mt-8">
+          <form onSubmit={handleSubmit} aria-busy={busy} className="space-y-6 mt-8">
 
             {/* EMAIL */}
             <div>
@@ -65,12 +97,17 @@ export default function Login() {
             </div>
 
             {/* BUTTON */}
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" name="rememberMe" /> Remember me
+            </label>
+            {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
             <div>
               <button
                 type="submit"
+                disabled={busy}
                 className="w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 shadow-md hover:shadow-indigo-300 transition"
               >
-                Sign in
+                {busy ? "Signing in..." : "Sign in"}
               </button>
             </div>
 
@@ -79,9 +116,9 @@ export default function Login() {
           {/* FOOTER */}
           <p className="mt-6 text-center text-sm text-gray-500">
             Not a member?{" "}
-            <a href="#" className="font-semibold text-indigo-500 hover:text-indigo-700">
-              Start a 14 day free trial
-            </a>
+            <Link href="/register" className="font-semibold text-indigo-500 hover:text-indigo-700">
+              Create an account
+            </Link>
           </p>
 
         </div>
