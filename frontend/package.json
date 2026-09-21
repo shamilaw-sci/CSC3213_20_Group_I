@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:auth": "node --test tests/auth/*.test.mjs",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "prisma generate"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.10",
