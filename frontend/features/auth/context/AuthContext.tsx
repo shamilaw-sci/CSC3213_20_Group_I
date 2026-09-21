@@ -10,6 +10,7 @@ type AuthContextValue = {
   register: (account: RegisterAccount) => Promise<void>;
   login: (email: string, password: string, rememberMe?: boolean) => Promise<AuthUser>;
   logout: () => Promise<void>;
+  refresh: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -63,7 +64,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     finally { setUser(null); }
   }
 
-  return <AuthContext.Provider value={{ user, ready, register, login, logout }}>{children}</AuthContext.Provider>;
+  async function refresh() {
+    const response = await fetch("/api/v1/auth/refresh", { method: "POST" });
+    if (response.status === 401) setUser(null);
+    // A competing tab may have just installed the winning token.
+    if (response.status === 409) return;
+    const refreshedUser = (await readJson(response)).user;
+    if (!refreshedUser) throw new Error("Could not refresh the user session.");
+    setUser(refreshedUser);
+  }
+
+  return <AuthContext.Provider value={{ user, ready, register, login, logout, refresh }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
