@@ -6,7 +6,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { useAuth } from "@/features/auth/context/AuthContext";
 
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { register, startGuest } = useAuth();
   const router = useRouter();
   const submitting = useRef(false);
   const [busy, setBusy] = useState(false);
@@ -34,6 +34,22 @@ export default function RegisterPage() {
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
+    } finally {
+      submitting.current = false;
+      setBusy(false);
+    }
+  }
+
+  async function continueAsGuest() {
+    if (submitting.current) return;
+    submitting.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      await startGuest();
+      router.push("/explore");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start a guest session.");
     } finally {
       submitting.current = false;
       setBusy(false);
@@ -249,6 +265,8 @@ export default function RegisterPage() {
                 {/* Guest */}
                 <button
                   type="button"
+                  disabled={busy}
+                  onClick={continueAsGuest}
                   className="w-full rounded-xl border border-gray-300 py-3 font-semibold text-gray-700 transition hover:bg-gray-100"
                 >
                   Continue as Guest
