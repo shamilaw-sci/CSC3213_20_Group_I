@@ -1,7 +1,7 @@
 "use client";
 
 import { Trash, UserCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type UserRecord = {
   id: string;
@@ -33,6 +33,8 @@ export default function Userpage() {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const changing = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -61,6 +63,35 @@ export default function Userpage() {
     return () => controller.abort();
   }, []);
 
+  async function changeAccount(user: UserRecord, action: "status" | "delete") {
+    if (changing.current || user.role === "ADMIN") return;
+    const deleting = action === "delete";
+    const nextStatus = user.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
+    const prompt = deleting
+      ? `Delete ${user.name}'s account? They will no longer be able to sign in.`
+      : `${nextStatus === "SUSPENDED" ? "Suspend" : "Reactivate"} ${user.name}'s account?`;
+    if (!window.confirm(prompt)) return;
+    changing.current = true;
+    setPendingId(user.id);
+    setError("");
+    try {
+      const response = await fetch(`/api/v1/admin/users/${encodeURIComponent(user.id)}`, {
+        method: deleting ? "DELETE" : "PATCH",
+        ...(deleting ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: nextStatus }) }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.message ?? "Could not update this account.");
+      setUsers(current => deleting
+        ? current.filter(item => item.id !== user.id)
+        : current.map(item => item.id === user.id ? { ...item, status: nextStatus } : item));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update this account.");
+    } finally {
+      changing.current = false;
+      setPendingId(null);
+    }
+  }
+
   return (
     <div className="p-6 bg-white rounded-2xl shadow">
       <h1 className="text-3xl font-bold mb-5">User Details</h1>
@@ -71,6 +102,7 @@ export default function Userpage() {
             <tr className="bg-gray-200 text-left text-sm text-gray-600 uppercase">
               <th scope="col" className="p-2">User</th>
               <th scope="col" className="p-2">Role</th>
+              <th scope="col" className="p-2">Status</th>
               <th scope="col" className="p-2">Joined</th>
               <th scope="col" className="p-2">Last Login</th>
               <th scope="col" className="p-2">Twins Created</th>
@@ -78,9 +110,9 @@ export default function Userpage() {
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={6} className="p-4" role="status">Loading users...</td></tr>}
+            {loading && <tr><td colSpan={7} className="p-4" role="status">Loading users...</td></tr>}
             {!loading && !error && users.length === 0 && (
-              <tr><td colSpan={6} className="p-4">No users found.</td></tr>
+              <tr><td colSpan={7} className="p-4">No users found.</td></tr>
             )}
             {users.map((user) => (
               <tr key={user.id} className="border-b hover:bg-gray-100">
@@ -93,15 +125,21 @@ export default function Userpage() {
                     <UserCheck size={16} />{roleLabels[user.role]}
                   </span>
                 </td>
+                <td className="p-2">{user.status === "ACTIVE" ? "Active" : user.status === "SUSPENDED" ? "Suspended" : "Deleted"}</td>
                 <td className="p-2 text-gray-500">{new Date(user.createdAt).toLocaleDateString()}</td>
                 <td className="p-2 text-gray-500">{user.lastLoginAt ? getTimeAgo(user.lastLoginAt) : "Never"}</td>
                 <td className="p-2 text-center">{user.twinsCreated}</td>
                 <td className="p-2">
-                  <span title="User deletion is not available yet">
-                    <button type="button" disabled aria-label={`Delete ${user.name} (unavailable)`} className="p-3 rounded-md opacity-40 cursor-not-allowed">
-                      <Trash size={16} />
-                    </button>
-                  </span>
+                  {user.role === "ADMIN" ? <span className="text-sm text-gray-500">Protected account</span> : (
+                    <div className="flex items-center gap-2">
+                      <button type="button" disabled={pendingId !== null} onClick={() => void changeAccount(user, "status")} className="rounded border px-3 py-2 disabled:opacity-40">
+                        {pendingId === user.id ? "Updating..." : user.status === "ACTIVE" ? "Suspend" : "Reactivate"}
+                      </button>
+                      <button type="button" disabled={pendingId !== null} onClick={() => void changeAccount(user, "delete")} aria-label={`Delete ${user.name}`} className="p-3 rounded-md text-red-700 hover:bg-red-50 disabled:opacity-40">
+                        <Trash size={16} />
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
