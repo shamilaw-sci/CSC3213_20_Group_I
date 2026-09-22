@@ -1,21 +1,21 @@
 //digital twin monitoring page, list of twins, add twin, edit twin, delete twin
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { X, User, UserCheck } from "lucide-react";
 import Link from "next/link";
 
 
-export default function garmentPreviewPage(){
-    const [selectedGarment, setSelectedGarment] = useState<any>(null);
-    const [garments, setGarments] = useState<any[]>([]);
-    const [error, setError] = useState("");
-    useEffect(() => { void (async () => { try { const response = await fetch('/api/garments'); if (!response.ok) throw new Error((await response.json()).error); setGarments(await response.json()); } catch (e) { setError(e instanceof Error ? e.message : 'Could not load garments.'); } })(); }, []);
+type Garment = { garmentId: string; garmentImage: string; merchant: string; role: string };
+
+export default function GarmentPreviewPage(){
+    const [selectedGarment, setSelectedGarment] = useState<Garment | null>(null);
+    const garments: Garment[] = [];
 
     return(
         <div>
             <div>
-                {error && <p className="rounded bg-red-50 p-3 text-red-700">{error}</p>}
+                <p className="rounded bg-amber-50 p-3 text-amber-800">Catalog data will appear when the admin garment API is available.</p>
                 <div>
                     <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
                         {garments.map((garment) => (
@@ -44,7 +44,7 @@ export default function garmentPreviewPage(){
     )
 }
 
-function GarmentModal({ garment, onClose }: any) {
+function GarmentModal({ garment, onClose }: { garment: Garment | null; onClose: () => void }) {
   if (!garment) return null;
 
   return (

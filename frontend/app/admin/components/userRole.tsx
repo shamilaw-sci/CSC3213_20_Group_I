@@ -33,7 +33,7 @@ export default function UserRole({ data }: { data?: { name: string; value: numbe
 								<Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
 							))}
 						</Pie>
-						<Tooltip formatter={(value: any) => (value == null ? "" : `${value}`)} />
+							<Tooltip formatter={(value: unknown) => (value == null ? "" : String(value))} />
 						<Legend verticalAlign="bottom" height={36} />
 					</PieChart>
 				</ResponsiveContainer>
@@ -41,4 +41,3 @@ export default function UserRole({ data }: { data?: { name: string; value: numbe
 		</div>
 	);
 }
-

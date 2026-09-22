@@ -1,4 +1,31 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
+import { useAuth } from "@/features/auth/context/AuthContext";
+
 export default function Login() {
+  const { login } = useAuth();
+  const router = useRouter();
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    setSubmitting(true);
+    const form = new FormData(event.currentTarget);
+    try {
+      const user = await login(String(form.get("email")), String(form.get("password")));
+      router.push(user.role === "ADMIN" ? "/admin" : "/explore");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not sign in.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
   return (
     <>
       <div className="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8 bg-gradient-to-r from-purple-400 to-pink-300 ">
@@ -20,7 +47,8 @@ export default function Login() {
           </div>
 
           {/* FORM */}
-          <form action="#" method="POST" className="space-y-6 mt-8">
+          <form onSubmit={handleSubmit} className="space-y-6 mt-8">
+            {error && <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
             {/* EMAIL */}
             <div>
@@ -66,11 +94,12 @@ export default function Login() {
 
             {/* BUTTON */}
             <div>
-              <button
-                type="submit"
+                <button
+                  type="submit"
+                  disabled={submitting}
                 className="w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 shadow-md hover:shadow-indigo-300 transition"
               >
-                Sign in
+                  {submitting ? "Signing in..." : "Sign in"}
               </button>
             </div>
 
@@ -79,9 +108,9 @@ export default function Login() {
           {/* FOOTER */}
           <p className="mt-6 text-center text-sm text-gray-500">
             Not a member?{" "}
-            <a href="#" className="font-semibold text-indigo-500 hover:text-indigo-700">
+            <Link href="/register" className="font-semibold text-indigo-500 hover:text-indigo-700">
               Start a 14 day free trial
-            </a>
+            </Link>
           </p>
 
         </div>

@@ -1,6 +1,36 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
+import { useAuth } from "@/features/auth/context/AuthContext";
 
 export default function RegisterPage() {
+  const { register } = useAuth();
+  const router = useRouter();
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    const form = new FormData(event.currentTarget);
+    const password = String(form.get("password"));
+    if (password !== String(form.get("confirmPassword"))) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await register({ name: String(form.get("name")), email: String(form.get("email")), password });
+      router.push("/explore");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create the account.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#2E1065] via-[#9333EA] to-[#2563EB]">
 
@@ -92,7 +122,8 @@ export default function RegisterPage() {
                 Join StyleTwin and begin your AI fashion journey.
               </p>
 
-              <form className="mt-8 space-y-5">
+              <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+                {error && <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
                 {/* Name */}
                 <div>
@@ -101,6 +132,8 @@ export default function RegisterPage() {
                   </label>
 
                   <input
+                    name="name"
+                    required
                     type="text"
                     placeholder="John Doe"
                     className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 outline-none transition-all duration-300 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-300/40"
@@ -114,6 +147,8 @@ export default function RegisterPage() {
                   </label>
 
                   <input
+                    name="email"
+                    required
                     type="email"
                     placeholder="john@example.com"
                     className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 outline-none transition-all duration-300 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-300/40"
@@ -127,6 +162,8 @@ export default function RegisterPage() {
                   </label>
 
                   <input
+                    name="password"
+                    required
                     type="password"
                     placeholder="••••••••"
                     className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 outline-none transition-all duration-300 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-300/40"
@@ -140,6 +177,8 @@ export default function RegisterPage() {
                   </label>
 
                   <input
+                    name="confirmPassword"
+                    required
                     type="password"
                     placeholder="••••••••"
                     className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 outline-none transition-all duration-300 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-300/40"
@@ -152,6 +191,7 @@ export default function RegisterPage() {
                   <input
                     id="terms"
                     type="checkbox"
+                    required
                     className="mt-1 h-4 w-4 rounded border-gray-300 accent-fuchsia-600"
                   />
 
@@ -173,14 +213,17 @@ export default function RegisterPage() {
 
                 {/* Register Button */}
                 <button
+                  type="submit"
+                  disabled={submitting}
                   className="w-full rounded-xl bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-purple-500/50"
                 >
-                  Create Account
+                  {submitting ? "Creating account..." : "Create Account"}
                 </button>
 
                 {/* Guest */}
                 <button
                   type="button"
+                  onClick={() => router.push("/explore")}
                   className="w-full rounded-xl border border-gray-300 py-3 font-semibold text-gray-700 transition hover:bg-gray-100"
                 >
                   Continue as Guest

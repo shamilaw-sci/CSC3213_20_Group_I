@@ -4,12 +4,17 @@
 import '../globals.css';
 import Sidebar from './components/sidebar';
 import Navbar from './components/navbar';
+import { redirect } from 'next/navigation';
+import { getCurrentSession } from '@/server/auth/session';
 
-export default function AdminLayout({ 
+export default async function AdminLayout({
     children,
 }: { 
     children: React.ReactNode 
 }) {
+    const current = await getCurrentSession();
+    if (!current || current.user.role !== 'ADMIN') redirect('/login');
+
     return(
         <div className="flex min-h-screen">
                 {/* Sidebar */}
@@ -33,5 +38,3 @@ export default function AdminLayout({
                 
     )
 }
-
-

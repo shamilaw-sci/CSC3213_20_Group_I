@@ -1,5 +1,5 @@
 import Login from "@/components/Login";
-export default function Login_form(){
+export default function LoginRoute(){
     return(
         <Login/>
     );
