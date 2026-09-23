@@ -17,6 +17,15 @@ function storageDirectory() {
   return path.resolve(process.env.PRIVATE_STORAGE_ROOT || path.join(process.cwd(), "private-storage"), "digital-twins");
 }
 
+export function digitalTwinStoragePath(
+  twinId: string,
+) {
+  return path.join(
+    storageDirectory(),
+    `${twinId}.bin`,
+  );
+}
+
 export async function saveEncryptedTwin(twinId: string, image: Buffer) {
   const directory = storageDirectory();
   await mkdir(directory, { recursive: true });
@@ -24,7 +33,7 @@ export async function saveEncryptedTwin(twinId: string, image: Buffer) {
   const cipher = createCipheriv("aes-256-gcm", encryptionKey(), iv);
   const encrypted = Buffer.concat([cipher.update(image), cipher.final()]);
   const payload = Buffer.concat([iv, cipher.getAuthTag(), encrypted]);
-  const filePath = path.join(directory, `${twinId}.bin`);
+  const filePath = digitalTwinStoragePath(twinId);
   await writeFile(filePath, payload, { flag: "wx" });
   return filePath;
 }

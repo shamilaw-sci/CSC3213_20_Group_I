@@ -4,13 +4,33 @@ import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/server/auth/authorization";
 import { prisma } from "@/server/db/prisma";
 import { readEncryptedTwin } from "@/server/storage/digital-twin-storage";
+import { verifySignedDigitalTwinImageUrl } from "@/server/storage/digital-twin-signed-url";
 
 export const runtime = "nodejs";
 
-export async function GET(_request: Request, { params }: { params: Promise<{ twinId: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ twinId: string }> }) {
   const access = await requireAuthenticatedUser(["CUSTOMER", "MERCHANT", "ADMIN"]);
   if ("error" in access) return access.error;
   const { twinId } = await params;
+  const { searchParams } = new URL(request.url);
+
+  const validSignature = verifySignedDigitalTwinImageUrl({
+    digitalTwinId: twinId,
+    userId: access.user.id,
+    expires: searchParams.get("expires"),
+    signature: searchParams.get("signature"),
+  });
+
+  if (!validSignature) {
+    return NextResponse.json(
+      {
+        message:
+          "The Digital Twin image link is invalid or has expired.",
+      },
+      { status: 403 },
+    );
+  }
+
   const twin = await prisma.digitaltwin.findFirst({ where: { digitalTwinId: twinId, userId: access.user.id, status: "READY", deletedAt: null } });
   if (!twin) return NextResponse.json({ message: "Digital twin not found." }, { status: 404 });
   try {

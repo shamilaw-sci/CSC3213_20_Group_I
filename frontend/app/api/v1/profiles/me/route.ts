@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { getCurrentSession, toPublicUser } from "@/server/auth/session";
 import { prisma } from "@/server/db/prisma";
+import { removeEncryptedTwin } from "@/server/storage/digital-twin-storage";
 
 export const runtime = "nodejs";
 
@@ -86,13 +87,78 @@ export async function PATCH(request: Request) {
 
 export async function DELETE() {
   const current = await getCurrentSession();
-  if (!current) return NextResponse.json({ message: "Authentication is required." }, { status: 401 });
+
+  if (!current) {
+    return NextResponse.json(
+      { message: "Authentication is required." },
+      { status: 401 },
+    );
+  }
+
+  const userId = current.session.userId;
   const now = new Date();
+
+  const twins = await prisma.digitaltwin.findMany({
+    where: { userId },
+    select: { encryptedImagePath: true },
+  });
+
   await prisma.$transaction([
-    prisma.user.update({ where: { userId: current.session.userId }, data: { status: "DELETED", deletedAt: now, updatedAt: now } }),
-    prisma.session.updateMany({ where: { userId: current.session.userId, revokedAt: null }, data: { revokedAt: now, updatedAt: now } }),
+    prisma.user.update({
+      where: { userId },
+      data: {
+        status: "DELETED",
+        deletedAt: now,
+        updatedAt: now,
+      },
+    }),
+    prisma.session.updateMany({
+      where: {
+        userId,
+        revokedAt: null,
+      },
+      data: {
+        revokedAt: now,
+        updatedAt: now,
+      },
+    }),
+    prisma.digitaltwin.updateMany({
+      where: {
+        userId,
+        deletedAt: null,
+      },
+      data: {
+        status: "DELETED",
+        deletedAt: now,
+        updatedAt: now,
+      },
+    }),
   ]);
-  const response = NextResponse.json({ success: true });
-  response.cookies.set("tryvora_session", "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
+
+  const cleanupResults = await Promise.allSettled(
+    twins.map((twin) => removeEncryptedTwin(twin.encryptedImagePath)),
+  );
+
+  const cleanupPending = cleanupResults.some(
+    (result) => result.status === "rejected",
+  );
+
+  const response = NextResponse.json(
+    {
+      success: true,
+      cleanupPending,
+    },
+    {
+      status: cleanupPending ? 202 : 200,
+    },
+  );
+
+  response.cookies.set("tryvora_session", "", {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
+
   return response;
 }
