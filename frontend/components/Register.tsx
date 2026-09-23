@@ -1,6 +1,61 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useRef, useState, type FormEvent } from "react";
+import { useAuth } from "@/features/auth/context/AuthContext";
 
 export default function RegisterPage() {
+  const { register, startGuest } = useAuth();
+  const router = useRouter();
+  const submitting = useRef(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (submitting.current) return;
+    const data = new FormData(event.currentTarget);
+    const password = String(data.get("password") ?? "");
+    if (password !== data.get("confirmPassword")) {
+      setError("Passwords do not match.");
+      return;
+    }
+    if (data.get("terms") !== "on") {
+      setError("Please accept the terms to continue.");
+      return;
+    }
+    submitting.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      await register({ name: String(data.get("name") ?? ""), email: String(data.get("email") ?? ""), password });
+      router.replace("/profile");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
+    } finally {
+      submitting.current = false;
+      setBusy(false);
+    }
+  }
+
+  async function continueAsGuest() {
+    if (submitting.current) return;
+    submitting.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      await startGuest();
+      router.push("/explore");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start a guest session.");
+    } finally {
+      submitting.current = false;
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#2E1065] via-[#9333EA] to-[#2563EB]">
 
@@ -92,7 +147,7 @@ export default function RegisterPage() {
                 Join StyleTwin and begin your AI fashion journey.
               </p>
 
-              <form className="mt-8 space-y-5">
+              <form onSubmit={handleSubmit} aria-busy={busy} className="mt-8 space-y-5">
 
                 {/* Name */}
                 <div>
@@ -102,6 +157,12 @@ export default function RegisterPage() {
 
                   <input
                     type="text"
+                    name="name"
+                    aria-label="Full name"
+                    autoComplete="name"
+                    required
+                    minLength={2}
+                    maxLength={100}
                     placeholder="John Doe"
                     className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 outline-none transition-all duration-300 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-300/40"
                   />
@@ -115,6 +176,11 @@ export default function RegisterPage() {
 
                   <input
                     type="email"
+                    name="email"
+                    aria-label="Email address"
+                    autoComplete="email"
+                    required
+                    maxLength={255}
                     placeholder="john@example.com"
                     className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 outline-none transition-all duration-300 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-300/40"
                   />
@@ -128,6 +194,12 @@ export default function RegisterPage() {
 
                   <input
                     type="password"
+                    name="password"
+                    aria-label="Password"
+                    autoComplete="new-password"
+                    required
+                    minLength={8}
+                    maxLength={128}
                     placeholder="••••••••"
                     className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 outline-none transition-all duration-300 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-300/40"
                   />
@@ -141,6 +213,12 @@ export default function RegisterPage() {
 
                   <input
                     type="password"
+                    name="confirmPassword"
+                    aria-label="Confirm password"
+                    autoComplete="new-password"
+                    required
+                    minLength={8}
+                    maxLength={128}
                     placeholder="••••••••"
                     className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 outline-none transition-all duration-300 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-300/40"
                   />
@@ -151,6 +229,8 @@ export default function RegisterPage() {
 
                   <input
                     id="terms"
+                    name="terms"
+                    required
                     type="checkbox"
                     className="mt-1 h-4 w-4 rounded border-gray-300 accent-fuchsia-600"
                   />
@@ -172,15 +252,21 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Register Button */}
+                <p className="text-sm text-gray-600">Use at least 8 characters, including an uppercase letter and a number.</p>
+                {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
                 <button
+                  type="submit"
+                  disabled={busy}
                   className="w-full rounded-xl bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-purple-500/50"
                 >
-                  Create Account
+                  {busy ? "Creating account..." : "Create Account"}
                 </button>
 
                 {/* Guest */}
                 <button
                   type="button"
+                  disabled={busy}
+                  onClick={continueAsGuest}
                   className="w-full rounded-xl border border-gray-300 py-3 font-semibold text-gray-700 transition hover:bg-gray-100"
                 >
                   Continue as Guest

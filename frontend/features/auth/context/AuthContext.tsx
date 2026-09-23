@@ -10,6 +10,8 @@ type AuthContextValue = {
   register: (account: RegisterAccount) => Promise<void>;
   login: (email: string, password: string, rememberMe?: boolean) => Promise<AuthUser>;
   logout: () => Promise<void>;
+  refresh: () => Promise<void>;
+  startGuest: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -23,22 +25,33 @@ async function readJson(response: Response) {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [ready, setReady] = useState(false);
+  const [guestConversionError, setGuestConversionError] = useState("");
 
   useEffect(() => {
+    const controller = new AbortController();
     async function restoreSession() {
       try {
-        const response = await fetch("/api/v1/auth/session", { cache: "no-store" });
-        if (response.ok) setUser((await readJson(response)).user ?? null);
+        const response = await fetch("/api/v1/auth/session", { cache: "no-store", signal: controller.signal });
+        if (response.ok) {
+          const body = await readJson(response);
+          if (!controller.signal.aborted) setUser(body.user ?? null);
+        }
+      } catch {
+        // Keep sign-in available when session restoration fails or is aborted.
       } finally {
-        setReady(true);
+        if (!controller.signal.aborted) setReady(true);
       }
     }
     void restoreSession();
+    return () => controller.abort();
   }, []);
 
   async function register(account: RegisterAccount) {
     const response = await fetch("/api/v1/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(account) });
-    setUser((await readJson(response)).user ?? null);
+    const registeredUser = (await readJson(response)).user;
+    if (!registeredUser) throw new Error("Could not start a user session.");
+    setUser(registeredUser);
+    await convertGuest();
   }
 
   async function login(email: string, password: string, rememberMe = false) {
@@ -46,15 +59,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const signedInUser = (await readJson(response)).user;
     if (!signedInUser) throw new Error("Could not start a user session.");
     setUser(signedInUser);
+    await convertGuest();
     return signedInUser;
   }
 
   async function logout() {
-    try { await fetch("/api/v1/auth/logout", { method: "POST" }); }
-    finally { setUser(null); }
+    await readJson(await fetch("/api/v1/auth/logout", { method: "POST" }));
+    setUser(null);
+    setGuestConversionError("");
   }
 
-  return <AuthContext.Provider value={{ user, ready, register, login, logout }}>{children}</AuthContext.Provider>;
+  async function startGuest() {
+    await readJson(await fetch("/api/v1/auth/guest", { method: "POST" }));
+  }
+
+  async function convertGuest() {
+    try {
+      await readJson(await fetch("/api/v1/auth/guest/convert", { method: "POST" }));
+      setGuestConversionError("");
+    } catch {
+      // Account authentication succeeded independently; retain guest data for retry.
+      setGuestConversionError("Signed in, but guest data could not be transferred.");
+    }
+  }
+
+  async function refresh() {
+    const response = await fetch("/api/v1/auth/refresh", { method: "POST" });
+    if (response.status === 401) setUser(null);
+    // A competing tab may have just installed the winning token.
+    if (response.status === 409) return;
+    const refreshedUser = (await readJson(response)).user;
+    if (!refreshedUser) throw new Error("Could not refresh the user session.");
+    setUser(refreshedUser);
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, ready, register, login, logout, refresh, startGuest }}>
+      {user && guestConversionError && (
+        <div role="alert" className="bg-amber-100 p-3 text-black">
+          {guestConversionError}{" "}
+          <button type="button" className="underline" onClick={() => void convertGuest()}>Retry transfer</button>
+        </div>
+      )}
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
