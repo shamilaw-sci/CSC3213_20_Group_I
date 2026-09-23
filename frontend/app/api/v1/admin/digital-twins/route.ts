@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireAuthenticatedUser } from "@/server/auth/authorization";
 import { prisma } from "@/server/db/prisma";
+import type { Prisma } from "@/app/generated/prisma/client";
 
 export const runtime = "nodejs";
 
@@ -53,9 +54,21 @@ export async function GET(request: Request) {
   }
 
   const limit = Math.min(requestedLimit, 100);
-  const where = statusParameter
-    ? { status: statusParameter }
+  const selectedStatus =
+    statusParameter && isTwinStatus(statusParameter)
+      ? statusParameter
+      : undefined;
+
+  const where: Prisma.digitaltwinWhereInput = selectedStatus
+    ? { status: selectedStatus }
     : {};
+
+  const groupedStatusesQuery =
+    prisma.digitaltwin.groupBy({
+      by: "status",
+      orderBy: { status: "asc" },
+      _count: { _all: true },
+    });
 
   const [twins, total, groupedStatuses] = await prisma.$transaction([
     prisma.digitaltwin.findMany({
@@ -80,10 +93,7 @@ export async function GET(request: Request) {
       },
     }),
     prisma.digitaltwin.count({ where }),
-    prisma.digitaltwin.groupBy({
-      by: ["status"],
-      _count: { _all: true },
-    }),
+    groupedStatusesQuery,
   ]);
 
   const summary: Record<TwinStatus, number> = {

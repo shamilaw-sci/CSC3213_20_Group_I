@@ -1,182 +1,151 @@
-//user management page, list of users, add user, edit user, delete user
 "use client";
-import { Trash, User, UserCheck} from 'lucide-react';
-import { useEffect, useState } from 'react';
 
-type UserRecord = { userId: string; name: string; email: string; role: string; createdAt: string; lastLogin: string | null; twinsCreated: number };
+import { Trash, UserCheck } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
+type UserRecord = {
+  id: string;
+  name: string;
+  email: string;
+  role: "CUSTOMER" | "MERCHANT" | "ADMIN";
+  status: "ACTIVE" | "SUSPENDED" | "DELETED";
+  createdAt: string;
+  lastLoginAt: string | null;
+  twinsCreated: number;
+};
 
-//Time format function
+const roleLabels = { CUSTOMER: "Customer", MERCHANT: "Merchant", ADMIN: "Admin" };
+
 function getTimeAgo(dateString: string) {
-  const now = new Date();
-  const past = new Date(dateString);
-  const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
-
-  const minutes = Math.floor(diffInSeconds / 60);
-  const hours = Math.floor(diffInSeconds / 3600);
-  const days = Math.floor(diffInSeconds / 86400);
-
-  if (diffInSeconds < 60) return "Just now";
+  const timestamp = Date.parse(dateString);
+  if (!Number.isFinite(timestamp)) return "Unknown";
+  const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+  if (seconds < 60) return "Just now";
+  const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours} hr ago`;
-  if (days === 1) return "Yesterday";
-  return `${days} days ago`;
+  const days = Math.floor(hours / 24);
+  return days === 1 ? "Yesterday" : `${days} days ago`;
 }
-//Main component
-export default function Userpage(){
-    const [users , setUsers] = useState<UserRecord[]>([]);
-    const [error, setError] = useState("");
 
-    useEffect(() => { void loadUsers(); }, []);
-    const loadUsers = async () => {
-        try { const response = await fetch('/api/users'); if (!response.ok) throw new Error((await response.json()).error); setUsers(await response.json()); }
-        catch (e) { setError(e instanceof Error ? e.message : 'Could not load users.'); }
-    };
+export default function Userpage() {
+  const [users, setUsers] = useState<UserRecord[]>([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const changing = useRef(false);
 
-    const [selectedUser, setSelectedUser] = useState<any>(null);
-    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-
-    //Delete user function
-    const handleDeleteUser = (user: any) => {
-        setSelectedUser(user);
-        setIsDeleteOpen(true);
-    };
-
-    const closeModal = () => {
-        setSelectedUser(null);
-        setIsDeleteOpen(false);
-    };
-    
-    const confirmDelete = async () => {
-        if (selectedUser) {
-            try {
-                const response = await fetch(`/api/users/${selectedUser.userId}`, { method: 'DELETE' });
-                if (!response.ok) throw new Error((await response.json()).error);
-                setUsers((current) => current.filter((u) => u.userId !== selectedUser.userId));
-                closeModal();
-            } catch (e) { setError(e instanceof Error ? e.message : 'Could not delete user.'); }
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadUsers() {
+      try {
+        const response = await fetch("/api/v1/admin/users", {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          throw new Error(body.message ?? "Could not load users.");
         }
-    };
-    //Edit user function
-    const handleEditUser = (user: any) => {
-        // Implement edit functionality here
-        console.log("Edit user:", user);
-    };
+        const body: { users: UserRecord[] } = await response.json();
+        if (!Array.isArray(body.users)) throw new Error("Invalid user-list response.");
+        if (!controller.signal.aborted) setUsers(body.users);
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          setError(err instanceof Error ? err.message : "Could not load users.");
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }
+    void loadUsers();
+    return () => controller.abort();
+  }, []);
 
-    //User interface
-    return(
-        <div className="p-6 bg-white rounded-2xl shadow">
-            <h1 className="text-3xl font-bold mb-5">User Details</h1>
-            {error && <p className="mb-4 rounded bg-red-50 p-3 text-red-700">{error}</p>}
-            <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-left mt-4 p-5 border border-gray-300">
+  async function changeAccount(user: UserRecord, action: "status" | "delete") {
+    if (changing.current || user.role === "ADMIN") return;
+    const deleting = action === "delete";
+    const nextStatus = user.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
+    const prompt = deleting
+      ? `Delete ${user.name}'s account? They will no longer be able to sign in.`
+      : `${nextStatus === "SUSPENDED" ? "Suspend" : "Reactivate"} ${user.name}'s account?`;
+    if (!window.confirm(prompt)) return;
+    changing.current = true;
+    setPendingId(user.id);
+    setError("");
+    try {
+      const response = await fetch(`/api/v1/admin/users/${encodeURIComponent(user.id)}`, {
+        method: deleting ? "DELETE" : "PATCH",
+        ...(deleting ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: nextStatus }) }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.message ?? "Could not update this account.");
+      setUsers(current => deleting
+        ? current.filter(item => item.id !== user.id)
+        : current.map(item => item.id === user.id ? { ...item, status: nextStatus } : item));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update this account.");
+    } finally {
+      changing.current = false;
+      setPendingId(null);
+    }
+  }
 
-                    <thead>
-                    <tr className="bg-gray-200 text-left text-sm text-gray-600 uppercase">
-                        <th className="p-2">User</th>
-                        
-                        <th className="p-2">Role</th>
-                        <th className="p-2">Joined</th>
-                        <th className="p-2">Last Login</th>
-                        <th className="p-2">Twins Created</th>
-                        <th className="p-2 text-center"></th>
-                    </tr>
-                    </thead>
-
-                    <tbody>
-                    {users.map((user) => (
-                        <tr key={user.userId} className="border-b hover:bg-gray-100" >
-                            {/* user name */}
-                            <td className="p-2 py-7">
-                                <span className="font-semibold">
-                                    {user.name}<br/>
-                                </span>
-                                <span className="italic text-gray-500">
-                                    {user.email}
-                                </span>
-                                
-                                </td>
-                            {/* user role */}
-                            <td className="p-2">
-                                <span className={` px-3 py-4 rounded-xl shadow-xs text-xs font-semibold ${
-                                        user.role === "Registered User"
-                                        ? "bg-red-100 text-green-900"
-                                        : "bg-yellow-100 text-yellow-900"
-                                }`}>
-                                <span >
-                                    {user.role === "Registered User" && (
-                                        <div className="inline-flex items-center gap-1">
-                                            <UserCheck size={16} />
-                                            <span> {user.role}</span>
-                                        </div>
-                                    )
-                                    }
-                                    {user.role === "Guest User" && (
-                                        <div className="inline-flex items-center gap-1">
-                                            <User size={16} />
-                                            <span> {user.role}</span>
-                                        </div>
-                                    )}
-                                </span>
-                                
-                                </span>
-                            </td>
-                            {/* user created date */}
-                            <td className="p-2 text-gray-500">
-                              {new Date(user.createdAt).toLocaleDateString()}
-                            </td>
-                            {/* user last login */}
-                            <td className="p-2 text-gray-500">
-                                  {user.lastLogin ? getTimeAgo(user.lastLogin) : "Never"}
-                            </td>
-                            {/* user twins created */}
-                            <td className="p-2 text-center">{user.twinsCreated}</td>
-                            {/* user actions */}
-                            <td className="p-2">
-                                <div className="flex gap-3">
-                                    <button 
-                                        onClick={() => handleDeleteUser(user)}
-                                        className="p-3 hover:bg-gray-300 rounded-md">
-                                        <Trash size={16} />
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-
-                </table>
-            </div>
-
-            {/* Delete confirmation modal */}
-            {isDeleteOpen && selectedUser && (
-                <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm bg-opacity-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                        <h2 className="text-xl font-bold mb-4">Confirm Deletion</h2>
-                        <p className="mb-2">Are you sure you want to delete user "{selectedUser.name}"?</p>
-                        <div className="flex justify-end gap-4">
-                            <button 
-                                onClick={closeModal}
-                                className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">
-                                Cancel
-                            </button>
-                            <button 
-                                onClick={confirmDelete}
-                                className="px-4 py-2 bg-red-700 text-white rounded-md hover:bg-red-600">
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
+  return (
+    <div className="p-6 bg-white rounded-2xl shadow">
+      <h1 className="text-3xl font-bold mb-5">User Details</h1>
+      {error && <p role="alert" className="mb-4 rounded bg-red-50 p-3 text-red-700">{error}</p>}
+      <div className="overflow-x-auto">
+        <table aria-busy={loading} className="w-full border-collapse text-left mt-4 p-5 border border-gray-300">
+          <thead>
+            <tr className="bg-gray-200 text-left text-sm text-gray-600 uppercase">
+              <th scope="col" className="p-2">User</th>
+              <th scope="col" className="p-2">Role</th>
+              <th scope="col" className="p-2">Status</th>
+              <th scope="col" className="p-2">Joined</th>
+              <th scope="col" className="p-2">Last Login</th>
+              <th scope="col" className="p-2">Twins Created</th>
+              <th scope="col" className="p-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && <tr><td colSpan={7} className="p-4" role="status">Loading users...</td></tr>}
+            {!loading && !error && users.length === 0 && (
+              <tr><td colSpan={7} className="p-4">No users found.</td></tr>
             )}
-
-            
-            
-            
-            
-        </div>
-
-
-
-    )
+            {users.map((user) => (
+              <tr key={user.id} className="border-b hover:bg-gray-100">
+                <td className="p-2 py-7">
+                  <span className="font-semibold">{user.name}<br /></span>
+                  <span className="italic text-gray-500">{user.email}</span>
+                </td>
+                <td className="p-2">
+                  <span className={`inline-flex items-center gap-1 px-3 py-4 rounded-xl shadow-xs text-xs font-semibold ${user.role === "CUSTOMER" ? "bg-red-100 text-green-900" : "bg-yellow-100 text-yellow-900"}`}>
+                    <UserCheck size={16} />{roleLabels[user.role]}
+                  </span>
+                </td>
+                <td className="p-2">{user.status === "ACTIVE" ? "Active" : user.status === "SUSPENDED" ? "Suspended" : "Deleted"}</td>
+                <td className="p-2 text-gray-500">{new Date(user.createdAt).toLocaleDateString()}</td>
+                <td className="p-2 text-gray-500">{user.lastLoginAt ? getTimeAgo(user.lastLoginAt) : "Never"}</td>
+                <td className="p-2 text-center">{user.twinsCreated}</td>
+                <td className="p-2">
+                  {user.role === "ADMIN" ? <span className="text-sm text-gray-500">Protected account</span> : (
+                    <div className="flex items-center gap-2">
+                      <button type="button" disabled={pendingId !== null} onClick={() => void changeAccount(user, "status")} className="rounded border px-3 py-2 disabled:opacity-40">
+                        {pendingId === user.id ? "Updating..." : user.status === "ACTIVE" ? "Suspend" : "Reactivate"}
+                      </button>
+                      <button type="button" disabled={pendingId !== null} onClick={() => void changeAccount(user, "delete")} aria-label={`Delete ${user.name}`} className="p-3 rounded-md text-red-700 hover:bg-red-50 disabled:opacity-40">
+                        <Trash size={16} />
+                      </button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
