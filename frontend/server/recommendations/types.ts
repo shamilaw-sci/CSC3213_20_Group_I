@@ -21,7 +21,7 @@ export type VariantFitRanges = Partial<
 >;
 
 export interface VariantFitInput {
-  variantId: number;
+  variantId: string;
   size: string | null;
   ranges: VariantFitRanges;
 }
@@ -37,7 +37,7 @@ export interface DimensionFitResult {
 }
 
 export interface VariantFitResult {
-  variantId: number;
+  variantId: string;
   size: string | null;
   fitScore: number | null;
   comparedDimensions: number;
@@ -45,7 +45,7 @@ export interface VariantFitResult {
 }
 
 export interface SizeRecommendation {
-  recommendedVariantId: number | null;
+  recommendedVariantId: string | null;
   recommendedSize: string | null;
   fitScore: number | null;
   comparedDimensions: number;
@@ -64,21 +64,21 @@ export type InterestSignalType =
 
 export interface InterestSignal {
   type: InterestSignalType;
-  categoryId?: number | null;
-  merchantId?: number | null;
+  categoryId?: string | null;
+  merchantId?: string | null;
   color?: string | null;
   occurredAt: Date;
 }
 
 export interface InterestCandidate {
-  productId: number;
-  categoryId?: number | null;
-  merchantId?: number | null;
+  productId: string;
+  categoryId?: string | null;
+  merchantId?: string | null;
   colors?: string[];
 }
 
 export interface InterestScoreResult {
-  productId: number;
+  productId: string;
   interestScore: number | null;
   matchedSignals: number;
   reasons: string[];

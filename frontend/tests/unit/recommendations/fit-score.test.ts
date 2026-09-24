@@ -47,7 +47,7 @@ describe("Digital Twin recommendation fit scoring", () => {
   it("selects the highest-scoring available size", () => {
     const variants: VariantFitInput[] = [
       {
-        variantId: 1,
+        variantId: "variant-s",
         size: "S",
         ranges: {
           chest: { min: 80, max: 85 },
@@ -55,7 +55,7 @@ describe("Digital Twin recommendation fit scoring", () => {
         },
       },
       {
-        variantId: 2,
+        variantId: "variant-m",
         size: "M",
         ranges: {
           chest: { min: 86, max: 92 },
@@ -63,7 +63,7 @@ describe("Digital Twin recommendation fit scoring", () => {
         },
       },
       {
-        variantId: 3,
+        variantId: "variant-l",
         size: "L",
         ranges: {
           chest: { min: 93, max: 99 },
@@ -80,7 +80,7 @@ describe("Digital Twin recommendation fit scoring", () => {
       variants,
     );
 
-    expect(result.recommendedVariantId).toBe(2);
+    expect(result.recommendedVariantId).toBe("variant-m");
     expect(result.recommendedSize).toBe("M");
     expect(result.fitScore).toBe(97);
     expect(result.comparedDimensions).toBe(2);
@@ -94,7 +94,7 @@ describe("Digital Twin recommendation fit scoring", () => {
         waist: null,
       },
       {
-        variantId: 2,
+        variantId: "variant-m",
         size: "M",
         ranges: {
           chest: { min: 86, max: 92 },
@@ -113,7 +113,7 @@ describe("Digital Twin recommendation fit scoring", () => {
       {},
       [
         {
-          variantId: 2,
+          variantId: "variant-m",
           size: "M",
           ranges: {
             chest: { min: 86, max: 92 },
@@ -137,7 +137,7 @@ describe("Digital Twin recommendation fit scoring", () => {
         chest: 89,
       },
       {
-        variantId: 2,
+        variantId: "variant-m",
         size: "M",
         ranges: {},
       },

@@ -140,7 +140,7 @@ export function recommendBestSize(
         return second.comparedDimensions - first.comparedDimensions;
       }
 
-      return first.variantId - second.variantId;
+      return first.variantId.localeCompare(second.variantId);
     });
 
   const bestMatch = scoredVariants[0];

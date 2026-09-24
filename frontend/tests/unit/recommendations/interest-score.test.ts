@@ -9,9 +9,9 @@ import type {
 const NOW = new Date("2026-09-24T10:00:00.000Z");
 
 const candidate: InterestCandidate = {
-  productId: 25,
-  categoryId: 3,
-  merchantId: 7,
+  productId: "product-25",
+  categoryId: "category-dresses",
+  merchantId: "merchant-tryvora",
   colors: ["Black", "Blue"],
 };
 
@@ -20,7 +20,7 @@ describe("recommendation interest scoring", () => {
     const result = scoreProductInterest(candidate, [], NOW);
 
     expect(result).toEqual({
-      productId: 25,
+      productId: "product-25",
       interestScore: null,
       matchedSignals: 0,
       reasons: [],
@@ -31,8 +31,8 @@ describe("recommendation interest scoring", () => {
     const signals: InterestSignal[] = [
       {
         type: "FAVORITE",
-        categoryId: 3,
-        merchantId: 7,
+        categoryId: "category-dresses",
+        merchantId: "merchant-tryvora",
         color: "black",
         occurredAt: new Date("2026-09-20T10:00:00.000Z"),
       },
@@ -57,8 +57,8 @@ describe("recommendation interest scoring", () => {
     const signals: InterestSignal[] = [
       {
         type: "TRY_ON",
-        categoryId: 9,
-        merchantId: 12,
+        categoryId: "category-shoes",
+        merchantId: "merchant-other",
         color: "red",
         occurredAt: new Date("2026-09-23T10:00:00.000Z"),
       },
@@ -75,12 +75,12 @@ describe("recommendation interest scoring", () => {
     const signals: InterestSignal[] = [
       {
         type: "FAVORITE",
-        categoryId: 3,
+        categoryId: "category-dresses",
         occurredAt: new Date("2026-09-23T10:00:00.000Z"),
       },
       {
         type: "REDIRECT",
-        categoryId: 9,
+        categoryId: "category-shoes",
         occurredAt: new Date("2026-09-23T10:00:00.000Z"),
       },
     ];
@@ -111,12 +111,12 @@ describe("recommendation interest scoring", () => {
     const signals: InterestSignal[] = [
       {
         type: "FAVORITE",
-        categoryId: 3,
+        categoryId: "category-dresses",
         occurredAt: new Date("2026-04-01T10:00:00.000Z"),
       },
       {
         type: "FAVORITE",
-        categoryId: 9,
+        categoryId: "category-shoes",
         occurredAt: new Date("2026-09-23T10:00:00.000Z"),
       },
     ];
