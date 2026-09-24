@@ -111,3 +111,33 @@ export interface RecommendationScoreResult {
   mode: RecommendationMode;
   reasons: string[];
 }
+export interface RecommendationVariantCandidate {
+  variantId: string;
+  size: string | null;
+  color?: string | null;
+  metadata?: unknown;
+}
+
+export interface RecommendationProductCandidate {
+  productId: string;
+  categoryId?: string | null;
+  merchantId?: string | null;
+  variants: RecommendationVariantCandidate[];
+}
+
+export interface ProductRecommendation {
+  productId: string;
+  recommendedVariantId: string | null;
+  recommendedSize: string | null;
+  fitScore: number | null;
+  interestScore: number | null;
+  recommendationScore: number | null;
+  comparedDimensions: number;
+  mode: RecommendationMode;
+  reasons: string[];
+}
+
+export interface RecommendProductsOptions {
+  weights?: RecommendationWeights;
+  now?: Date;
+}
