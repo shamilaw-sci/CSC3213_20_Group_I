@@ -51,3 +51,35 @@ export interface SizeRecommendation {
   comparedDimensions: number;
   reasons: string[];
 }
+
+export const INTEREST_SIGNAL_TYPES = [
+  "FAVORITE",
+  "TRY_ON",
+  "COMPARISON",
+  "REDIRECT",
+] as const;
+
+export type InterestSignalType =
+  (typeof INTEREST_SIGNAL_TYPES)[number];
+
+export interface InterestSignal {
+  type: InterestSignalType;
+  categoryId?: number | null;
+  merchantId?: number | null;
+  color?: string | null;
+  occurredAt: Date;
+}
+
+export interface InterestCandidate {
+  productId: number;
+  categoryId?: number | null;
+  merchantId?: number | null;
+  colors?: string[];
+}
+
+export interface InterestScoreResult {
+  productId: number;
+  interestScore: number | null;
+  matchedSignals: number;
+  reasons: string[];
+}
