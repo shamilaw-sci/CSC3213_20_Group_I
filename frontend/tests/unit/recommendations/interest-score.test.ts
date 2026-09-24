@@ -84,7 +84,6 @@ describe("recommendation interest scoring", () => {
         occurredAt: new Date("2026-09-23T10:00:00.000Z"),
       },
     ];
-
     const result = scoreProductInterest(candidate, signals, NOW);
 
     expect(result.interestScore).toBe(67);
