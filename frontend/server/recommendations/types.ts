@@ -83,3 +83,31 @@ export interface InterestScoreResult {
   matchedSignals: number;
   reasons: string[];
 }
+
+export type RecommendationMode =
+  | "combined"
+  | "fit"
+  | "interest"
+  | "general";
+
+export interface RecommendationWeights {
+  fit: number;
+  interest: number;
+}
+
+export interface RecommendationScoreInput {
+  productId: string;
+  fitScore: number | null;
+  interestScore: number | null;
+  fitReasons?: string[];
+  interestReasons?: string[];
+}
+
+export interface RecommendationScoreResult {
+  productId: string;
+  fitScore: number | null;
+  interestScore: number | null;
+  recommendationScore: number | null;
+  mode: RecommendationMode;
+  reasons: string[];
+}
