@@ -1,11 +1,15 @@
+/** WBS-2.2 | Owner: S/21/063 | Branch: feature/s21-063-profile-digital-twin | Profile and measurement client state. */
 "use client";
 
 import {
   createContext,
   useContext,
   useState,
+  useEffect,
   ReactNode,
 } from "react";
+
+import { useAuth } from "@/features/auth/context/AuthContext";
 
 import type {
   ProfileContextType,
@@ -26,6 +30,7 @@ interface ProfileProviderProps {
 export function ProfileProvider({
   children,
 }: ProfileProviderProps) {
+  const { user, ready } = useAuth();
   const [profile, setProfile] = useState<ProfileState>({
     activeTab: "digitalTwin",
 
@@ -40,13 +45,17 @@ export function ProfileProvider({
       waist: 0,
       hips: 0,
       shoulder: 0,
-      inseam: 0,
+      skinColor: "#dfbeaa",
+      gender: "Unisex",
     },
 
     account: {
       firstName: "",
       lastName: "",
       email: "",
+      phone: "",
+      dateOfBirth: "",
+      country: "",
     },
   });
 
@@ -119,15 +128,56 @@ export function ProfileProvider({
     }));
   };
 
+  useEffect(() => {
+    if (!ready || !user) return;
+
+    async function loadProfile() {
+      const [profileResponse, measurementResponse] = await Promise.all([
+        fetch("/api/v1/profiles/me", { cache: "no-store" }),
+        fetch("/api/v1/profiles/measurements", { cache: "no-store" }),
+      ]);
+      if (!profileResponse.ok) return;
+      const profileData = await profileResponse.json() as { account: Account };
+      const measurementData = measurementResponse.ok ? await measurementResponse.json() as { measurements: Partial<Measurements> } : null;
+      setProfile((previous) => ({
+        ...previous,
+        account: profileData.account,
+        measurements: measurementData ? { ...previous.measurements, ...measurementData.measurements } : previous.measurements,
+      }));
+    }
+
+    void loadProfile();
+  }, [ready, user]);
+
   // -----------------------------
   // Save Profile
   // -----------------------------
 
-  const saveProfile = () => {
-    console.log("Profile Saved", profile);
+  const saveMeasurements = async () => {
+    const measurements = Object.fromEntries(
+      Object.entries(profile.measurements)
+        .filter(([key]) => key !== "skinColor")
+        .map(([key, value]) => [key, value || null]),
+    );
+    const measurementResponse = await fetch("/api/v1/profiles/measurements", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(measurements),
+    });
+    const measurementResult = await measurementResponse.json().catch(() => ({})) as { message?: string };
+    if (!measurementResponse.ok) throw new Error(measurementResult.message ?? "Could not save measurements.");
+  };
 
-    // Backend API call later
-    // POST /api/profile
+  const saveProfile = async () => {
+    const profileResponse = await fetch("/api/v1/profiles/me", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profile.account),
+    });
+    const profileResult = await profileResponse.json().catch(() => ({})) as { message?: string };
+    if (!profileResponse.ok) throw new Error(profileResult.message ?? "Could not save account details.");
+
+    await saveMeasurements();
   };
 
   return (
@@ -140,6 +190,7 @@ export function ProfileProvider({
         updateMeasurements,
         updateAccount,
         saveProfile,
+        saveMeasurements,
       }}
     >
       {children}

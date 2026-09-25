@@ -1,3 +1,4 @@
+/** WBS-2.1/2.2 | Owner: S/21/063 | Branch: feature/s21-063-profile-digital-twin | Profile domain types. */
 // =========================
 // Profile Tabs
 // =========================
@@ -26,7 +27,8 @@ export interface Measurements {
   waist: number;
   hips: number;
   shoulder: number;
-  inseam: number;
+  skinColor: string;
+  gender: "Female" | "Male" | "Unisex";
 }
 
 // =========================
@@ -37,6 +39,9 @@ export interface Account {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
+  dateOfBirth: string;
+  country: string;
 }
 
 // =========================
@@ -74,5 +79,7 @@ export interface ProfileContextType {
     account: Partial<Account>
   ) => void;
 
-  saveProfile: () => void;
+  saveProfile: () => Promise<void>;
+
+  saveMeasurements: () => Promise<void>;
 }

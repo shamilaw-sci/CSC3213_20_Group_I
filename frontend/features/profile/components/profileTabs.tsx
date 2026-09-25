@@ -1,3 +1,4 @@
+/** WBS-2.2 | Owner: S/21/063 | Branch: feature/s21-063-profile-digital-twin | Profile tab navigation. */
 "use client";
 
 import { User, Ruler, Settings } from "lucide-react";
