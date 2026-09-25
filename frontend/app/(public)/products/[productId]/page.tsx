@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 import Navbar from "@/app/components/Navbar";
+import MerchantRedirectButton from "./MerchantRedirectButton";
 
 type ProductDetails = {
   id: string;
@@ -12,7 +13,6 @@ type ProductDetails = {
   price: number;
   currency: string;
   image: string | null;
-  merchantUrl: string;
   merchant: { name: string; logo: string | null; website: string | null };
   category: { name: string };
   images: { id: string; url: string; alt: string | null }[];
@@ -101,14 +101,7 @@ export default async function ProductDetailsPage({
               </div>
             </div>
 
-            <a
-              href={product.merchantUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-8 inline-flex w-full justify-center rounded-xl bg-indigo-600 px-5 py-3 font-bold text-white transition hover:bg-indigo-700 sm:w-auto"
-            >
-              Visit Merchant Store
-            </a>
+            <MerchantRedirectButton productId={product.id} />
           </div>
         </section>
       </main>
