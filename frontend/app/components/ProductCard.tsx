@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart } from "lucide-react";
+import { CheckCircle2, Heart } from "lucide-react";
 
 import { useCart } from "@/features/cart/hooks/useCart";
 import TryOnButton from "@/features/try-on/components/TryOnButton";
@@ -26,10 +26,16 @@ const badgeColors: Record<string, string> = {
 
 interface ProductCardProps {
   product: Product;
+  compareSelected?: boolean;
+  compareDisabled?: boolean;
+  onToggleCompare?: (product: Product) => void;
 }
 
 export default function ProductCard({
   product,
+  compareSelected = false,
+  compareDisabled = false,
+  onToggleCompare,
 }: ProductCardProps) {
   const [liked, setLiked] = useState(false);
 
@@ -100,6 +106,22 @@ export default function ProductCard({
         <p className="mt-2 text-2xl font-bold text-indigo-600">
           ${product.price.toFixed(2)}
         </p>
+
+        {onToggleCompare && (
+          <button
+            type="button"
+            onClick={() => onToggleCompare(product)}
+            disabled={compareDisabled && !compareSelected}
+            className={`mt-4 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+              compareSelected
+                ? "border-indigo-600 bg-indigo-50 text-indigo-700"
+                : "border-gray-200 text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            {compareSelected && <CheckCircle2 size={16} />}
+            {compareSelected ? "Selected to compare" : "Compare"}
+          </button>
+        )}
 
         {/* Add To Cart */}
         <button
