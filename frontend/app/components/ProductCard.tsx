@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Heart } from "lucide-react";
 
 import { useCart } from "@/features/cart/hooks/useCart";
@@ -40,12 +41,14 @@ export default function ProductCard({
       {/* Product Image */}
       <div className="relative aspect-[4/5] bg-gray-100">
 
-        <Image
-          src={product.image}
-          alt={product.title}
-          fill
-          className="object-cover"
-        />
+        <Link href={`/products/${product.id}`} aria-label={`View ${product.title}`}>
+          <Image
+            src={product.image}
+            alt={product.title}
+            fill
+            className="object-cover"
+          />
+        </Link>
 
         {/* Category Badge */}
         <span
@@ -79,9 +82,9 @@ export default function ProductCard({
           {product.store}
         </p>
 
-        <h3 className="mt-1 font-semibold text-lg text-gray-900">
+        <Link href={`/products/${product.id}`} className="mt-1 block font-semibold text-lg text-gray-900 hover:text-indigo-600">
           {product.title}
-        </h3>
+        </Link>
 
         <p className="mt-2 text-2xl font-bold text-indigo-600">
           ${product.price.toFixed(2)}
