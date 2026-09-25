@@ -1,5 +1,6 @@
+/** WBS-3.x | Owner: S/21/501 | Branch: feature/s21-501-catalogue-merchants | Scope: Catalogue, merchants, comparison and redirects. */
 export interface CartItem {
-  id: number;
+  id: string | number;
   title: string;
   store: string;
   category: string;
@@ -23,11 +24,11 @@ export interface CartContextType {
 
   addToCart: (item: Omit<CartItem, "quantity">) => void;
 
-  removeFromCart: (id: number) => void;
+  removeFromCart: (id: string | number) => void;
 
-  increaseQuantity: (id: number) => void;
+  increaseQuantity: (id: string | number) => void;
 
-  decreaseQuantity: (id: number) => void;
+  decreaseQuantity: (id: string | number) => void;
 
   clearCart: () => void;
 
