@@ -8,7 +8,7 @@ import { useCart } from "@/features/cart/hooks/useCart";
 import TryOnButton from "@/features/try-on/components/TryOnButton";
 
 interface Product {
-  id: number;
+  id: string | number;
   image: string;
   title: string;
   category: string;
