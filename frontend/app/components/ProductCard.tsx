@@ -61,7 +61,18 @@ export default function ProductCard({
 
         {/* Wishlist */}
         <button
-          onClick={() => setLiked(!liked)}
+          onClick={async () => {
+            const nextLiked = !liked;
+            setLiked(nextLiked);
+            const response = await fetch(`/api/v1/favorites/${product.id}`, {
+              method: nextLiked ? "POST" : "DELETE",
+            });
+
+            if (!response.ok) {
+              setLiked(!nextLiked);
+            }
+          }}
+          aria-label={liked ? "Remove from favorites" : "Add to favorites"}
           className="absolute top-3 right-3 w-10 h-10 bg-white rounded-full shadow flex items-center justify-center"
         >
           <Heart
