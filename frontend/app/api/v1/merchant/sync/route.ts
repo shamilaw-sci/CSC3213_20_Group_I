@@ -9,7 +9,7 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
-  const access = await requireCurrentMerchant();
+  const access = await requireCurrentMerchant({ allowedStatuses: ["ACTIVE"] });
   if (!("merchant" in access)) return access.error;
 
   const parsed = schema.safeParse(await request.json().catch(() => null));

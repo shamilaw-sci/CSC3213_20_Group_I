@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { clearSelectedProduct, loadSelectedProduct } from "@/features/catalogue/utils/selectedProductRestore";
 import { clearGuestCart, loadGuestCart } from "@/features/cart/utils/guestCartRestore";
 
 type AuthUser = { id: string; name: string; email: string; role: "CUSTOMER" | "MERCHANT" | "ADMIN" };
@@ -54,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(registeredUser);
     await convertGuest();
     restoreGuestCart();
+    restoreSelectedProduct();
   }
 
   async function login(email: string, password: string, rememberMe = false) {
@@ -63,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(signedInUser);
     await convertGuest();
     restoreGuestCart();
+    restoreSelectedProduct();
     return signedInUser;
   }
 
@@ -91,6 +94,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!items.length) return;
     window.dispatchEvent(new CustomEvent("tryvora:restore-cart", { detail: { items } }));
     clearGuestCart();
+  }
+
+  function restoreSelectedProduct() {
+    const selected = loadSelectedProduct();
+    if (!selected) return;
+    clearSelectedProduct();
+    window.location.assign(selected.path);
   }
 
   async function refresh() {

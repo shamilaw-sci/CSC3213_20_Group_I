@@ -12,7 +12,7 @@ type CurrentMerchantResult =
       merchant: merchantModel;
     };
 
-export async function requireCurrentMerchant(): Promise<CurrentMerchantResult> {
+export async function requireCurrentMerchant(options: { allowedStatuses?: merchantModel["status"][] } = {}): Promise<CurrentMerchantResult> {
   const access = await requireAuthenticatedUser();
 
   if ("error" in access) {
@@ -28,6 +28,15 @@ export async function requireCurrentMerchant(): Promise<CurrentMerchantResult> {
       error: NextResponse.json(
         { message: "Create a merchant profile before managing catalog products." },
         { status: 404 },
+      ),
+    };
+  }
+
+  if (options.allowedStatuses && !options.allowedStatuses.includes(merchant.status)) {
+    return {
+      error: NextResponse.json(
+        { message: "Your merchant profile is not approved for catalog management." },
+        { status: 403 },
       ),
     };
   }

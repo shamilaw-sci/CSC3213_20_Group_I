@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import type { merchantModel } from "@/app/generated/prisma/models";
 import { prisma } from "@/server/db/prisma";
+import { fetchJsonWithLimits } from "@/server/security/safe-fetch";
+import { fitRangesCmSchema } from "@/server/modules/products/size-normalization";
 
 const feedProductSchema = z.object({
   externalId: z.string().trim().min(1).max(255),
@@ -19,6 +21,7 @@ const feedProductSchema = z.object({
     color: z.string().trim().max(100).nullable().optional(),
     price: z.number().nonnegative().nullable().optional(),
     stockQuantity: z.number().int().min(0).max(100000).default(0),
+    fitRangesCm: fitRangesCmSchema.optional(),
   })).max(100).default([]),
 });
 
@@ -26,19 +29,21 @@ const feedSchema = z.object({
   products: z.array(feedProductSchema).max(500),
 });
 
-function assertHttpUrl(url: string) {
-  const parsed = new URL(url);
-  if (!["http:", "https:"].includes(parsed.protocol)) {
-    throw new Error("Merchant feed URL must use HTTP or HTTPS.");
+function assertFeedHostMatchesMerchant(merchant: merchantModel, feedUrl: string) {
+  if (!merchant.websiteUrl) {
+    throw new Error("Merchant website must be configured before feed sync.");
+  }
+
+  const feed = new URL(feedUrl);
+  const website = new URL(merchant.websiteUrl);
+  if (feed.hostname !== website.hostname && !feed.hostname.endsWith(`.${website.hostname}`)) {
+    throw new Error("Merchant feed URL must belong to the merchant website.");
   }
 }
 
 export async function syncMerchantJsonFeed(merchant: merchantModel, feedUrl: string) {
-  assertHttpUrl(feedUrl);
-  const response = await fetch(feedUrl, { cache: "no-store" });
-  if (!response.ok) throw new Error("Merchant feed could not be loaded.");
-
-  const parsed = feedSchema.safeParse(await response.json());
+  assertFeedHostMatchesMerchant(merchant, feedUrl);
+  const parsed = feedSchema.safeParse(await fetchJsonWithLimits(feedUrl));
   if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Merchant feed is invalid.");
 
   let upserted = 0;
@@ -89,6 +94,7 @@ export async function syncMerchantJsonFeed(merchant: merchantModel, feedUrl: str
           color: variant.color,
           price: variant.price,
           stockQuantity: variant.stockQuantity,
+          metadata: variant.fitRangesCm ? { fitRangesCm: variant.fitRangesCm } : undefined,
           updatedAt: now,
         })),
       });

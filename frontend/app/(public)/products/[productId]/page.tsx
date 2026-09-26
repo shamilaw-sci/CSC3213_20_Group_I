@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 
 import Navbar from "@/app/components/Navbar";
 import MerchantRedirectButton from "./MerchantRedirectButton";
+import RememberSelectedProduct from "./RememberSelectedProduct";
 
 type ProductDetails = {
   id: string;
@@ -51,6 +52,7 @@ export default async function ProductDetailsPage({
 
   return (
     <div className="tv-page min-h-screen">
+      <RememberSelectedProduct productId={product.id} />
       <Navbar />
       <main className="mx-auto max-w-6xl px-6 py-8">
         <Link href="/explore" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700">
