@@ -44,6 +44,7 @@ export default function ProductCard({
             src={product.image}
             alt={product.title}
             fill
+            unoptimized
             className="object-cover"
           />
         </Link>
