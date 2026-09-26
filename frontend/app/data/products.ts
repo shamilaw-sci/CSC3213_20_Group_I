@@ -1,12 +1,13 @@
 export type Category = "Dresses" | "Tops" | "Bottoms" | "Accessories";
 
 export interface Product {
-  id: number;
+  id: string | number;
   title: string;
   store: string;
   price: number;
   image: string;
   category: Category;
+  categorySlug?: string;
 }
 
 // 👉 image walata ohe app eke /public folder eke images dala, path change karaganna

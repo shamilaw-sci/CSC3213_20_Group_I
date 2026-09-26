@@ -4,6 +4,7 @@
 import React, {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useState,
   ReactNode,
@@ -15,6 +16,7 @@ import {
   CartItem,
   CartState,
 } from "../types/cart";
+import { saveGuestCart } from "@/features/cart/utils/guestCartRestore";
 
 export const CartContext =
   createContext<CartContextType | undefined>(undefined);
@@ -33,6 +35,26 @@ export function CartProvider({
       items: [],
       isOpen: false,
     });
+
+  useEffect(() => {
+    saveGuestCart(cart.items);
+  }, [cart.items]);
+
+  useEffect(() => {
+    function restoreCart(event: Event) {
+      const customEvent = event as CustomEvent<{ items?: CartItem[] }>;
+      const items = customEvent.detail?.items ?? [];
+      if (!items.length) return;
+      setCart((prev) => ({
+        ...prev,
+        items,
+        isOpen: true,
+      }));
+    }
+
+    window.addEventListener("tryvora:restore-cart", restoreCart);
+    return () => window.removeEventListener("tryvora:restore-cart", restoreCart);
+  }, []);
 
   // --------------------------
   // Drawer Controls

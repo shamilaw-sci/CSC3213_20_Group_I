@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { clearGuestCart, loadGuestCart } from "@/features/cart/utils/guestCartRestore";
 
 type AuthUser = { id: string; name: string; email: string; role: "CUSTOMER" | "MERCHANT" | "ADMIN" };
 type RegisterAccount = { name: string; email: string; password: string; rememberMe?: boolean };
@@ -52,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!registeredUser) throw new Error("Could not start a user session.");
     setUser(registeredUser);
     await convertGuest();
+    restoreGuestCart();
   }
 
   async function login(email: string, password: string, rememberMe = false) {
@@ -60,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!signedInUser) throw new Error("Could not start a user session.");
     setUser(signedInUser);
     await convertGuest();
+    restoreGuestCart();
     return signedInUser;
   }
 
@@ -81,6 +84,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Account authentication succeeded independently; retain guest data for retry.
       setGuestConversionError("Signed in, but guest data could not be transferred.");
     }
+  }
+
+  function restoreGuestCart() {
+    const items = loadGuestCart();
+    if (!items.length) return;
+    window.dispatchEvent(new CustomEvent("tryvora:restore-cart", { detail: { items } }));
+    clearGuestCart();
   }
 
   async function refresh() {

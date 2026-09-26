@@ -1,29 +1,32 @@
 "use client";
 
-// Local Category type to avoid relying on external module during build
-type Category = "Dresses" | "Tops" | "Bottoms" | "Accessories";
-
-const categories: ("All" | Category)[] = ["All", "Dresses", "Tops", "Bottoms", "Accessories"];
+export type CatalogueCategory = {
+  name: string;
+  slug: string;
+};
 
 interface CategoryTabsProps {
   active: string;
+  categories: CatalogueCategory[];
   onChange: (category: string) => void;
 }
 
-export default function CategoryTabs({ active, onChange }: CategoryTabsProps) {
+export default function CategoryTabs({ active, categories, onChange }: CategoryTabsProps) {
+  const tabs = [{ name: "All", slug: "all" }, ...categories];
+
   return (
     <div className="flex flex-wrap gap-2 mb-6">
-      {categories.map((cat) => (
+      {tabs.map((cat) => (
         <button
-          key={cat}
-          onClick={() => onChange(cat)}
+          key={cat.slug}
+          onClick={() => onChange(cat.slug)}
           className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
-            active === cat
+            active === cat.slug
               ? "bg-indigo-600 text-white"
               : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}
         >
-          {cat}
+          {cat.name}
         </button>
       ))}
     </div>
