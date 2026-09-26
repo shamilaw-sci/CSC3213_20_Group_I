@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireAuthenticatedUser } from "@/server/auth/authorization";
 import { prisma } from "@/server/db/prisma";
-import { recommendSize, sortSizes } from "@/server/modules/products/size-normalization";
+import { fitRangesCmSchema, recommendSizeFromFitRanges, sortSizes } from "@/server/modules/products/size-normalization";
 
 export async function GET(
   _request: Request,
@@ -29,22 +29,34 @@ export async function GET(
 
   const availableSizes = sortSizes(product.productvariant.map((variant) => variant.size));
   const measurement = profile?.measurement;
-  const recommendedSize = measurement
-    ? recommendSize(
+  const fitVariants = product.productvariant.map((variant) => {
+    const metadata = typeof variant.metadata === "object" && variant.metadata ? variant.metadata : {};
+    const parsed = fitRangesCmSchema.safeParse("fitRangesCm" in metadata ? metadata.fitRangesCm : null);
+    return {
+      size: variant.size,
+      fitRangesCm: parsed.success ? parsed.data : null,
+    };
+  });
+  const fitRecommendation = measurement
+    ? recommendSizeFromFitRanges(
         {
           chestCm: measurement.chestCm ? Number(measurement.chestCm) : null,
           waistCm: measurement.waistCm ? Number(measurement.waistCm) : null,
           hipsCm: measurement.hipsCm ? Number(measurement.hipsCm) : null,
         },
-        availableSizes,
+        fitVariants,
       )
-    : null;
+    : {
+        recommendedSize: null,
+        confidence: "unavailable" as const,
+        reason: "No customer measurements are available.",
+      };
 
   return NextResponse.json({
     recommendation: {
       productId,
       availableSizes,
-      recommendedSize,
+      ...fitRecommendation,
     },
   });
 }
