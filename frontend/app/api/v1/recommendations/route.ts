@@ -38,6 +38,14 @@ export async function GET() {
         categoryName: product.categoryName,
         price: product.price,
         currency: product.currency,
+        availableSizes: [
+          ...new Set(
+            product.candidate.variants.flatMap((variant) => {
+              const size = variant.size?.trim();
+              return size ? [size] : [];
+            }),
+          ),
+        ],
       },
     }];
   });

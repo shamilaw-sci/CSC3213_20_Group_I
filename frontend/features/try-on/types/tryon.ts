@@ -5,6 +5,8 @@ export interface TryOnProduct {
   category: string;
   store: string;
   price: number;
+  currency?: string;
+  availableSizes?: string[];
 }
 
 

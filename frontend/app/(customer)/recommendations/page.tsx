@@ -24,6 +24,7 @@ type Recommendation = {
     categoryName: string;
     price: number;
     currency: string;
+    availableSizes: string[];
   };
 };
 
@@ -229,6 +230,8 @@ export default function RecommendationsPage() {
                             category: product.categoryName,
                             store: product.merchantName,
                             price: product.price,
+                            currency: product.currency,
+                            availableSizes: product.availableSizes,
                           }}
                         />
                       </div>

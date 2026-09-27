@@ -97,6 +97,7 @@ describe("recommendations API", () => {
     expect(body.hasMeasurements).toBe(true);
     expect(body.hasInterestHistory).toBe(true);
     expect(body.recommendations[0].product.name).toBe("Blue Shirt");
+    expect(body.recommendations[0].product.availableSizes).toEqual([]);
     expect(body).not.toHaveProperty("measurements");
     expect(body).not.toHaveProperty("interestSignals");
   });
@@ -108,5 +109,26 @@ describe("recommendations API", () => {
     expect(body.hasMeasurements).toBe(false);
     expect(body.hasInterestHistory).toBe(false);
     expect(body.recommendations).toHaveLength(1);
+  });
+
+  it("passes only distinct in-stock variant sizes to the Try-On client", async () => {
+    mocks.products.mockResolvedValue([{
+      ...product,
+      candidate: {
+        ...product.candidate,
+        variants: [
+          { variantId: "variant-1", size: "M", color: null, metadata: null },
+          { variantId: "variant-2", size: " M ", color: null, metadata: null },
+          { variantId: "variant-3", size: null, color: null, metadata: null },
+          { variantId: "variant-4", size: "L", color: null, metadata: null },
+        ],
+      },
+    }]);
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(body.recommendations[0].product.availableSizes).toEqual(["M", "L"]);
+    expect(body.recommendations[0].product.currency).toBe("USD");
   });
 });
