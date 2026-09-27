@@ -5,17 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle2, Heart } from "lucide-react";
 
+import type { Product } from "@/app/data/products";
 import { useCart } from "@/features/cart/hooks/useCart";
 import TryOnButton from "@/features/try-on/components/TryOnButton";
-
-interface Product {
-  id: string | number;
-  image: string;
-  title: string;
-  category: string;
-  store: string;
-  price: number;
-}
 
 const badgeColors: Record<string, string> = {
   Dresses: "bg-purple-600",
@@ -52,6 +44,7 @@ export default function ProductCard({
             src={product.image}
             alt={product.title}
             fill
+            unoptimized
             className="object-cover"
           />
         </Link>

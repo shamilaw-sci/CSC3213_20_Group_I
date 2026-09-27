@@ -15,7 +15,7 @@ function isAllowedMerchantDestination(destinationUrl: string, merchantWebsite: s
   try {
     const destination = new URL(destinationUrl);
     if (!["http:", "https:"].includes(destination.protocol)) return false;
-    if (!merchantWebsite) return true;
+    if (!merchantWebsite) return false;
 
     const website = new URL(merchantWebsite);
     return destination.hostname === website.hostname || destination.hostname.endsWith(`.${website.hostname}`);

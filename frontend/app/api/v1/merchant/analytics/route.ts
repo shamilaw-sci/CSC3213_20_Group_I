@@ -4,7 +4,7 @@ import { requireCurrentMerchant } from "@/server/merchant/current-merchant";
 import { prisma } from "@/server/db/prisma";
 
 export async function GET() {
-  const access = await requireCurrentMerchant();
+  const access = await requireCurrentMerchant({ allowedStatuses: ["ACTIVE"] });
   if (!("merchant" in access)) return access.error;
 
   const merchantId = access.merchant.merchantId;

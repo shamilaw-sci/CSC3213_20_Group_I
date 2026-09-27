@@ -139,6 +139,17 @@ describe("Merchant redirect tracking API", () => {
       }),
     );
     expect(wrongHost.status).toBe(400);
+
+    mocks.productFindFirst.mockResolvedValueOnce({
+      ...ACTIVE_PRODUCT,
+      merchant: { websiteUrl: null },
+    });
+    const missingMerchantWebsite = await POST(
+      redirectRequest({
+        productId: ACTIVE_PRODUCT.productId,
+      }),
+    );
+    expect(missingMerchantWebsite.status).toBe(400);
   });
 
   it("validates the request body before reading products", async () => {

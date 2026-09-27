@@ -17,6 +17,17 @@ const products = [
   { name: "Trendy Crop Top", merchant: "Style Corner", category: "Tops", price: 39.99, image: "https://images.pexels.com/photos/14581932/pexels-photo-14581932.jpeg" },
 ];
 
+// Example-labelled demo size chart used only for local recommendation testing.
+// Leave fit ranges absent for products where the merchant has not supplied a chart.
+const demoFitRangesByProduct = {
+  "Elegant Evening Dress": {
+    S: { chest: { min: 82, max: 88 }, waist: { min: 66, max: 72 }, hips: { min: 90, max: 96 } },
+    M: { chest: { min: 89, max: 96 }, waist: { min: 73, max: 80 }, hips: { min: 97, max: 104 } },
+    L: { chest: { min: 97, max: 104 }, waist: { min: 81, max: 88 }, hips: { min: 105, max: 112 } },
+    XL: { chest: { min: 105, max: 114 }, waist: { min: 89, max: 98 }, hips: { min: 113, max: 122 } },
+  },
+} as const;
+
 async function main() {
   const categoryByName = new Map<string, string>();
   for (const name of categories) {
@@ -30,7 +41,8 @@ async function main() {
   }
   for (const item of products) {
     const merchantId = merchantByName.get(item.merchant)!; const categoryId = categoryByName.get(item.category)!; const externalId = item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    await prisma.product.upsert({ where: { merchantId_externalId: { merchantId, externalId } }, create: { productId: randomUUID(), merchantId, categoryId, externalId, productName: item.name, price: item.price, primaryImageUrl: item.image, merchantUrl: "https://example.com", status: "ACTIVE", updatedAt: new Date(), productvariant: { create: ["S", "M", "L", "XL"].map((size) => ({ productVariantId: randomUUID(), sku: `${externalId}-${size}`, size, stockQuantity: 10, updatedAt: new Date() })) } }, update: { categoryId, productName: item.name, price: item.price, primaryImageUrl: item.image, status: "ACTIVE", updatedAt: new Date() } });
+    const demoRanges = demoFitRangesByProduct[item.name as keyof typeof demoFitRangesByProduct];
+    await prisma.product.upsert({ where: { merchantId_externalId: { merchantId, externalId } }, create: { productId: randomUUID(), merchantId, categoryId, externalId, productName: item.name, price: item.price, primaryImageUrl: item.image, merchantUrl: "https://example.com", status: "ACTIVE", updatedAt: new Date(), productvariant: { create: ["S", "M", "L", "XL"].map((size) => ({ productVariantId: randomUUID(), sku: `${externalId}-${size}`, size, stockQuantity: 10, metadata: demoRanges?.[size as keyof typeof demoRanges] ? { fitRangesCm: demoRanges[size as keyof typeof demoRanges] } : undefined, updatedAt: new Date() })) } }, update: { categoryId, productName: item.name, price: item.price, primaryImageUrl: item.image, status: "ACTIVE", updatedAt: new Date() } });
   }
   console.log("TryVora catalog seed completed.");
 }

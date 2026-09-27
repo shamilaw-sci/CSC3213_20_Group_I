@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 type MeasurementProfile = {
   chestCm?: number | null;
   waistCm?: number | null;
@@ -6,14 +8,18 @@ type MeasurementProfile = {
 
 const sizeOrder = ["XS", "S", "M", "L", "XL", "XXL"];
 
-const womenSizeChart = [
-  { size: "XS", chest: 78, waist: 62, hips: 86 },
-  { size: "S", chest: 84, waist: 68, hips: 92 },
-  { size: "M", chest: 90, waist: 74, hips: 98 },
-  { size: "L", chest: 98, waist: 82, hips: 106 },
-  { size: "XL", chest: 106, waist: 90, hips: 114 },
-  { size: "XXL", chest: 116, waist: 100, hips: 124 },
-];
+const bodyRangeSchema = z.object({
+  min: z.number().min(0).max(300),
+  max: z.number().min(0).max(300),
+}).refine((value) => value.max >= value.min, "Fit range max must be greater than min.");
+
+export const fitRangesCmSchema = z.object({
+  chest: bodyRangeSchema.optional(),
+  waist: bodyRangeSchema.optional(),
+  hips: bodyRangeSchema.optional(),
+}).refine((value) => Boolean(value.chest || value.waist || value.hips), "At least one fit range is required.");
+
+export type FitRangesCm = z.infer<typeof fitRangesCmSchema>;
 
 export function normalizeSizeLabel(value: string | null | undefined) {
   if (!value) return null;
@@ -40,26 +46,53 @@ export function sortSizes(sizes: (string | null | undefined)[]) {
   });
 }
 
-export function recommendSize(profile: MeasurementProfile, availableSizes: (string | null | undefined)[]) {
-  const normalizedAvailable = sortSizes(availableSizes);
-  if (!normalizedAvailable.length) return null;
+function isInRange(value: number | null | undefined, range: { min: number; max: number } | undefined) {
+  if (!range || value == null) return true;
+  return value >= range.min && value <= range.max;
+}
 
-  const target = {
-    chest: profile.chestCm ?? 0,
-    waist: profile.waistCm ?? 0,
-    hips: profile.hipsCm ?? 0,
-  };
+function rangeDistance(value: number | null | undefined, range: { min: number; max: number } | undefined) {
+  if (!range || value == null) return 0;
+  if (value < range.min) return range.min - value;
+  if (value > range.max) return value - range.max;
+  return 0;
+}
 
-  const scored = womenSizeChart
-    .filter((entry) => normalizedAvailable.includes(entry.size))
-    .map((entry) => ({
-      size: entry.size,
-      score:
-        Math.abs(entry.chest - target.chest) +
-        Math.abs(entry.waist - target.waist) +
-        Math.abs(entry.hips - target.hips),
+export function recommendSizeFromFitRanges(
+  profile: MeasurementProfile,
+  variants: { size: string | null | undefined; fitRangesCm?: FitRangesCm | null }[],
+) {
+  const candidates = variants
+    .map((variant) => ({ size: normalizeSizeLabel(variant.size), fitRangesCm: variant.fitRangesCm }))
+    .filter((variant): variant is { size: string; fitRangesCm: FitRangesCm } => Boolean(variant.size && variant.fitRangesCm));
+
+  if (!candidates.length) {
+    return { recommendedSize: null, confidence: "unavailable" as const, reason: "No merchant fit ranges are available for this product." };
+  }
+
+  const exact = candidates.find((candidate) => (
+    isInRange(profile.chestCm, candidate.fitRangesCm.chest) &&
+    isInRange(profile.waistCm, candidate.fitRangesCm.waist) &&
+    isInRange(profile.hipsCm, candidate.fitRangesCm.hips)
+  ));
+
+  if (exact) {
+    return { recommendedSize: exact.size, confidence: "fit_range_match" as const, reason: "Matched against merchant-provided fit ranges." };
+  }
+
+  const closest = candidates
+    .map((candidate) => ({
+      size: candidate.size,
+      distance:
+        rangeDistance(profile.chestCm, candidate.fitRangesCm.chest) +
+        rangeDistance(profile.waistCm, candidate.fitRangesCm.waist) +
+        rangeDistance(profile.hipsCm, candidate.fitRangesCm.hips),
     }))
-    .sort((left, right) => left.score - right.score);
+    .sort((left, right) => left.distance - right.distance)[0];
 
-  return scored[0]?.size ?? normalizedAvailable[0];
+  return {
+    recommendedSize: closest?.size ?? null,
+    confidence: "closest_fit_range" as const,
+    reason: "Closest available size based on merchant-provided fit ranges.",
+  };
 }
