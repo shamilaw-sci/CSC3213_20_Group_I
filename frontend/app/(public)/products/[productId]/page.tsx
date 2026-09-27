@@ -67,6 +67,7 @@ export default async function ProductDetailsPage({
                   src={image.url}
                   alt={image.alt ?? product.name}
                   fill
+                  unoptimized
                   sizes="(min-width: 1024px) 35vw, 90vw"
                   className="object-cover"
                 />
