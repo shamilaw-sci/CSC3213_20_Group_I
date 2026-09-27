@@ -103,7 +103,7 @@ export default function RecommendationsPage() {
         {loading && <p role="status">Loading recommendations...</p>}
 
         {!loading && needsLogin && (
-          <div className="rounded-2xl border bg-white p-6">
+          <div className="rounded-2xl border bg-white p-6 text-gray-900">
             <p>Log in to see recommendations for your profile.</p>
             <Link href="/login" className="mt-4 inline-block font-semibold text-indigo-600">
               Log in
@@ -142,7 +142,7 @@ export default function RecommendationsPage() {
             )}
 
             {data.recommendations.length === 0 ? (
-              <div className="rounded-2xl border bg-white p-6">
+              <div className="rounded-2xl border bg-white p-6 text-gray-900">
                 <p>No active products are available for recommendations yet.</p>
                 <Link href="/explore" className="mt-3 inline-block font-semibold text-indigo-600">
                   Explore products
@@ -181,7 +181,7 @@ export default function RecommendationsPage() {
                           {product.currency} {product.price.toFixed(2)}
                         </p>
 
-                        <div className="mt-4 rounded-xl bg-indigo-50 p-3 text-sm">
+                        <div className="mt-4 rounded-xl bg-indigo-50 p-3 text-sm text-gray-900">
                           <p>
                             Recommended size:{" "}
                             <strong>{item.recommendedSize ?? "Not available"}</strong>
