@@ -59,29 +59,29 @@ No new Product or ProductVariant table is required.
 
 ## Interest personalization
 
-The first version uses existing application records:
+The current API loads two kinds of existing application records:
 
 - Favorites
-- Try-On sessions
-- Product comparisons
 - Merchant redirects
 
-Default interaction weights:
+Their interaction weights are:
 
 | Interaction | Weight |
 |---|---:|
 | Favorite | 4 |
-| Try-On | 4 |
-| Comparison | 3 |
 | Merchant redirect | 2 |
 
 Recent interactions receive more influence than older interactions.
 
-Products are compared using:
+The live signals are compared with products using:
 
 - Category
 - Merchant or brand
-- Colour
+
+The scoring module also supports Try-On, comparison, and colour signals,
+but the current API does not load those interactions or a colour from
+favorites and redirects. They must not be presented as active sources of
+personalization yet.
 
 Search and product-view history are not included in the first version
 because dedicated search/view records do not currently exist.
@@ -163,12 +163,14 @@ Completed:
 - Combined 60/40 recommendation score
 - Missing-data fallback behavior
 - Product metadata validation
-- Unit tests
+- Unit and API tests
+- Queries for saved Profile measurements and a ready Digital Twin snapshot
+- Queries for active catalogue products and in-stock variants
+- Favorites and merchant redirects as interest signals
+- Authenticated `GET /api/v1/recommendations` API
+- Recommended For You page with Product Details and Try-On actions
 
-Waiting for catalogue integration:
-
-- Real Product database queries
-- Authenticated recommendation API
-- Recommended For You frontend section
-- Product Details action
-- Try-On action
+The Product Details and Try-On actions are connected in the interface;
+their full end-to-end behavior still needs manual testing with a signed-in
+customer and available catalogue data. A recommended size is only shown
+when the product variant has usable `fitRangesCm` metadata.
