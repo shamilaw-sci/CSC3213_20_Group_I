@@ -7,6 +7,7 @@ import CartButton from "@/features/cart/components/CartButton";
 const navLinks = [
   { label: "Home", href: "/" },
   { label: "Explore", href: "/explore" },
+  { label: "For You", href: "/recommendations" },
   { label: "Dashboard", href: "/dashboard" },
   { label: "How it Works", href: "/how-it-works" },
 ];
