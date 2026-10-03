@@ -5,9 +5,15 @@ export interface Product {
   title: string;
   store: string;
   price: number;
+  currency?: string;
   image: string;
   category: Category;
   categorySlug?: string;
+  variants?: {
+    size: string | null;
+    color: string | null;
+    stock: number | null;
+  }[];
 }
 
 // 👉 image walata ohe app eke /public folder eke images dala, path change karaganna

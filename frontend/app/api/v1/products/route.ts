@@ -23,10 +23,21 @@ type ProductRow = {
 
 type ProductWhere = {
   status: "ACTIVE";
-  OR?: { productName?: { contains: string }; description?: { contains: string } }[];
+  OR?: {
+    productName?: { contains: string };
+    description?: { contains: string };
+    merchant?: { storeName: { contains: string } };
+  }[];
   category?: { slug: string };
   merchantId?: string;
   price?: { gte?: number; lte?: number };
+  productvariant?: {
+    some: {
+      size?: { equals: string };
+      color?: { contains: string };
+      stockQuantity?: { gt: number };
+    };
+  };
 };
 
 function parsePositiveInt(value: string | null, fallback: number, maximum: number) {
@@ -77,6 +88,9 @@ export async function GET(request: Request) {
   const minPrice = parsePrice(url.searchParams.get("minPrice"));
   const maxPrice = parsePrice(url.searchParams.get("maxPrice"));
   const sort = url.searchParams.get("sort");
+  const size = url.searchParams.get("size")?.trim();
+  const color = url.searchParams.get("color")?.trim();
+  const inStock = url.searchParams.get("inStock") === "true";
 
   if (Number.isNaN(minPrice) || Number.isNaN(maxPrice)) {
     return NextResponse.json({ message: "Price filters must be positive numbers." }, { status: 400 });
@@ -87,7 +101,13 @@ export async function GET(request: Request) {
   }
 
   const where: ProductWhere = { status: "ACTIVE" };
-  if (query) where.OR = [{ productName: { contains: query } }, { description: { contains: query } }];
+  if (query) {
+    where.OR = [
+      { productName: { contains: query } },
+      { description: { contains: query } },
+      { merchant: { storeName: { contains: query } } },
+    ];
+  }
   if (category && category !== "all") where.category = { slug: category };
   if (merchant) where.merchantId = merchant;
   if (minPrice !== null || maxPrice !== null) {
@@ -96,13 +116,24 @@ export async function GET(request: Request) {
       ...(maxPrice !== null ? { lte: maxPrice } : {}),
     };
   }
+  if (size || color || inStock) {
+    where.productvariant = {
+      some: {
+        ...(size ? { size: { equals: size } } : {}),
+        ...(color ? { color: { contains: color } } : {}),
+        ...(inStock ? { stockQuantity: { gt: 0 } } : {}),
+      },
+    };
+  }
 
   const orderBy =
     sort === "price_asc"
       ? { price: "asc" as const }
       : sort === "price_desc"
         ? { price: "desc" as const }
-        : { createdAt: "desc" as const };
+        : sort === "name_asc"
+          ? { productName: "asc" as const }
+          : { createdAt: "desc" as const };
 
   const [total, products] = await Promise.all([
     prisma.product.count({ where }),

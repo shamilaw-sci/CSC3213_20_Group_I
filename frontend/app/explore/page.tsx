@@ -16,9 +16,17 @@ type ProductResponse = {
   merchant: { name: string };
   category: { name: string; slug: string };
   price: number;
+  currency: string;
+  variants: { size: string | null; color: string | null; stock: number | null }[];
 };
 
-const pageSize = 12;
+type MerchantResponse = {
+  id: string;
+  name: string;
+  productCount: number;
+};
+
+const pageSizeOptions = [12, 24, 48];
 
 export default function ExplorePage() {
   const [category, setCategory] = useState("all");
@@ -27,8 +35,14 @@ export default function ExplorePage() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [sort, setSort] = useState("newest");
+  const [merchant, setMerchant] = useState("");
+  const [size, setSize] = useState("");
+  const [color, setColor] = useState("");
+  const [inStock, setInStock] = useState(false);
+  const [pageSize, setPageSize] = useState(12);
   const [page, setPage] = useState(1);
   const [categories, setCategories] = useState<CatalogueCategory[]>([]);
+  const [merchants, setMerchants] = useState<MerchantResponse[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [compareProducts, setCompareProducts] = useState<Product[]>([]);
   const [compareName, setCompareName] = useState("");
@@ -61,8 +75,12 @@ export default function ExplorePage() {
 
         if (submittedSearch) params.set("q", submittedSearch);
         if (category !== "all") params.set("category", category);
+        if (merchant) params.set("merchant", merchant);
         if (minPrice) params.set("minPrice", minPrice);
         if (maxPrice) params.set("maxPrice", maxPrice);
+        if (size) params.set("size", size);
+        if (color.trim()) params.set("color", color.trim());
+        if (inStock) params.set("inStock", "true");
 
         const response = await fetch(`/api/v1/products?${params}`, { cache: "no-store" });
         const data = await response.json();
@@ -75,6 +93,8 @@ export default function ExplorePage() {
           category: product.category.name as Product["category"],
           categorySlug: product.category.slug,
           price: product.price,
+          currency: product.currency,
+          variants: product.variants,
         })));
         setTotal(data.total);
       } catch (reason) {
@@ -86,7 +106,7 @@ export default function ExplorePage() {
       }
     }
     void loadProducts();
-  }, [category, maxPrice, minPrice, page, sort, submittedSearch]);
+  }, [category, color, inStock, maxPrice, merchant, minPrice, page, pageSize, size, sort, submittedSearch]);
 
   useEffect(() => {
     async function loadCategories() {
@@ -99,7 +119,19 @@ export default function ExplorePage() {
     void loadCategories();
   }, []);
 
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total]);
+  useEffect(() => {
+    async function loadMerchants() {
+      const response = await fetch("/api/v1/merchants", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json();
+      setMerchants(data.merchants);
+    }
+
+    void loadMerchants();
+  }, []);
+
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [pageSize, total]);
+  const hasActiveFilters = Boolean(submittedSearch || category !== "all" || merchant || minPrice || maxPrice || size || color || inStock);
   const selectedCompareIds = useMemo(
     () => new Set(compareProducts.map((product) => product.id)),
     [compareProducts],
@@ -146,6 +178,20 @@ export default function ExplorePage() {
     }
   }
 
+  function clearFilters() {
+    setSearch("");
+    setSubmittedSearch("");
+    setCategory("all");
+    setMerchant("");
+    setMinPrice("");
+    setMaxPrice("");
+    setSize("");
+    setColor("");
+    setInStock(false);
+    setSort("newest");
+    setPage(1);
+  }
+
   return (
     <div className="tv-page">
       <Navbar />
@@ -159,6 +205,11 @@ export default function ExplorePage() {
           minPrice={minPrice}
           maxPrice={maxPrice}
           sort={sort}
+          merchant={merchant}
+          size={size}
+          color={color}
+          inStock={inStock}
+          merchants={merchants}
           onChange={setSearch}
           onMinPriceChange={(value) => {
             setMinPrice(value);
@@ -172,6 +223,23 @@ export default function ExplorePage() {
             setSort(value);
             setPage(1);
           }}
+          onMerchantChange={(value) => {
+            setMerchant(value);
+            setPage(1);
+          }}
+          onSizeChange={(value) => {
+            setSize(value);
+            setPage(1);
+          }}
+          onColorChange={(value) => {
+            setColor(value);
+            setPage(1);
+          }}
+          onInStockChange={(value) => {
+            setInStock(value);
+            setPage(1);
+          }}
+          onClear={clearFilters}
         />
         <CategoryTabs
           active={category}
@@ -182,7 +250,25 @@ export default function ExplorePage() {
           }}
         />
 
-        {loading ? <p className="text-sm text-gray-400 mb-4">Loading database catalog...</p> : error ? <p className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p> : <p className="text-sm text-gray-400 mb-4">Showing {products.length} of {total} database products</p>}
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {loading ? <p className="text-sm text-gray-400">Loading database catalog...</p> : error ? <p className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p> : <p className="text-sm text-gray-400">Showing {products.length} of {total} database products{hasActiveFilters ? " after filters" : ""}</p>}
+
+          <label className="flex items-center gap-2 text-sm text-gray-500">
+            Per page
+            <select
+              value={pageSize}
+              onChange={(event) => {
+                setPageSize(Number(event.target.value));
+                setPage(1);
+              }}
+              className="rounded-lg border border-gray-200 px-2 py-1.5 text-gray-700 outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {pageSizeOptions.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+        </div>
 
         <ProductGrid
           products={products}
@@ -260,3 +346,4 @@ export default function ExplorePage() {
     </div>
   );
 }
+

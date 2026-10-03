@@ -50,22 +50,33 @@ describe("Products catalogue API", () => {
     mocks.productFindMany.mockResolvedValue([PRODUCT]);
   });
 
-  it("applies search, category, merchant, price, sort and pagination filters", async () => {
-    const response = await GET(request("?q=dress&category=dresses&merchant=merchant-1&minPrice=100&maxPrice=200&sort=price_asc&page=2&pageSize=12"));
+  it("applies search, category, merchant, variant, price, sort and pagination filters", async () => {
+    const response = await GET(request("?q=dress&category=dresses&merchant=merchant-1&minPrice=100&maxPrice=200&size=M&color=Black&inStock=true&sort=name_asc&page=2&pageSize=12"));
     const body = await response.json();
 
     expect(response.status).toBe(200);
     expect(mocks.productCount).toHaveBeenCalledWith({
       where: {
         status: "ACTIVE",
-        OR: [{ productName: { contains: "dress" } }, { description: { contains: "dress" } }],
+        OR: [
+          { productName: { contains: "dress" } },
+          { description: { contains: "dress" } },
+          { merchant: { storeName: { contains: "dress" } } },
+        ],
         category: { slug: "dresses" },
         merchantId: "merchant-1",
         price: { gte: 100, lte: 200 },
+        productvariant: {
+          some: {
+            size: { equals: "M" },
+            color: { contains: "Black" },
+            stockQuantity: { gt: 0 },
+          },
+        },
       },
     });
     expect(mocks.productFindMany).toHaveBeenCalledWith(expect.objectContaining({
-      orderBy: { price: "asc" },
+      orderBy: { productName: "asc" },
       skip: 12,
       take: 12,
       include: { merchant: true, category: true, productvariant: true },

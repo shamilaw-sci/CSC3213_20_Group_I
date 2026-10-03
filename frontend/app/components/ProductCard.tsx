@@ -32,6 +32,13 @@ export default function ProductCard({
   const [liked, setLiked] = useState(false);
 
   const { addToCart } = useCart();
+  const sizes = Array.from(new Set(product.variants?.map((variant) => variant.size).filter(Boolean))).slice(0, 4);
+  const colors = Array.from(new Set(product.variants?.map((variant) => variant.color).filter(Boolean)));
+  const totalStock = product.variants?.reduce((sum, variant) => sum + (variant.stock ?? 0), 0);
+  const priceFormatter = new Intl.NumberFormat("en", {
+    style: "currency",
+    currency: product.currency ?? "USD",
+  });
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300">
@@ -97,8 +104,26 @@ export default function ProductCard({
         </Link>
 
         <p className="mt-2 text-2xl font-bold text-indigo-600">
-          ${product.price.toFixed(2)}
+          {priceFormatter.format(product.price)}
         </p>
+
+        <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-gray-500">
+          {typeof totalStock === "number" && (
+            <span className={`rounded-full px-2.5 py-1 ${totalStock > 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+              {totalStock > 0 ? `${totalStock} in stock` : "Out of stock"}
+            </span>
+          )}
+          {sizes.length > 0 && (
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-600">
+              Sizes {sizes.join(", ")}
+            </span>
+          )}
+          {colors.length > 0 && (
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-600">
+              {colors.length} colour{colors.length === 1 ? "" : "s"}
+            </span>
+          )}
+        </div>
 
         {onToggleCompare && (
           <button

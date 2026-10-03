@@ -15,6 +15,16 @@ const products = [
   { name: "Rose Pleated Party Dress", merchant: "Style Corner", category: "Dresses", price: 135.0, image: "https://images.pexels.com/photos/1021693/pexels-photo-1021693.jpeg" },
   { name: "Business Casual Blouse", merchant: "Fashion Hub", category: "Tops", price: 59.99, image: "https://images.pexels.com/photos/8289271/pexels-photo-8289271.jpeg" },
   { name: "Trendy Crop Top", merchant: "Style Corner", category: "Tops", price: 39.99, image: "https://images.pexels.com/photos/14581932/pexels-photo-14581932.jpeg" },
+  { name: "Silk Office Shirt", merchant: "Fashion Hub", category: "Tops", price: 68.0, image: "https://images.pexels.com/photos/6311392/pexels-photo-6311392.jpeg" },
+  { name: "Relaxed Cotton Tee", merchant: "Style Corner", category: "Tops", price: 28.0, image: "https://images.pexels.com/photos/6311607/pexels-photo-6311607.jpeg" },
+  { name: "High Waist Tailored Trousers", merchant: "Fashion Hub", category: "Bottoms", price: 74.5, image: "https://images.pexels.com/photos/7691195/pexels-photo-7691195.jpeg" },
+  { name: "Classic Straight Jeans", merchant: "Style Corner", category: "Bottoms", price: 64.0, image: "https://images.pexels.com/photos/1082529/pexels-photo-1082529.jpeg" },
+  { name: "Pleated Midi Skirt", merchant: "Fashion Hub", category: "Bottoms", price: 58.0, image: "https://images.pexels.com/photos/6311475/pexels-photo-6311475.jpeg" },
+  { name: "Linen Summer Shorts", merchant: "Style Corner", category: "Bottoms", price: 42.0, image: "https://images.pexels.com/photos/6311613/pexels-photo-6311613.jpeg" },
+  { name: "Pearl Evening Clutch", merchant: "Fashion Hub", category: "Accessories", price: 49.0, image: "https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg" },
+  { name: "Minimal Leather Belt", merchant: "Style Corner", category: "Accessories", price: 35.0, image: "https://images.pexels.com/photos/45055/pexels-photo-45055.jpeg" },
+  { name: "Gold Hoop Earrings", merchant: "Fashion Hub", category: "Accessories", price: 32.0, image: "https://images.pexels.com/photos/1191531/pexels-photo-1191531.jpeg" },
+  { name: "Soft Knit Scarf", merchant: "Style Corner", category: "Accessories", price: 24.0, image: "https://images.pexels.com/photos/45055/pexels-photo-45055.jpeg" },
 ];
 
 // Example-labelled demo size chart used only for local recommendation testing.
@@ -27,6 +37,13 @@ const demoFitRangesByProduct = {
     XL: { chest: { min: 105, max: 114 }, waist: { min: 89, max: 98 }, hips: { min: 113, max: 122 } },
   },
 } as const;
+
+const demoColorsByCategory: Record<string, string[]> = {
+  Dresses: ["Black", "Red", "Blue"],
+  Tops: ["White", "Black", "Pink"],
+  Bottoms: ["Black", "Blue", "Beige"],
+  Accessories: ["Gold", "Black", "Cream"],
+};
 
 async function main() {
   const categoryByName = new Map<string, string>();
@@ -42,7 +59,8 @@ async function main() {
   for (const item of products) {
     const merchantId = merchantByName.get(item.merchant)!; const categoryId = categoryByName.get(item.category)!; const externalId = item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     const demoRanges = demoFitRangesByProduct[item.name as keyof typeof demoFitRangesByProduct];
-    await prisma.product.upsert({ where: { merchantId_externalId: { merchantId, externalId } }, create: { productId: randomUUID(), merchantId, categoryId, externalId, productName: item.name, price: item.price, primaryImageUrl: item.image, merchantUrl: "https://example.com", status: "ACTIVE", updatedAt: new Date(), productvariant: { create: ["S", "M", "L", "XL"].map((size) => ({ productVariantId: randomUUID(), sku: `${externalId}-${size}`, size, stockQuantity: 10, metadata: demoRanges?.[size as keyof typeof demoRanges] ? { fitRangesCm: demoRanges[size as keyof typeof demoRanges] } : undefined, updatedAt: new Date() })) } }, update: { categoryId, productName: item.name, price: item.price, primaryImageUrl: item.image, status: "ACTIVE", updatedAt: new Date() } });
+    const colors = demoColorsByCategory[item.category] ?? ["Black"];
+    await prisma.product.upsert({ where: { merchantId_externalId: { merchantId, externalId } }, create: { productId: randomUUID(), merchantId, categoryId, externalId, productName: item.name, price: item.price, primaryImageUrl: item.image, merchantUrl: "https://example.com", status: "ACTIVE", updatedAt: new Date(), productvariant: { create: ["S", "M", "L", "XL"].map((size, index) => ({ productVariantId: randomUUID(), sku: `${externalId}-${size}`, size, color: colors[index % colors.length], stockQuantity: 10, metadata: demoRanges?.[size as keyof typeof demoRanges] ? { fitRangesCm: demoRanges[size as keyof typeof demoRanges] } : undefined, updatedAt: new Date() })) } }, update: { categoryId, productName: item.name, price: item.price, primaryImageUrl: item.image, status: "ACTIVE", updatedAt: new Date() } });
   }
   console.log("TryVora catalog seed completed.");
 }
