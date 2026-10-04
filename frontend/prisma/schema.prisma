@@ -24,6 +24,18 @@ model auditlog {
   @@index([entityType, entityId], map: "AuditLog_entityType_entityId_idx")
 }
 
+model adminprofile {
+  adminProfileId String   @id @db.Char(36)
+  userId         String   @unique(map: "AdminProfile_userId_key") @db.Char(36)
+  department     String?  @db.VarChar(100)
+  designation    String   @default("Administrator") @db.VarChar(100)
+  avatarData     Bytes?   @db.LongBlob
+  avatarMimeType String?  @db.VarChar(50)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  user           user     @relation(fields: [userId], references: [userId], onDelete: Cascade, map: "AdminProfile_userId_fkey")
+}
+
 model category {
   categoryId  String    @id @db.Char(36)
   name        String    @unique(map: "Category_name_key") @db.VarChar(100)
@@ -126,6 +138,7 @@ model guestsession {
   lastUsedAt       DateTime?
   convertedAt      DateTime?
   convertedUserId  String?            @db.Char(36)
+  restrictedAt     DateTime?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime
   comparison       comparison[]
@@ -136,6 +149,7 @@ model guestsession {
 
   @@index([convertedUserId], map: "GuestSession_convertedUserId_idx")
   @@index([expiryDate], map: "GuestSession_expiryDate_idx")
+  @@index([restrictedAt, createdAt], map: "GuestSession_restrictedAt_createdAt_idx")
 }
 
 model measurement {
@@ -373,6 +387,7 @@ model user {
   updatedAt                            DateTime
   deletedAt                            DateTime?
   auditlog                             auditlog[]
+  adminprofile                         adminprofile?
   comparison                           comparison[]
   digitaltwin                          digitaltwin[]
   favorite                             favorite[]

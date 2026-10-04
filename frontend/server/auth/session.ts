@@ -53,7 +53,15 @@ export function toPublicUser(user: SessionUser) {
   return { id: user.userId, name: user.userName, email: user.userEmail, role: user.role };
 }
 
-export async function createUserSession(user: SessionUser, persistent: boolean) {
+export function getRequestSessionMetadata(request: Request) {
+  const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return {
+    ipAddress: (forwardedFor || request.headers.get("x-real-ip") || "local").slice(0, 45),
+    userAgent: request.headers.get("user-agent")?.slice(0, 512) || null,
+  };
+}
+
+export async function createUserSession(user: SessionUser, persistent: boolean, request?: Request) {
   const sessionId = randomUUID();
   const maxAge = cookieMaxAge(persistent);
   const expiryDate = new Date(Date.now() + maxAge * 1000);
@@ -72,6 +80,7 @@ export async function createUserSession(user: SessionUser, persistent: boolean) 
       tokenHash: tokenHash(token),
       type: persistent ? "PERSISTENT" : "TEMPORARY",
       expiryDate,
+      ...(request ? getRequestSessionMetadata(request) : {}),
       updatedAt: now,
     },
   });

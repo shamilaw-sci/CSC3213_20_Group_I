@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     return created;
   });
 
-  const session = await createUserSession(user, rememberMe);
+  const session = await createUserSession(user, rememberMe, request);
   const response = NextResponse.json({ user: toPublicUser(user) }, { status: 201 });
   response.cookies.set(AUTH_COOKIE_NAME, session.token, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: session.maxAge, expires: session.expiryDate });
   return response;

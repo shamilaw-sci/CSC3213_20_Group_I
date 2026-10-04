@@ -1,8 +1,10 @@
+import { randomUUID } from "node:crypto";
+
 import bcrypt from "bcrypt";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { AUTH_COOKIE_NAME, createUserSession, toPublicUser } from "@/server/auth/session";
+import { AUTH_COOKIE_NAME, createUserSession, getRequestSessionMetadata, toPublicUser } from "@/server/auth/session";
 import { prisma } from "@/server/db/prisma";
 import { enforceRateLimit } from "@/server/security/rate-limit";
 
@@ -24,11 +26,22 @@ export async function POST(request: Request) {
   const user = await prisma.user.findUnique({ where: { userEmail: email } });
   const passwordMatches = user ? await bcrypt.compare(password, user.passwordHash) : false;
   if (!user || !passwordMatches || user.status !== "ACTIVE" || user.deletedAt) {
+    const requestMetadata = getRequestSessionMetadata(request);
+    await prisma.auditlog.create({
+      data: {
+        auditLogId: randomUUID(),
+        action: "AUTH_LOGIN_FAILED",
+        entityType: "authentication",
+        entityId: user?.userId ?? null,
+        metadata: { email, reason: !user || !passwordMatches ? "INVALID_CREDENTIALS" : "ACCOUNT_UNAVAILABLE" },
+        ...requestMetadata,
+      },
+    });
     return NextResponse.json({ message: "Incorrect email or password." }, { status: 401 });
   }
 
   await prisma.user.update({ where: { userId: user.userId }, data: { lastLoginAt: new Date(), updatedAt: new Date() } });
-  const session = await createUserSession(user, rememberMe);
+  const session = await createUserSession(user, rememberMe, request);
   const response = NextResponse.json({ user: toPublicUser(user) });
   response.cookies.set(AUTH_COOKIE_NAME, session.token, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: session.maxAge, expires: session.expiryDate });
   return response;

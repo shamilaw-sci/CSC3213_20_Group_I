@@ -129,7 +129,7 @@ export function ProfileProvider({
   };
 
   useEffect(() => {
-    if (!ready || !user) return;
+    if (!ready || !user || user.role !== "CUSTOMER") return;
 
     async function loadProfile() {
       const [profileResponse, measurementResponse] = await Promise.all([
