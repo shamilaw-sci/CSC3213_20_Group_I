@@ -18,10 +18,18 @@ export default async function AnalyticsPage() {
         </div>
       </div>
       <div className="grid gap-6 xl:grid-cols-2">
-        <LoginOverviewChart weeklyData={analytics.loginActivity.weekly} monthlyData={analytics.loginActivity.monthly} threeMonthData={analytics.loginActivity.threeMonths} sixMonthData={analytics.loginActivity.sixMonths} />
-        <UserGrowthChart weeklyData={analytics.userGrowth.weekly} monthlyData={analytics.userGrowth.monthly} threeMonthData={analytics.userGrowth.threeMonths} sixMonthData={analytics.userGrowth.sixMonths} />
-        <DigitalTwinGrowthChart weeklyData={analytics.digitalTwinGrowth.weekly} monthlyData={analytics.digitalTwinGrowth.monthly} threeMonthData={analytics.digitalTwinGrowth.threeMonths} sixMonthData={analytics.digitalTwinGrowth.sixMonths} />
-        <VirtualTryOnActivityChart weeklyData={analytics.tryOnActivity.weekly} monthlyData={analytics.tryOnActivity.monthly} threeMonthData={analytics.tryOnActivity.threeMonths} sixMonthData={analytics.tryOnActivity.sixMonths} />
+        <div className="xl:col-span-2">
+          <LoginOverviewChart weeklyData={analytics.loginActivity.weekly} monthlyData={analytics.loginActivity.monthly} threeMonthData={analytics.loginActivity.threeMonths} sixMonthData={analytics.loginActivity.sixMonths} />
+        </div>
+        <div className="xl:col-span-2">
+          <UserGrowthChart weeklyData={analytics.userGrowth.weekly} monthlyData={analytics.userGrowth.monthly} threeMonthData={analytics.userGrowth.threeMonths} sixMonthData={analytics.userGrowth.sixMonths} />
+        </div>
+        <div className="xl:col-span-2">
+          <DigitalTwinGrowthChart weeklyData={analytics.digitalTwinGrowth.weekly} monthlyData={analytics.digitalTwinGrowth.monthly} threeMonthData={analytics.digitalTwinGrowth.threeMonths} sixMonthData={analytics.digitalTwinGrowth.sixMonths} />
+        </div>
+        <div className="xl:col-span-2">
+          <VirtualTryOnActivityChart weeklyData={analytics.tryOnActivity.weekly} monthlyData={analytics.tryOnActivity.monthly} threeMonthData={analytics.tryOnActivity.threeMonths} sixMonthData={analytics.tryOnActivity.sixMonths} />
+        </div>
         <div className="xl:col-span-2">
           <RedirectionChart weeklyData={analytics.redirects.weekly} monthlyData={analytics.redirects.monthly} threeMonthData={analytics.redirects.threeMonths} sixMonthData={analytics.redirects.sixMonths} />
         </div>
