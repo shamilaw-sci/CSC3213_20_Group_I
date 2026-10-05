@@ -2,7 +2,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Save } from "lucide-react";
+import { LoaderCircle, Save } from "lucide-react";
 
 import { useProfile } from "../hooks/useProfile";
 import Avatar from "./Avatar";
@@ -31,37 +31,65 @@ export default function MeasurementForm() {
   const [selectedSize, setSelectedSize] = useState<(typeof sizes)[number]>("M");
   const [scoreVisible, setScoreVisible] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const body = profile.measurements;
   const fitScore = useMemo(() => calculateFitScore(body, selectedSize), [body, selectedSize]);
   const hasCoreMeasurements = [body.chest, body.waist, body.hips, body.shoulder].every((value) => value > 0);
   const recommendation = useMemo(() => recommendSize(body), [body]);
   const updateNumber = (field: (typeof fields)[number][0], value: string) => updateMeasurements({ [field]: Number(value) } as never);
 
+  async function handleSave() {
+    if (isSaving) return;
+    setIsSaving(true);
+    setSaveError("");
+    try {
+      await saveMeasurements();
+      setScoreVisible(true);
+    } catch (reason) {
+      setSaveError(reason instanceof Error ? reason.message : "Could not save measurements.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="grid gap-8 lg:grid-cols-2">
-        <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-bold text-gray-900">Interactive Twin Model</h2>
-          <p className="mt-1 text-gray-500">An SVG silhouette that updates from your saved measurements.</p>
-          <div className="mt-6 flex min-h-[470px] flex-col items-center justify-center rounded-xl bg-gray-50">
+    <div className="grid gap-5 lg:grid-cols-2">
+      <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h2 className="text-xl font-bold text-gray-900">Body Measurements</h2>
+        <p className="mt-1 text-sm text-gray-600">Set your measurements to calibrate the fit-guide avatar and size estimate.</p>
+        <div className="mt-5 flex flex-wrap gap-2">{(["Female", "Male", "Unisex"] as const).map((gender) => <button key={gender} type="button" onClick={() => updateMeasurements({ gender })} className={`rounded-full border px-4 py-2 text-sm font-semibold ${body.gender === gender ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 bg-white text-gray-700"}`}>{gender}</button>)}</div>
+        <div className="mt-5 grid grid-cols-2 gap-x-5 gap-y-4">
+          {fields.map(([field, label, min, max]) => (
+            <label key={field} className="block">
+              <span className="mb-2 flex flex-wrap justify-between gap-1 text-sm font-semibold text-gray-800"><span>{label}</span><span>{body[field] || min} {field === "weight" ? "kg" : "cm"}</span></span>
+              <input type="range" min={min} max={max} value={body[field] || min} onChange={(event) => updateNumber(field, event.target.value)} className="w-full accent-indigo-600" />
+            </label>
+          ))}
+        </div>
+        <div className="mt-5"><p className="mb-3 text-sm font-semibold text-gray-800">Skin tone</p><div className="flex gap-3">{["#f7d7c4", "#dfbeaa", "#c58f70", "#8c593c", "#5a3825"].map((skinColor) => <button key={skinColor} type="button" aria-label={`Select skin tone ${skinColor}`} onClick={() => updateMeasurements({ skinColor })} className={`h-9 w-9 rounded-full border-2 ${body.skinColor === skinColor ? "border-indigo-600 ring-2 ring-indigo-200" : "border-gray-300"}`} style={{ backgroundColor: skinColor }} />)}</div></div>
+        <button type="button" onClick={() => void handleSave()} disabled={isSaving} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-wait disabled:bg-indigo-300">
+          {isSaving ? <LoaderCircle size={18} className="animate-spin" /> : <Save size={18} />}
+          {isSaving ? "Saving measurements…" : "Save measurements & calculate fit"}
+        </button>
+        {saveError && <p role="alert" className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-800">{saveError}</p>}
+      </section>
+
+      <div className="space-y-5">
+        <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <h2 className="text-xl font-bold text-gray-900">Interactive Twin Model</h2>
+          <p className="mt-1 text-sm text-gray-600">An SVG silhouette that updates from your measurements.</p>
+          <div className="mt-4 flex flex-col items-center justify-center rounded-xl bg-gray-50 p-3">
             <Avatar body={body} garmentSize={selectedSize} fitScore={scoreVisible && hasCoreMeasurements ? fitScore : null} />
-            <div className="mt-5 flex flex-wrap justify-center gap-2 text-xs font-semibold"><span className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-800">85–100% great fit</span><span className="rounded-full bg-amber-100 px-3 py-1 text-amber-800">65–84% check fit</span><span className="rounded-full bg-rose-100 px-3 py-1 text-rose-800">Below 65% tight/loose</span></div>
-            <p className="mt-4 text-sm font-medium text-gray-700">H: {body.height || "—"} cm · W: {body.weight || "—"} kg</p>
+            <div className="mt-3 flex flex-wrap justify-center gap-2 text-xs font-semibold"><span className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-800">85–100% great fit</span><span className="rounded-full bg-amber-100 px-3 py-1 text-amber-800">65–84% check fit</span><span className="rounded-full bg-rose-100 px-3 py-1 text-rose-800">Below 65% tight/loose</span></div>
+            <p className="mt-3 text-sm font-medium text-gray-700">H: {body.height || "—"} cm · W: {body.weight || "—"} kg</p>
           </div>
         </section>
-
-        <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-bold text-gray-900">Body Measurements (cm)</h2>
-          <p className="mt-2 text-gray-500">Set your measurements to calibrate the fit-guide avatar and size estimate.</p>
-          <div className="mt-6 flex flex-wrap gap-3">{(["Female", "Male", "Unisex"] as const).map((gender) => <button key={gender} type="button" onClick={() => updateMeasurements({ gender })} className={`rounded-full border px-4 py-2 text-sm font-semibold ${body.gender === gender ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 bg-white text-gray-700"}`}>{gender}</button>)}</div>
-          <div className="mt-7 space-y-5">{fields.map(([field, label, min, max]) => <label key={field} className="block"><span className="mb-2 flex justify-between text-sm font-semibold text-gray-800"><span>{label}</span><span>{body[field] || min} cm</span></span><input type="range" min={min} max={max} value={body[field] || min} onChange={(event) => updateNumber(field, event.target.value)} className="w-full accent-indigo-600" /></label>)}</div>
-          <div className="mt-7"><p className="mb-3 text-sm font-semibold text-gray-800">Skin tone</p><div className="flex gap-3">{["#f7d7c4", "#dfbeaa", "#c58f70", "#8c593c", "#5a3825"].map((skinColor) => <button key={skinColor} type="button" aria-label={`Select skin tone ${skinColor}`} onClick={() => updateMeasurements({ skinColor })} className={`h-9 w-9 rounded-full border-2 ${body.skinColor === skinColor ? "border-indigo-600 ring-2 ring-indigo-200" : "border-gray-300"}`} style={{ backgroundColor: skinColor }} />)}</div></div>
-          <button type="button" onClick={() => { void saveMeasurements().then(() => { setSaveError(""); setScoreVisible(true); }).catch((reason: unknown) => setSaveError(reason instanceof Error ? reason.message : "Could not save measurements.")); }} className="tv-button mt-8 flex w-full items-center justify-center gap-2 px-6 py-3"><Save size={18} /> Save measurements & calculate fit</button>
-          {saveError && <p role="alert" className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-800">{saveError}</p>}
+        <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <h2 className="text-xl font-bold text-gray-900">Size Recommendation</h2>
+          {"error" in recommendation ? <p role="alert" className="mt-3 rounded-xl bg-rose-50 p-3 text-sm font-semibold text-rose-800">{recommendation.error}</p> : <div className="mt-3"><p className="text-2xl font-black text-indigo-700">Recommended Size: {recommendation.size}</p><p className="mt-1 font-bold text-slate-900">Fit Confidence: {recommendation.confidence}%</p><div className="mt-3 grid gap-2 sm:grid-cols-3">{(["chest", "waist", "hips"] as const).map((part) => <p key={part} className={`rounded-xl p-2 text-sm font-semibold ${recommendation.matches[part] ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"}`}>{recommendation.matches[part] ? "✓" : "!"} {part[0].toUpperCase() + part.slice(1)}: {recommendation.matches[part] ? "Suitable" : "Closest match"}</p>)}</div><p className="mt-3 text-sm text-gray-600">Rule-based estimate using chest, waist, and hip size ranges. When measurements fall between sizes, the size with the most matching measurements is selected.</p></div>}
+          <div className="mt-4 border-t pt-4"><h3 className="font-bold text-gray-900">Manual fit preview</h3><div className="mt-3 flex flex-wrap gap-2">{sizes.map((size) => <button type="button" key={size} onClick={() => { setSelectedSize(size); setScoreVisible(true); }} className={`rounded-lg border px-4 py-2 font-semibold transition ${selectedSize === size ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 bg-white text-gray-800 hover:bg-gray-50"}`}>{size}</button>)}</div></div>
         </section>
       </div>
-
-      <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"><h2 className="text-xl font-bold text-gray-900">Size Recommendation</h2>{"error" in recommendation ? <p role="alert" className="mt-4 rounded-xl bg-rose-50 p-4 text-sm font-semibold text-rose-800">{recommendation.error}</p> : <div className="mt-4"><p className="text-3xl font-black text-indigo-700">Recommended Size: {recommendation.size}</p><p className="mt-2 text-xl font-bold text-slate-900">Fit Confidence: {recommendation.confidence}%</p><div className="mt-4 grid gap-2 sm:grid-cols-3">{(["chest", "waist", "hips"] as const).map((part) => <p key={part} className={`rounded-xl p-3 text-sm font-semibold ${recommendation.matches[part] ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"}`}>{recommendation.matches[part] ? "✓" : "!"} {part[0].toUpperCase() + part.slice(1)}: {recommendation.matches[part] ? "Suitable" : "Closest match"}</p>)}</div><p className="mt-4 text-sm text-gray-600">Rule-based estimate using chest, waist, and hip size ranges. When measurements fall between sizes, the size with the most matching measurements is selected.</p></div>}<div className="mt-6 border-t pt-5"><h3 className="font-bold text-gray-900">Manual fit preview</h3><div className="mt-3 flex flex-wrap gap-3">{sizes.map((size) => <button type="button" key={size} onClick={() => { setSelectedSize(size); setScoreVisible(true); }} className={`rounded-lg border px-5 py-2 font-semibold transition ${selectedSize === size ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 bg-white text-gray-800 hover:bg-gray-50"}`}>{size}</button>)}</div></div></section>
     </div>
   );
 }
