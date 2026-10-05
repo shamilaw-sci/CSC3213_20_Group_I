@@ -57,10 +57,10 @@ export default function DigitalTwinTab() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       <div><h2 className="text-3xl font-bold text-gray-900">Your Digital Twin</h2><p className="mt-2 text-gray-500">Upload and manage a clear full-body photo for your virtual fitting room.</p></div>
-      <div className="grid gap-8 xl:grid-cols-2">
-        <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="grid gap-5 xl:grid-cols-2">
+        <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <h3 className="mb-4 text-lg font-semibold text-gray-900">Current Photo</h3>
           <UploadBox onUpload={handleUpload} preview={profile.digitalTwin.image} onDeleteRequest={() => setDeleteDialogOpen(true)} />
           {error && <p role="alert" className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-800">{error}</p>}

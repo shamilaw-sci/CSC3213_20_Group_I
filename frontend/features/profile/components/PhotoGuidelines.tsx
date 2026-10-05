@@ -34,23 +34,23 @@ const guidelines = [
 
 export default function PhotoGuidelines() {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
 
       <h2 className="text-xl font-bold text-gray-900 mb-2">
         Photo Guidelines
       </h2>
 
-      <p className="text-gray-500 mb-6">
+      <p className="mb-4 text-gray-500">
         Follow these simple recommendations for a clear Digital Twin photo.
       </p>
 
-      <div className="space-y-5">
+      <div className="grid grid-cols-2 gap-3">
         {guidelines.map((item, index) => (
           <div
             key={index}
-            className="flex items-start gap-4 p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition"
+            className="flex items-start gap-3 rounded-xl border border-gray-100 p-3 transition hover:bg-gray-50"
           >
-            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100">
               {item.icon}
             </div>
 
@@ -64,21 +64,18 @@ export default function PhotoGuidelines() {
               </p>
             </div>
 
-            <CheckCircle2
-              size={20}
-              className="text-green-500 mt-1"
-            />
+            <CheckCircle2 size={18} className="mt-1 shrink-0 text-green-500" />
           </div>
         ))}
       </div>
 
       {/* Tips */}
-      <div className="mt-8 rounded-xl bg-indigo-50 border border-indigo-100 p-4">
+      <div className="mt-4 rounded-xl border border-indigo-100 bg-indigo-50 p-4">
         <h4 className="font-semibold text-indigo-700 mb-2">
           Tips for Best Results
         </h4>
 
-        <ul className="list-disc ml-5 text-sm text-gray-600 space-y-2">
+        <ul className="ml-5 list-disc space-y-1 text-sm text-gray-600">
           <li>Capture your full body from head to toe.</li>
           <li>Keep your arms slightly away from your body.</li>
           <li>Avoid blurry or low-quality images.</li>

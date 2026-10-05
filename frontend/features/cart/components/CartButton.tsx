@@ -9,9 +9,9 @@ export default function CartButton() {
   return (
     <button
       onClick={toggleCart}
-      className="relative flex items-center justify-center w-11 h-11 rounded-full bg-white shadow-md border border-gray-200 hover:bg-gray-100 transition"
+      className="relative flex h-11 w-11 items-center justify-center rounded-full border border-indigo-600 bg-indigo-600 text-white shadow-md transition hover:border-indigo-700 hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
     >
-      <ShoppingCart className="w-6 h-6 text-gray-700" />
+      <ShoppingCart className="h-6 w-6" />
 
       {totalItems > 0 && (
         <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold min-w-[22px] h-[22px] rounded-full flex items-center justify-center px-1">
