@@ -1,11 +1,14 @@
 import ProductCard from "./ProductCard";
-import { Product } from "../data/products";
+import type { Product } from "../data/products";
 
 interface ProductGridProps {
   products: Product[];
   selectedCompareIds?: Set<string | number>;
   compareDisabled?: boolean;
   onToggleCompare?: (product: Product) => void;
+  favoriteIds: ReadonlySet<string>;
+  favoriteStateUnavailable?: boolean;
+  onFavoriteChange: (productId: string, nextFavorite: boolean) => Promise<void>;
 }
 
 export default function ProductGrid({
@@ -13,6 +16,9 @@ export default function ProductGrid({
   selectedCompareIds,
   compareDisabled,
   onToggleCompare,
+  favoriteIds,
+  favoriteStateUnavailable,
+  onFavoriteChange,
 }: ProductGridProps) {
   if (products.length === 0) {
     return (
@@ -31,6 +37,9 @@ export default function ProductGrid({
           compareSelected={selectedCompareIds?.has(product.id)}
           compareDisabled={compareDisabled}
           onToggleCompare={onToggleCompare}
+          isFavorite={favoriteIds.has(String(product.id))}
+          favoriteStateUnavailable={favoriteStateUnavailable}
+          onFavoriteChange={onFavoriteChange}
         />
       ))}
     </div>

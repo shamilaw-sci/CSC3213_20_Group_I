@@ -1,57 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import Navbar from "@/app/components/Navbar";
 import ProductGrid from "@/app/components/ProductGrid";
 import type { Product } from "@/app/data/products";
-
-type FavoriteResponse = {
-  id: string;
-  product: {
-    id: string;
-    name: string;
-    image: string | null;
-    merchant: { name: string };
-    category: { name: string; slug: string };
-    price: number;
-  };
-};
+import { useFavorites } from "@/features/favorites/useFavorites";
 
 export default function FavoritesPage() {
-  const [favorites, setFavorites] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    async function loadFavorites() {
-      try {
-        const response = await fetch("/api/v1/favorites", { cache: "no-store" });
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message ?? "Could not load favorites.");
-        }
-
-        setFavorites(data.favorites.map((favorite: FavoriteResponse) => ({
-          id: favorite.product.id,
-          title: favorite.product.name,
-          image: favorite.product.image ?? "https://placehold.co/600x750?text=TryVora",
-          store: favorite.product.merchant.name,
-          category: favorite.product.category.name as Product["category"],
-          categorySlug: favorite.product.category.slug,
-          price: favorite.product.price,
-        })));
-      } catch (reason) {
-        setError(reason instanceof Error ? reason.message : "Could not load favorites.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    void loadFavorites();
-  }, []);
+  const { favorites, favoriteIds, loading, error, isAuthenticated, updateFavorite } = useFavorites();
+  const products: Product[] = favorites.map((favorite) => ({
+    id: favorite.product.id,
+    title: favorite.product.name,
+    image: favorite.product.image ?? "https://placehold.co/600x750?text=TryVora",
+    store: favorite.product.merchant.name,
+    category: favorite.product.category.name as Product["category"],
+    categorySlug: favorite.product.category.slug,
+    price: favorite.product.price,
+  }));
 
   return (
     <div className="tv-page min-h-screen">
@@ -70,10 +36,14 @@ export default function FavoritesPage() {
         <div className="mt-8">
           {loading ? (
             <p className="text-sm text-gray-400">Loading favorites...</p>
+          ) : !isAuthenticated ? (
+            <p className="text-sm text-gray-700">Log in to see your saved products. <Link href="/login" className="font-semibold text-indigo-600 underline">Log in</Link></p>
           ) : error ? (
             <p className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>
+          ) : products.length === 0 ? (
+            <p className="text-sm text-gray-700">No saved products yet. Explore the catalogue and tap a heart to save one.</p>
           ) : (
-            <ProductGrid products={favorites} />
+            <ProductGrid products={products} favoriteIds={favoriteIds} onFavoriteChange={updateFavorite} />
           )}
         </div>
       </main>
