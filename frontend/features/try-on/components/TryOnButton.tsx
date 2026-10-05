@@ -32,11 +32,15 @@ export default function TryOnButton({
         w-full
         mt-3
         border
-        border-gray-300
-        hover:bg-indigo-50
-        hover:border-indigo-500
-        text-gray-700
-        hover:text-indigo-600
+        border-indigo-500
+        bg-indigo-50
+        text-indigo-700
+        hover:bg-indigo-100
+        hover:border-indigo-600
+        hover:text-indigo-800
+        focus-visible:outline-2
+        focus-visible:outline-offset-2
+        focus-visible:outline-indigo-600
         font-semibold
         py-3
         rounded-xl

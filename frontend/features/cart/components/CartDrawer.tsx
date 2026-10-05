@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useCart } from "../hooks/useCart";
 import CartItem from "./CartItem";
 import CartFooter from "./CartFooter";
@@ -39,7 +39,7 @@ export default function CartDrawer() {
             onClick={closeCart}
             className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center"
           >
-            <X size={22} />
+            <XMarkIcon className="h-[22px] w-[22px]" />
           </button>
         </div>
 

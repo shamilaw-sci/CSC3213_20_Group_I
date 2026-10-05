@@ -93,7 +93,7 @@ export async function getCurrentSession() {
   if (!token) return null;
 
   try {
-    const { payload } = await jwtVerify(token, jwtSecret());
+    const { payload } = await jwtVerify(token, jwtSecret(), { algorithms: ["HS256"] });
     const claims = payload as Partial<SessionClaims>;
     if (!claims.sub || !claims.sid) return null;
 
@@ -127,4 +127,37 @@ export async function revokeCurrentSession() {
     where: { tokenHash: tokenHash(token), revokedAt: null },
     data: { revokedAt: new Date(), updatedAt: new Date() },
   });
+}
+
+export async function rotateCurrentSession() {
+  const current = await getCurrentSession();
+  if (!current) return { status: "unauthenticated" } as const;
+
+  const { session } = current;
+  const maxAge = Math.floor((session.expiryDate.getTime() - Date.now()) / 1000);
+  if (maxAge <= 0) return { status: "unauthenticated" } as const;
+
+  const token = await new SignJWT({ sid: session.sessionId, role: session.user.role })
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(session.userId)
+    .setJti(randomUUID())
+    .setIssuedAt()
+    .setExpirationTime(session.expiryDate)
+    .sign(jwtSecret());
+
+  const now = new Date();
+  // Compare and replace the old hash atomically. Only one concurrent refresh wins.
+  const updated = await prisma.session.updateMany({
+    where: {
+      sessionId: session.sessionId,
+      tokenHash: session.tokenHash,
+      revokedAt: null,
+      expiryDate: { gt: now },
+      user: { is: { status: "ACTIVE", deletedAt: null } },
+    },
+    data: { tokenHash: tokenHash(token), lastUsedAt: now, updatedAt: now },
+  });
+  if (updated.count !== 1) return { status: "conflict" } as const;
+
+  return { status: "ok", token, maxAge, expiryDate: session.expiryDate, user: current.user } as const;
 }

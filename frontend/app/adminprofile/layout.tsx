@@ -1,9 +1,8 @@
-import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
 
-import { getCurrentSession } from "@/server/auth/session";
+import { requireAdminPageUser } from "@/server/auth/page-access";
 
-export default async function AdminProfileLayout({ children }: { children: React.ReactNode }) {
-  const current = await getCurrentSession();
-  if (!current || current.user.role !== "ADMIN") redirect("/login");
-  return children;
+export default async function AdminProfileLayout({ children }: { children: ReactNode }) {
+  await requireAdminPageUser();
+  return <>{children}</>;
 }

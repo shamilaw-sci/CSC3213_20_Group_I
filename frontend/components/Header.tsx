@@ -1,164 +1,79 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import {
-  Dialog,
-  DialogPanel,
-  Disclosure,
-  DisclosureButton,
-  DisclosurePanel,
-  Popover,
-  PopoverButton,
-  PopoverGroup,
-  PopoverPanel,
-} from '@headlessui/react'
-import {
-  ArrowPathIcon,
-  Bars3Icon,
-  ChartPieIcon,
-  CursorArrowRaysIcon,
-  FingerPrintIcon,
-  SquaresPlusIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline'
-import { ChevronDownIcon, PhoneIcon, PlayCircleIcon } from '@heroicons/react/20/solid'
+import { useState } from "react";
+import Link from "next/link";
+import { Dialog, DialogPanel } from "@headlessui/react";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { User } from "lucide-react";
 
-const products = [
-  { name: 'Analytics', description: 'Get a better understanding of your traffic', href: '#', icon: ChartPieIcon },
-  { name: 'Engagement', description: 'Speak directly to your customers', href: '#', icon: CursorArrowRaysIcon },
-  { name: 'Security', description: 'Your customers’ data will be safe and secure', href: '#', icon: FingerPrintIcon },
-  { name: 'Integrations', description: 'Connect with third-party tools', href: '#', icon: SquaresPlusIcon },
-  { name: 'Automations', description: 'Build strategic funnels that will convert', href: '#', icon: ArrowPathIcon },
-]
-const callsToAction = [
-  { name: 'Watch demo', href: '#', icon: PlayCircleIcon },
-  { name: 'Contact sales', href: '#', icon: PhoneIcon },
-]
+import CartButton from "@/features/cart/components/CartButton";
+
+const navLinks = [
+  { label: "Home", href: "/" },
+  { label: "Explore", href: "/explore" },
+  { label: "For You", href: "/recommendations" },
+  { label: "Favorites", href: "/favorites" },
+  { label: "How It Works", href: "/#how-it-works" },
+];
 
 export default function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="bg-gradient-to-r from-purple-700 to-blue-300 h-screen-">
-      <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
-        <div className="flex lg:flex-1">
-          <a href="#" className="-m-1.5 p-1.5">
-            <span className="sr-only">Your Company</span>
-            <h1 className='text font-semibold text-white'>TryVora</h1>
-          </a>
+    <header className="bg-gradient-to-r from-purple-700 to-blue-300">
+      <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between gap-5 p-6 lg:px-8">
+        <Link href="/" className="font-semibold text-white">TryVora</Link>
+
+        <div className="hidden items-center gap-5 lg:flex">
+          {navLinks.map((link) => (
+            <Link key={link.label} href={link.href} className="text-sm font-semibold text-white hover:underline">
+              {link.label}
+            </Link>
+          ))}
         </div>
-        <div className="flex lg:hidden">
+
+        <div className="flex items-center gap-3">
+          <div className="hidden items-center gap-4 lg:flex">
+            <Link href="/login" className="text-sm font-semibold text-white hover:underline">Log in</Link>
+            <Link href="/register" className="text-sm font-semibold text-white hover:underline">Register</Link>
+          </div>
+          <CartButton />
+          <Link href="/profile" aria-label="Profile" className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700">
+            <User size={18} />
+          </Link>
           <button
             type="button"
             onClick={() => setMobileMenuOpen(true)}
-            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-400"
+            aria-label="Open main menu"
+            className="rounded-md p-2 text-white lg:hidden"
           >
-            <span className="sr-only">Open main menu</span>
-            <Bars3Icon aria-hidden="true" className="size-6" />
+            <Bars3Icon className="h-6 w-6" />
           </button>
         </div>
-        <PopoverGroup className="hidden lg:flex lg:gap-x-12">
-          
-
-          <a href="#" className="text-sm/6 font-semibold text-white">
-            Home
-          </a>
-          <a href="#" className="text-sm/6 font-semibold text-white">
-            Explore
-          </a>
-          <a href="#" className="text-sm/6 font-semibold text-white">
-            Dashboard
-          </a>
-          <a href="#" className="text-sm/6 font-semibold text-white">
-            How It Works
-          </a>
-        </PopoverGroup>
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          <div className="flex items-center gap-4">
-            <a href="/login" className="text-sm/6 font-semibold text-white">
-              Log in <span aria-hidden="true">&rarr;</span>
-            </a>
-
-            <a href="/register" className="text-sm/6 font-semibold text-white">
-              Register <span aria-hidden="true">&rarr;</span>
-            </a>
-          </div>
-        </div>
-        
       </nav>
+
       <Dialog open={mobileMenuOpen} onClose={setMobileMenuOpen} className="lg:hidden">
-        <div className="fixed inset-0 z-50" />
-        <DialogPanel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-gray-900 p-6 sm:max-w-sm sm:ring-1 sm:ring-gray-100/10">
+        <div className="fixed inset-0 z-50 bg-slate-950/50" />
+        <DialogPanel className="fixed inset-y-0 right-0 z-50 w-full max-w-sm overflow-y-auto bg-gray-900 p-6 text-white">
           <div className="flex items-center justify-between">
-            <a href="#" className="-m-1.5 p-1.5">
-              <span className="sr-only">Your Company</span>
-              <img
-                alt=""
-                src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500"
-                className="h-8 w-auto"
-              />
-            </a>
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(false)}
-              className="-m-2.5 rounded-md p-2.5 text-gray-400"
-            >
-              <span className="sr-only">Close menu</span>
-              <XMarkIcon aria-hidden="true" className="size-6" />
+            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="font-semibold">TryVora</Link>
+            <button type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu" className="rounded-md p-2">
+              <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
-          <div className="mt-6 flow-root">
-            <div className="-my-6 divide-y divide-white/10">
-              <div className="space-y-2 py-6">
-                <Disclosure as="div" className="-mx-3">
-                  <DisclosureButton className="group flex w-full items-center justify-between rounded-lg py-2 pr-3.5 pl-3 text-base/7 font-semibold text-white hover:bg-white/5">
-                    Product
-                    <ChevronDownIcon aria-hidden="true" className="size-5 flex-none group-data-open:rotate-180" />
-                  </DisclosureButton>
-                  <DisclosurePanel className="mt-2 space-y-2">
-                    {[...products, ...callsToAction].map((item) => (
-                      <DisclosureButton
-                        key={item.name}
-                        as="a"
-                        href={item.href}
-                        className="block rounded-lg py-2 pr-3 pl-6 text-sm/7 font-semibold text-white hover:bg-white/5"
-                      >
-                        {item.name}
-                      </DisclosureButton>
-                    ))}
-                  </DisclosurePanel>
-                </Disclosure>
-                <a
-                  href="#"
-                  className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-white hover:bg-white/5"
-                >
-                  Features
-                </a>
-                <a
-                  href="#"
-                  className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-white hover:bg-white/5"
-                >
-                  Marketplace
-                </a>
-                <a
-                  href="#"
-                  className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-white hover:bg-white/5"
-                >
-                  Company
-                </a>
-              </div>
-              <div className="py-6">
-                <a
-                  href="#"
-                  className="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-white hover:bg-white/5"
-                >
-                  Log in
-                </a>
-              </div>
-            </div>
+          <div className="mt-8 flex flex-col gap-2">
+            {navLinks.map((link) => (
+              <Link key={link.label} href={link.href} onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 font-semibold hover:bg-white/10">
+                {link.label}
+              </Link>
+            ))}
+            <div className="my-2 border-t border-white/20" />
+            <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 font-semibold hover:bg-white/10">Profile</Link>
+            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 font-semibold hover:bg-white/10">Log in</Link>
+            <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 font-semibold hover:bg-white/10">Register</Link>
           </div>
         </DialogPanel>
       </Dialog>
     </header>
-  )
+  );
 }

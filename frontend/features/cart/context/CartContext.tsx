@@ -1,8 +1,10 @@
+/** WBS-3.x | Owner: S/21/501 | Branch: feature/s21-501-catalogue-merchants | Scope: Catalogue, merchants, comparison and redirects. */
 "use client";
 
 import React, {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useState,
   ReactNode,
@@ -14,6 +16,7 @@ import {
   CartItem,
   CartState,
 } from "../types/cart";
+import { saveGuestCart } from "@/features/cart/utils/guestCartRestore";
 
 export const CartContext =
   createContext<CartContextType | undefined>(undefined);
@@ -32,6 +35,26 @@ export function CartProvider({
       items: [],
       isOpen: false,
     });
+
+  useEffect(() => {
+    saveGuestCart(cart.items);
+  }, [cart.items]);
+
+  useEffect(() => {
+    function restoreCart(event: Event) {
+      const customEvent = event as CustomEvent<{ items?: CartItem[] }>;
+      const items = customEvent.detail?.items ?? [];
+      if (!items.length) return;
+      setCart((prev) => ({
+        ...prev,
+        items,
+        isOpen: true,
+      }));
+    }
+
+    window.addEventListener("tryvora:restore-cart", restoreCart);
+    return () => window.removeEventListener("tryvora:restore-cart", restoreCart);
+  }, []);
 
   // --------------------------
   // Drawer Controls
@@ -105,7 +128,7 @@ export function CartProvider({
   // --------------------------
 
   const removeFromCart = (
-    id: number
+    id: string | number
   ) => {
     setCart((prev) => ({
       ...prev,
@@ -120,7 +143,7 @@ export function CartProvider({
   // --------------------------
 
   const increaseQuantity = (
-    id: number
+    id: string | number
   ) => {
     setCart((prev) => ({
       ...prev,
@@ -141,7 +164,7 @@ export function CartProvider({
   // --------------------------
 
   const decreaseQuantity = (
-    id: number
+    id: string | number
   ) => {
     setCart((prev) => ({
       ...prev,

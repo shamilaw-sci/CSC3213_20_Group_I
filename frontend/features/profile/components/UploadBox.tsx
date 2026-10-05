@@ -98,11 +98,11 @@ export default function UploadBox({ onUpload, preview, onDeleteRequest }: Upload
   return (
     <div>
       {preview ? (
-        <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-gray-100">
-          <img src={preview} alt="Digital twin upload preview" className="h-full w-full object-cover" />
+        <div className="relative flex h-72 items-center justify-center overflow-hidden rounded-2xl bg-gray-100">
+          <img src={preview} alt="Digital twin upload preview" className="h-full max-w-full object-contain" />
         </div>
       ) : (
-        <button type="button" disabled={isWorking} onClick={() => fileInputRef.current?.click()} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); void handleFile(event.dataTransfer.files?.[0]); }} className="flex h-80 w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-indigo-300 transition hover:bg-indigo-50 disabled:cursor-wait disabled:opacity-60">
+        <button type="button" disabled={isWorking} onClick={() => fileInputRef.current?.click()} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); void handleFile(event.dataTransfer.files?.[0]); }} className="flex h-72 w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-indigo-300 transition hover:bg-indigo-50 disabled:cursor-wait disabled:opacity-60">
           {isWorking ? <LoaderCircle size={55} className="mb-5 animate-spin text-indigo-600" /> : <Upload size={55} className="mb-5 text-indigo-600" />}
           <p className="text-lg font-semibold text-gray-800">{uploadState === "preparing" ? "Preparing image…" : uploadState === "uploading" ? "Uploading photo…" : "Drag & drop or click to upload"}</p>
           <p className="mt-1 text-gray-500">PNG or JPEG · maximum 5 MB</p>
@@ -111,7 +111,7 @@ export default function UploadBox({ onUpload, preview, onDeleteRequest }: Upload
       )}
       {preview && (
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <button type="button" disabled={isWorking} onClick={() => fileInputRef.current?.click()} className="tv-button inline-flex items-center justify-center gap-2 px-4 py-3 disabled:cursor-wait disabled:opacity-60">
+          <button type="button" disabled={isWorking} onClick={() => fileInputRef.current?.click()} className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white transition hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-wait disabled:opacity-60">
             {isWorking ? <LoaderCircle size={18} className="animate-spin" /> : <ImageUp size={18} />}
             {uploadState === "preparing" ? "Preparing photo…" : uploadState === "uploading" ? "Replacing photo…" : "Replace Photo"}
           </button>

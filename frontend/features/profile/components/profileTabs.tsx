@@ -1,7 +1,8 @@
 /** WBS-2.2 | Owner: S/21/063 | Branch: feature/s21-063-profile-digital-twin | Profile tab navigation. */
 "use client";
 
-import { User, Ruler, Settings } from "lucide-react";
+import Link from "next/link";
+import { History, User, Ruler, Settings } from "lucide-react";
 import { useProfile } from "../hooks/useProfile";
 import type { ProfileTab } from "../types/profile";
 
@@ -51,6 +52,13 @@ export default function ProfileTabs() {
           </button>
         );
       })}
+      <Link
+        href="/profile/try-on-history"
+        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-white py-3 font-medium text-gray-600 transition-all duration-200 hover:bg-gray-100"
+      >
+        <History size={18} />
+        Try-On History
+      </Link>
     </div>
   );
 }
