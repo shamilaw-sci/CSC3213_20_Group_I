@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { CheckCircle2, Heart } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 import type { Product } from "@/app/data/products";
 import { useCart } from "@/features/cart/hooks/useCart";
 import TryOnButton from "@/features/try-on/components/TryOnButton";
+import FavoriteButton from "./FavoriteButton";
 
 const badgeColors: Record<string, string> = {
   Dresses: "bg-purple-600",
@@ -21,6 +21,9 @@ interface ProductCardProps {
   compareSelected?: boolean;
   compareDisabled?: boolean;
   onToggleCompare?: (product: Product) => void;
+  isFavorite: boolean;
+  favoriteStateUnavailable?: boolean;
+  onFavoriteChange: (productId: string, nextFavorite: boolean) => Promise<void>;
 }
 
 export default function ProductCard({
@@ -28,9 +31,10 @@ export default function ProductCard({
   compareSelected = false,
   compareDisabled = false,
   onToggleCompare,
+  isFavorite,
+  favoriteStateUnavailable = false,
+  onFavoriteChange,
 }: ProductCardProps) {
-  const [liked, setLiked] = useState(false);
-
   const { addToCart } = useCart();
 
   return (
@@ -58,31 +62,12 @@ export default function ProductCard({
           {product.category}
         </span>
 
-        {/* Wishlist */}
-        <button
-          onClick={async () => {
-            const nextLiked = !liked;
-            setLiked(nextLiked);
-            const response = await fetch(`/api/v1/favorites/${product.id}`, {
-              method: nextLiked ? "POST" : "DELETE",
-            });
-
-            if (!response.ok) {
-              setLiked(!nextLiked);
-            }
-          }}
-          aria-label={liked ? "Remove from favorites" : "Add to favorites"}
-          className="absolute top-3 right-3 w-10 h-10 bg-white rounded-full shadow flex items-center justify-center"
-        >
-          <Heart
-            size={18}
-            className={
-              liked
-                ? "fill-red-500 text-red-500"
-                : "text-gray-500"
-            }
-          />
-        </button>
+        <FavoriteButton
+          productId={String(product.id)}
+          isFavorite={isFavorite}
+          disabled={favoriteStateUnavailable}
+          onChange={onFavoriteChange}
+        />
       </div>
 
       {/* Product Details */}
