@@ -6,13 +6,9 @@ import { Dialog, DialogPanel } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { User } from "lucide-react";
 
-import CartButton from "@/features/cart/components/CartButton";
-
 const navLinks = [
   { label: "Home", href: "/" },
   { label: "Explore", href: "/explore" },
-  { label: "For You", href: "/recommendations" },
-  { label: "Favorites", href: "/favorites" },
   { label: "How It Works", href: "/#how-it-works" },
 ];
 
@@ -37,7 +33,7 @@ export default function Header() {
             <Link href="/login" className="text-sm font-semibold text-white hover:underline">Log in</Link>
             <Link href="/register" className="text-sm font-semibold text-white hover:underline">Register</Link>
           </div>
-          <CartButton />
+          <Link href="/login" className="hidden rounded-lg border border-white/70 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white lg:inline-flex">Login as Merchant</Link>
           <Link href="/profile" aria-label="Profile" className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700">
             <User size={18} />
           </Link>
@@ -71,6 +67,7 @@ export default function Header() {
             <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 font-semibold hover:bg-white/10">Profile</Link>
             <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 font-semibold hover:bg-white/10">Log in</Link>
             <Link href="/register" onClick={() => setMobileMenuOpen(false)} className="rounded-lg px-3 py-3 font-semibold hover:bg-white/10">Register</Link>
+            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-lg bg-white px-3 py-3 font-semibold text-indigo-700 hover:bg-indigo-50">Login as Merchant</Link>
           </div>
         </DialogPanel>
       </Dialog>
