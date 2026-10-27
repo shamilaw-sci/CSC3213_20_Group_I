@@ -64,7 +64,7 @@ export default function DigitalTwinTab() {
           <h3 className="mb-4 text-lg font-semibold text-gray-900">Current Photo</h3>
           <UploadBox onUpload={handleUpload} preview={profile.digitalTwin.image} onDeleteRequest={() => setDeleteDialogOpen(true)} />
           {error && <p role="alert" className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-800">{error}</p>}
-          {profile.digitalTwin.image ? <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-medium text-emerald-800"><p className="flex items-center gap-2"><CheckCircle2 size={18} /> Photo uploaded successfully</p><p className="mt-2 flex items-center gap-2"><CheckCircle2 size={18} /> Digital Twin photo ready</p><button type="button" onClick={() => setPreviewOpen(true)} className="mt-4 font-semibold text-indigo-700 underline underline-offset-4">View photo preview</button></div> : <p className="mt-4 text-sm text-gray-500">Upload requirements: PNG or JPEG · Maximum 5 MB</p>}
+          {profile.digitalTwin.image ? <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-medium text-emerald-800"><p className="flex items-center gap-2"><CheckCircle2 size={18} /> Photo uploaded successfully</p><p className="mt-2 flex items-center gap-2"><CheckCircle2 size={18} /> Digital Twin photo ready</p><button type="button" onClick={() => setPreviewOpen(true)} className="mt-4 font-semibold text-indigo-700 underline underline-offset-4">View photo preview</button></div> : <p className="mt-4 text-sm text-gray-500">Upload requirements: PNG or JPEG · Maximum 5 MB · At least 400 × 600 pixels</p>}
         </section>
         <PhotoGuidelines />
       </div>

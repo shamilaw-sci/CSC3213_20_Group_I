@@ -79,7 +79,7 @@ export default function PhotoGuidelines() {
           <li>Capture your full body from head to toe.</li>
           <li>Keep your arms slightly away from your body.</li>
           <li>Avoid blurry or low-quality images.</li>
-          <li>Do not crop any part of your body.</li>
+          <li>Keep your full body inside the crop frame.</li>
           <li>Use natural posture without bending.</li>
         </ul>
       </div>
