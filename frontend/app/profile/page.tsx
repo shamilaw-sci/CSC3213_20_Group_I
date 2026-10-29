@@ -7,6 +7,7 @@ import ProfileTabs from "@/features/profile/components/profileTabs";
 import DigitalTwinTab from "@/features/profile/components/DigitalTwinTab";
 import MeasurementsTab from "@/features/profile/components/MeasurementsTab";
 import AccountTab from "@/features/profile/components/AccountTab";
+import TryOnModal from "@/features/try-on/components/TryOnModal";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -74,6 +75,8 @@ export default function ProfilePage() {
         )}
 
       </main>
+
+      <TryOnModal />
 
     </div>
   );
