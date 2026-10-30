@@ -29,10 +29,10 @@ model adminprofile {
   userId         String   @unique(map: "AdminProfile_userId_key") @db.Char(36)
   department     String?  @db.VarChar(100)
   designation    String   @default("Administrator") @db.VarChar(100)
-  avatarData     Bytes?   @db.LongBlob
-  avatarMimeType String?  @db.VarChar(50)
   createdAt      DateTime @default(now())
   updatedAt      DateTime
+  avatarData     Bytes?
+  avatarMimeType String?  @db.VarChar(50)
   user           user     @relation(fields: [userId], references: [userId], onDelete: Cascade, map: "AdminProfile_userId_fkey")
 }
 
@@ -138,9 +138,9 @@ model guestsession {
   lastUsedAt       DateTime?
   convertedAt      DateTime?
   convertedUserId  String?            @db.Char(36)
-  restrictedAt     DateTime?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime
+  restrictedAt     DateTime?
   comparison       comparison[]
   feedback         feedback[]
   user             user?              @relation(fields: [convertedUserId], references: [userId], map: "GuestSession_convertedUserId_fkey")
@@ -298,6 +298,7 @@ model profile {
   country     String?      @db.VarChar(100)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime
+  skinColor   String?      @db.VarChar(7)
   measurement measurement?
   user        user         @relation(fields: [userId], references: [userId], onDelete: Cascade, map: "Profile_userId_fkey")
 }
@@ -386,8 +387,8 @@ model user {
   createdAt                            DateTime             @default(now())
   updatedAt                            DateTime
   deletedAt                            DateTime?
-  auditlog                             auditlog[]
   adminprofile                         adminprofile?
+  auditlog                             auditlog[]
   comparison                           comparison[]
   digitaltwin                          digitaltwin[]
   favorite                             favorite[]
