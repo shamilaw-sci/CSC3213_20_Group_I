@@ -10,8 +10,6 @@ import DigitalTwinTab from "@/features/profile/components/DigitalTwinTab";
 import MeasurementsTab from "@/features/profile/components/MeasurementsTab";
 import AccountTab from "@/features/profile/components/AccountTab";
 import TryOnModal from "@/features/try-on/components/TryOnModal";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { useProfile } from "@/features/profile/hooks/useProfile";

@@ -42,12 +42,12 @@ describe("Digital Twin outfit and photo layout", () => {
     const html = renderTab(null);
 
     expect(html).toContain("lg:grid-cols-2");
-    expect(html).toContain("Choose Clothing");
+    expect(html).toContain("Choose an outfit in Explore");
     expect(html).toContain("Your Photo");
     expect(html).toContain('aria-label="Photo guidelines"');
     expect(html).toContain("Drag &amp; drop or click to upload");
     expect(html).toContain("At least 400 × 600 pixels");
-    expect(html).toContain("Choose an outfit to continue.");
+    expect(html).toContain("Choose an outfit in Explore to continue.");
     expect(openingTagForButton(html, "Generate Try-On")).toContain("disabled");
     expect(html).toContain("illustrative fitting guide");
   });
