@@ -89,7 +89,7 @@ export default function RecommendationsPage() {
     <div className="tv-page min-h-screen">
       <Navbar />
 
-      <main className="mx-auto max-w-7xl px-6 py-10">
+      <main className="mx-auto max-w-7xl px-6 py-10 lg:pl-80">
         <div className="mb-8">
           <p className="text-sm font-semibold uppercase tracking-wide text-indigo-600">
             Your fitting-room picks
