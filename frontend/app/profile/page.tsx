@@ -1,9 +1,11 @@
 /** WBS-Shared | Owner: All members | Branch: reviewed integration branch | Scope: Shared application foundation. */
 "use client";
 
+import { Suspense, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+
 import Navbar from "@/app/components/Navbar";
 
-import ProfileTabs from "@/features/profile/components/profileTabs";
 import DigitalTwinTab from "@/features/profile/components/DigitalTwinTab";
 import MeasurementsTab from "@/features/profile/components/MeasurementsTab";
 import AccountTab from "@/features/profile/components/AccountTab";
@@ -13,6 +15,26 @@ import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { useProfile } from "@/features/profile/hooks/useProfile";
+import type { ProfileTab } from "@/features/profile/types/profile";
+
+function ProfileTabFromUrl() {
+  const searchParams = useSearchParams();
+  const { changeTab } = useProfile();
+  const appliedTab = useRef<string | null>(null);
+  const requestedTab = searchParams.get("tab");
+
+  useEffect(() => {
+    if (
+      (requestedTab === "digitalTwin" || requestedTab === "measurements" || requestedTab === "account") &&
+      appliedTab.current !== requestedTab
+    ) {
+      changeTab(requestedTab as ProfileTab);
+      appliedTab.current = requestedTab;
+    }
+  }, [requestedTab, changeTab]);
+
+  return null;
+}
 
 export default function ProfilePage() {
   const { user, ready } = useAuth();
@@ -43,23 +65,10 @@ export default function ProfilePage() {
       <Navbar />
 
       {/* Page */}
-      <main className="max-w-7xl mx-auto px-6 py-10">
-
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">
-            Profile & Settings
-          </h1>
-
-          <p className="text-gray-500 mt-2">
-            Manage your Digital Twin, measurements and account settings.
-          </p>
-        </div>
-
-        {/* Tabs */}
-        <div className="mb-8">
-          <ProfileTabs />
-        </div>
+      <main className="max-w-7xl mx-auto px-6 py-10 lg:pl-80">
+        <Suspense fallback={null}>
+          <ProfileTabFromUrl />
+        </Suspense>
 
         {/* Content */}
         {profile.activeTab === "digitalTwin" && (
