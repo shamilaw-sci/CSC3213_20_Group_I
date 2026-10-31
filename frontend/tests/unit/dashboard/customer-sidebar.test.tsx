@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
 import CustomerSidebar from "../../../app/dashboard/CustomerSidebar";
 
 describe("customer dashboard sidebar", () => {
-  it("groups real destinations and labels missing features unavailable", () => {
+  it("groups the available customer destinations", () => {
     const html = renderToStaticMarkup(<CustomerSidebar />);
 
     expect(html).toContain("Main menu");
@@ -20,6 +20,7 @@ describe("customer dashboard sidebar", () => {
     expect(html).toContain('href="/dashboard"');
     expect(html).toContain('href="/profile?tab=digitalTwin"');
     expect(html).toContain('href="/profile?tab=measurements"');
+    expect(html).toContain('href="/profile/try-on-history"');
     expect(html).toContain('href="/favorites"');
     expect(html).toContain('href="/recommendations"');
     expect(html).toContain('href="/profile?tab=account"');
@@ -27,8 +28,9 @@ describe("customer dashboard sidebar", () => {
     expect(html).toContain("Help &amp; FAQ");
     expect(html).toContain("My Plan");
     expect(html).toContain("Support");
-    expect(html).toContain("Unavailable");
-    expect(html).not.toContain('href="/profile/try-on-history"');
+    expect(html).toContain('href="/help"');
+    expect(html).toContain('href="/plan"');
+    expect(html).toContain('href="/support"');
     expect(html).not.toContain('href="/pricing"');
   });
 

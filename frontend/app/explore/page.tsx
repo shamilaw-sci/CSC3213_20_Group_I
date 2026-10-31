@@ -9,6 +9,7 @@ import CategoryTabs, { type CatalogueCategory } from "../components/CategoryTabs
 import ProductGrid from "../components/ProductGrid";
 import type { Product } from "../data/products";
 import { useFavorites } from "@/features/favorites/useFavorites";
+import TryOnModal from "@/features/try-on/components/TryOnModal";
 
 type ProductResponse = {
   id: string;
@@ -263,6 +264,7 @@ export default function ExplorePage() {
           </div>
         )}
       </main>
+      <TryOnModal />
     </div>
   );
 }

@@ -58,12 +58,15 @@ export interface ProfileState {
   account: Account;
 }
 
+export type ProfileLoadStatus = "loading" | "ready" | "error";
+
 // =========================
 // Context Interface
 // =========================
 
 export interface ProfileContextType {
   profile: ProfileState;
+  profileLoadStatus: ProfileLoadStatus;
 
   changeTab: (tab: ProfileTab) => void;
 

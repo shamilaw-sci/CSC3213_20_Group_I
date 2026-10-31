@@ -32,7 +32,29 @@ const guidelines = [
   },
 ];
 
-export default function PhotoGuidelines() {
+export default function PhotoGuidelines({ compact = false }: { compact?: boolean }) {
+  if (compact) {
+    return (
+      <div className="space-y-3 text-sm text-gray-700">
+        <p>Use a clear, well-lit, full-body photo facing the camera against a simple background.</p>
+        <ul className="space-y-2">
+          {guidelines.map((item) => (
+            <li key={item.title} className="flex items-start gap-2">
+              <span className="mt-0.5 shrink-0" aria-hidden="true">{item.icon}</span>
+              <span>
+                <strong className="font-semibold text-gray-900">{item.title}:</strong>{" "}
+                {item.description}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="rounded-lg bg-indigo-50 px-3 py-2 text-indigo-900">
+          PNG or JPEG · maximum 5 MB · minimum 400 × 600 pixels
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
 
@@ -79,7 +101,7 @@ export default function PhotoGuidelines() {
           <li>Capture your full body from head to toe.</li>
           <li>Keep your arms slightly away from your body.</li>
           <li>Avoid blurry or low-quality images.</li>
-          <li>Do not crop any part of your body.</li>
+          <li>Keep your full body inside the crop frame.</li>
           <li>Use natural posture without bending.</li>
         </ul>
       </div>

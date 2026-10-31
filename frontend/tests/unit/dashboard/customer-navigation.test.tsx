@@ -32,7 +32,7 @@ describe("customer navigation", () => {
     expect(html).toContain('href="/explore"');
     expect(html).toContain('href="/#how-it-works"');
     expect(html).toContain('href="/merchant"');
-    expect(html).toContain(">Merchant</a>");
+    expect(html).toContain("Login as Merchant");
     expect(html).toContain("Cart");
     expect(html).not.toContain('href="/dashboard"');
   });
@@ -45,7 +45,7 @@ describe("customer navigation", () => {
     expect(html).toContain('aria-current="page"');
     expect(html).toContain("Account menu");
     expect(html).toContain('href="/merchant"');
-    expect(html).toContain(">Merchant</a>");
+    expect(html).toContain("Login as Merchant");
     expect(html).not.toContain('href="/pricing"');
   });
 

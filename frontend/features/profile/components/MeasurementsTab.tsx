@@ -10,11 +10,11 @@ export default function MeasurementsTab() {
       {/* Header */}
       <div>
         <h2 className="text-3xl font-bold text-gray-900">
-          Body Measurements
+          My Measurements
         </h2>
 
         <p className="text-gray-500 mt-2">
-          Enter your body measurements to improve the accuracy of your AI Digital Twin and virtual try-on experience.
+          Your measurements help TryVora provide a more personalized fitting experience and better clothing size recommendations.
         </p>
       </div>
 
