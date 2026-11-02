@@ -15,6 +15,8 @@ type SavedTryOn = {
   product: { id: string; name: string; image: string | null };
   size: string | null;
   fitPercentage: number | null;
+  imageUrl: string | null;
+  generated: boolean;
 };
 
 function groupByDate(items: SavedTryOn[], order: "newest" | "oldest") {
@@ -124,7 +126,7 @@ export default function TryOnHistoryPage() {
             <button
               type="button"
               disabled
-              title="Download all is unavailable because illustrative Try-On results are not stored as image files."
+              title="Download all is not available yet."
               className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white opacity-50"
             >
               <Download size={18} /> Download all
@@ -132,7 +134,7 @@ export default function TryOnHistoryPage() {
           </div>
         </header>
         <p className="mt-4 text-sm text-slate-600">
-          Saved fitting guides are illustrative. The current Try-On system does not store a downloadable result image.
+          Your AI generated Try-On results are saved here privately with your fitting history.
         </p>
 
         {!ready ? (
@@ -176,20 +178,22 @@ export default function TryOnHistoryPage() {
                           aria-label={`Select saved fitting guide for ${item.product.name}`}
                           className="relative block aspect-[3/4] w-full bg-indigo-50 text-left"
                         >
-                          {item.product.image ? (
+                          {item.imageUrl ? (
+                            <Image src={item.imageUrl} alt={`${item.product.name} AI try-on result`} fill unoptimized className="object-cover" />
+                          ) : item.product.image ? (
                             <Image src={item.product.image} alt={`${item.product.name} product photo`} fill unoptimized className="object-cover" />
                           ) : (
                             <span className="flex h-full items-center justify-center text-center font-semibold text-indigo-800">Product image unavailable</span>
                           )}
                         </button>
                         <span className="absolute left-3 top-3 rounded-lg bg-slate-950/80 px-3 py-1 text-xs font-semibold text-white">
-                          Illustrative fitting guide
+                          {item.generated ? "AI Virtual Try-On" : "Illustrative fitting guide"}
                         </span>
                         <div className="absolute right-3 top-3 flex gap-2 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
                           <button
                             type="button"
                             disabled
-                            title="A downloadable Try-On image was not stored."
+                            title={item.imageUrl ? "Open the generated result above to view it." : "A downloadable Try-On image was not stored."}
                             aria-label={`Download ${item.product.name} Try-On result unavailable`}
                             className="rounded-lg bg-white p-2 text-slate-400 shadow"
                           >

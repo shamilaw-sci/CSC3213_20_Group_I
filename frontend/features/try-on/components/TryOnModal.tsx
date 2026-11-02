@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle2, Ruler, ShoppingBag, Sparkles, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useProfile } from "@/features/profile/hooks/useProfile";
 import { useTryOn } from "../hooks/useTryOn";
@@ -22,6 +22,9 @@ export default function TryOnModal() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [signInRequired, setSignInRequired] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState("");
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const product = state.selectedProduct;
 
   if (!state.isOpen || !product) return null;
@@ -34,6 +37,28 @@ export default function TryOnModal() {
     ? `${product.currency} ${product.price.toFixed(2)}`
     : `$${product.price.toFixed(2)}`;
   const isSaved = savedPreview?.productId === product.id && savedPreview.size === selectedSize;
+
+  useEffect(() => {
+    setGeneratedImage(null);
+    setGenerateError("");
+    setSavedPreview(null);
+    setSignInRequired(false);
+  }, [product?.id]);
+
+  async function generatePreview() {
+    if (!product || !selectedSize || generating) return;
+    setGenerating(true);
+    setGenerateError("");
+    try {
+      const response = await fetch("/api/v1/try-ons", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId: product.id, size: selectedSize, ...(score === null ? {} : { fitPercentage: score }) }) });
+      const body = await response.json().catch(() => ({})) as { message?: string; tryOn?: { id: string } };
+      if (response.status === 401) { setSignInRequired(true); throw new Error("Log in to generate a personalized try-on."); }
+      if (!response.ok || !body.tryOn?.id) throw new Error(body.message || "Could not generate your try-on. Please try again.");
+      setGeneratedImage(`/api/v1/try-ons/${body.tryOn.id}/image`);
+      setSavedPreview({ productId: product.id, size: selectedSize });
+    } catch (error) { setGenerateError(error instanceof Error ? error.message : "Could not generate your try-on."); }
+    finally { setGenerating(false); }
+  }
 
   async function savePreview() {
     if (!product || !selectedSize || saving) return;
@@ -101,7 +126,9 @@ export default function TryOnModal() {
         </header>
 
         <div className="grid gap-6 p-5 lg:grid-cols-[1.15fr_.85fr] sm:p-7">
-          {selectedSize ? (
+          {generatedImage ? (
+            <section className="overflow-hidden rounded-3xl border border-indigo-100 bg-slate-50 p-4 shadow-inner sm:p-6"><div className="mb-4"><p className="flex items-center gap-2 text-sm font-bold text-indigo-700"><Sparkles size={17} /> Your AI Virtual Try-On</p><p className="mt-1 text-xs text-slate-500">Generated from your Digital Twin and this garment.</p></div><div className="relative mx-auto aspect-[2/3] max-h-[65vh] max-w-md overflow-hidden rounded-2xl bg-white"><Image src={generatedImage} alt={`${product.title} worn in your AI try-on`} fill unoptimized className="object-contain" /></div></section>
+          ) : selectedSize ? (
             <InteractiveFittingPreview
               product={product}
               measurements={profile.measurements}
@@ -194,7 +221,7 @@ export default function TryOnModal() {
                   <h3 className="font-bold text-indigo-950">Make the result more personal</h3>
                   <p className="mt-1 text-sm leading-5 text-indigo-900">
                     {profile.digitalTwin.image
-                      ? "Your reference photo is saved. Update body measurements to improve the fit estimate."
+                      ? "Your reference photo is ready. Generate a realistic preview of this garment on you."
                       : "Add your body image and measurements for a more personal fitting guide."}
                   </p>
                   <Link
@@ -210,13 +237,25 @@ export default function TryOnModal() {
 
             <button
               type="button"
+              onClick={() => void generatePreview()}
+              disabled={selectedSize === null || generating || !profile.digitalTwin.image}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3.5 font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300 disabled:opacity-60"
+            >
+              <Sparkles size={18} /> {generating ? "Generating your try-on..." : generatedImage ? "Generate again" : "Generate AI try-on"}
+            </button>
+            {!profile.digitalTwin.image && <p className="text-sm text-slate-500">Add your Digital Twin photo to generate a personalized try-on.</p>}
+            {generateError && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm font-medium text-rose-800">{generateError} {signInRequired && <Link href="/login" onClick={closeTryOn} className="underline">Log in</Link>}</p>}
+            {generatedImage && <p role="status" className="flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800"><CheckCircle2 size={18} /> Your generated result is saved in <Link href="/profile/try-on-history" onClick={closeTryOn} className="underline">Try-On History</Link>.</p>}
+            {/* Legacy save button retained until AI generation succeeds. */}
+            {!generatedImage && <button
+              type="button"
               onClick={() => void savePreview()}
               disabled={selectedSize === null || saving || isSaved}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3.5 font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:bg-indigo-300 disabled:opacity-60"
             >
               <Sparkles size={18} /> {saving ? "Saving..." : isSaved ? "Preview saved" : "Save this fitting preview"}
-            </button>
-            {isSaved && (
+            </button>}
+            {isSaved && !generatedImage && (
               <p role="status" className="flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">
                 <CheckCircle2 size={18} /> Size {selectedSize} illustrative fitting guide saved. <Link href="/profile/try-on-history" onClick={closeTryOn} className="underline">View history</Link>
               </p>
