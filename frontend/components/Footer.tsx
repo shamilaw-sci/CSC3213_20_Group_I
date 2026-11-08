@@ -1,63 +1,43 @@
+import Link from "next/link";
+
+const groups = [
+  { title: "Discover", links: [
+    { label: "Explore Products", href: "/explore" },
+    { label: "Latest Outfits", href: "/#latest-products" },
+    { label: "How It Works", href: "/#how-it-works" },
+  ] },
+  { title: "Your Account", links: [
+    { label: "Your Profile", href: "/profile" },
+    { label: "Digital Twin", href: "/profile?tab=digitalTwin" },
+    { label: "Favorites", href: "/favorites" },
+    { label: "Recommendations", href: "/recommendations" },
+  ] },
+  { title: "Get Started", links: [
+    { label: "Create an Account", href: "/register" },
+    { label: "Log In", href: "/login" },
+    { label: "Merchant Portal", href: "/merchant" },
+    { label: "Help", href: "/#help" },
+  ] },
+];
+
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300 px-6 py-12">
-
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10">
-
-        
+    <footer className="bg-gray-900 px-6 py-12 text-gray-300">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 md:grid-cols-4">
         <div>
-          <h2 className="text-2xl font-bold text-white">TryVora</h2>
-          <p className="mt-4 text-sm">
-            Experience the future of online shopping with AI-powered virtual try-ons and digital twin technology.
-          </p>
+          <Link href="/" className="text-2xl font-bold text-white">TryVora</Link>
+          <p className="mt-4 text-sm">Discover outfits, preview your look, and continue to our partner stores to shop.</p>
         </div>
-
-        
-        <div>
-          <h3 className="text-white font-semibold mb-4">Company</h3>
-          <ul className="space-y-2 text-sm">
-            <li><a href="#" className="hover:text-white">About</a></li>
-            <li><a href="#" className="hover:text-white">Careers</a></li>
-            <li><a href="#" className="hover:text-white">Blog</a></li>
-          </ul>
-        </div>
-
-        
-        <div>
-          <h3 className="text-white font-semibold mb-4">Support</h3>
-          <ul className="space-y-2 text-sm">
-            <li><a href="#" className="hover:text-white">Help Center</a></li>
-            <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
-            <li><a href="#" className="hover:text-white">Terms of Service</a></li>
-          </ul>
-        </div>
-
-        
-        <div>
-          <h3 className="text-white font-semibold mb-4">Stay Updated</h3>
-          <p className="text-sm mb-4">
-            Subscribe to get latest updates.
-          </p>
-
-          <div className="flex">
-            <input
-              type="email"
-              placeholder="Enter email"
-              className="w-full px-3 py-2 rounded-l-lg bg-gray-800 text-white outline-none"
-            />
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700">
-              Subscribe
-            </button>
+        {groups.map((group) => (
+          <div key={group.title}>
+            <h2 className="mb-4 font-semibold text-white">{group.title}</h2>
+            <ul className="space-y-2 text-sm">
+              {group.links.map((link) => <li key={link.href}><Link href={link.href} className="hover:text-white hover:underline">{link.label}</Link></li>)}
+            </ul>
           </div>
-        </div>
-
+        ))}
       </div>
-
-      {/* Bottom */}
-      <div className="mt-10 border-t border-gray-700 pt-6 text-center text-sm text-gray-400">
-        © 2026 TryVora. All rights reserved.
-      </div>
-
+      <div className="mt-10 border-t border-gray-700 pt-6 text-center text-sm text-gray-400">© 2026 TryVora. All rights reserved.</div>
     </footer>
   );
 }
