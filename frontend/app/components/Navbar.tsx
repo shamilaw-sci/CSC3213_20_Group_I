@@ -32,6 +32,9 @@ export default function Navbar() {
         ? [homeLink, exploreLink, { label: "Admin", href: "/admin" }, howItWorksLink]
         : [homeLink, exploreLink, howItWorksLink];
 
+  const merchantEntryHref = role === "CUSTOMER" ? "/merchant/onboarding" : "/login";
+  const merchantEntryLabel = role === "CUSTOMER" ? "Become a Merchant" : "Login as Merchant";
+
   const accountLinks = role === "CUSTOMER"
     ? [
         { label: "Profile", href: "/profile" },
@@ -109,7 +112,7 @@ export default function Navbar() {
                 </>
               )}
               {(!user || role === "CUSTOMER") && (
-                <Link href="/merchant" className="rounded-lg border border-indigo-600 px-3 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Login as Merchant</Link>
+                <Link href={merchantEntryHref} className="rounded-lg border border-indigo-600 px-3 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">{merchantEntryLabel}</Link>
               )}
             </div>
           )}
@@ -160,7 +163,7 @@ export default function Navbar() {
             </div>
           )}
           {ready && (!user || role === "CUSTOMER") && (
-            <Link href="/merchant" onClick={() => setMenuOpen(false)} className="mt-2 block rounded-lg border border-indigo-600 px-3 py-2 text-center text-sm font-semibold text-indigo-700 hover:bg-indigo-50">Login as Merchant</Link>
+            <Link href={merchantEntryHref} onClick={() => setMenuOpen(false)} className="mt-2 block rounded-lg border border-indigo-600 px-3 py-2 text-center text-sm font-semibold text-indigo-700 hover:bg-indigo-50">{merchantEntryLabel}</Link>
           )}
           {ready && user && (
             <div className="mt-2 border-t border-gray-100 pt-2">
