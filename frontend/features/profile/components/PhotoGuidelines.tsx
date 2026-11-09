@@ -8,6 +8,7 @@ import {
   Camera,
   UserCheck,
 } from "lucide-react";
+import Image from "next/image";
 
 const guidelines = [
   {
@@ -32,7 +33,27 @@ const guidelines = [
   },
 ];
 
-export default function PhotoGuidelines({ compact = false }: { compact?: boolean }) {
+export default function PhotoGuidelines({ compact = false, modal = false }: { compact?: boolean; modal?: boolean }) {
+  if (modal) {
+    const goodExamples = ["/images/digitalTwin/twin1.jpg", "/images/digitalTwin/twin3.jpg", "/images/digitalTwin/twin5.jpeg"];
+    const badExamples = ["/images/digitalTwin/twin2.jpg.webp", "/images/digitalTwin/twin4.jpeg", "/images/digitalTwin/twin6.jpg.webp"];
+    return (
+      <div className="relative w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl sm:p-8">
+        <h2 id="photo-guidelines-title" className="text-center text-3xl font-bold text-gray-700">Photo guidelines</h2>
+        <p className="mt-2 text-center text-gray-500">Pick a clear photo so your try-on comes out sharp.</p>
+        {[{ title: "Good Examples:", note: "Front-facing, full upper body and face visible.", images: goodExamples, tone: "emerald" }, { title: "Bad Examples:", note: "Blurry, cropped, or side-angle shots distort results.", images: badExamples, tone: "rose" }].map((group) => (
+          <section key={group.title} className={`mt-5 rounded-2xl p-4 ${group.tone === "emerald" ? "bg-emerald-50" : "bg-rose-50"}`}>
+            <h3 className={`text-xl font-bold ${group.tone === "emerald" ? "text-emerald-600" : "text-rose-500"}`}>{group.title}</h3>
+            <p className="mt-1 text-sm text-gray-500">{group.note}</p>
+            <div className="mt-4 grid grid-cols-3 gap-3">
+              {group.images.map((src) => <div key={src} className="relative aspect-[3/4] overflow-hidden rounded-xl"><Image src={src} alt="" fill sizes="140px" className="object-cover" /></div>)}
+            </div>
+          </section>
+        ))}
+        <p className="mt-4 text-center text-xs text-gray-500">PNG or JPEG · maximum 5 MB · minimum 400 × 600 pixels</p>
+      </div>
+    );
+  }
   if (compact) {
     return (
       <div className="space-y-3 text-sm text-gray-700">

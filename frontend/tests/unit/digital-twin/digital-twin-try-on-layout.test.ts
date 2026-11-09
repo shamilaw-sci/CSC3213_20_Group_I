@@ -47,9 +47,7 @@ describe("Digital Twin outfit and photo layout", () => {
     expect(html).toContain('aria-label="Photo guidelines"');
     expect(html).toContain("Drag &amp; drop or click to upload");
     expect(html).toContain("At least 400 × 600 pixels");
-    expect(html).toContain("Choose an outfit in Explore to continue.");
-    expect(openingTagForButton(html, "Generate Try-On")).toContain("disabled");
-    expect(html).toContain("illustrative fitting guide");
+    expect(openingTagForButton(html, "Generate My Look")).toContain("disabled");
   });
 
   it("keeps the saved photo preview and replacement control, but requires an outfit", () => {
@@ -58,7 +56,9 @@ describe("Digital Twin outfit and photo layout", () => {
     expect(html).toContain('alt="Digital twin upload preview"');
     expect(html).toContain("Replace Photo");
     expect(html).toContain("Delete Photo");
-    expect(html).toContain("View photo preview");
-    expect(openingTagForButton(html, "Generate Try-On")).toContain("disabled");
+    expect(html).not.toContain("Photo uploaded successfully");
+    expect(html).not.toContain("Digital Twin photo ready");
+    expect(html).not.toContain("View photo preview");
+    expect(openingTagForButton(html, "Generate My Look")).toContain("disabled");
   });
 });
