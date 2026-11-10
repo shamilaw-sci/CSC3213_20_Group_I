@@ -89,6 +89,14 @@ export function TryOnProvider({
 
   };
 
+  const selectProduct = (product: TryOnProduct) => {
+    setState((prev) => ({
+      ...prev,
+      selectedProduct: product,
+      isOpen: false,
+      result: null,
+    }));
+  };
 
 
 
@@ -339,28 +347,14 @@ export function TryOnProvider({
     <TryOnContext.Provider
 
       value={{
-
         state,
-
-
         openTryOn,
-
-
+        selectProduct,
         closeTryOn,
-
-
         uploadPhoto,
-
-
         removePhoto,
-
-
         generateTryOn,
-
-
         clearResult,
-
-
       }}
 
     >
@@ -384,29 +378,12 @@ export function TryOnProvider({
 
 // Custom Hook
 
-export function useTryOnContext(){
+export function useTryOnContext() {
+  const context = useContext(TryOnContext);
 
-
-  const context =
-    useContext(TryOnContext);
-
-
-
-
-  if(!context){
-
-
-    throw new Error(
-      "useTryOnContext must be used inside TryOnProvider"
-    );
-
-
+  if (!context) {
+    throw new Error("useTryOnContext must be used inside TryOnProvider");
   }
 
-
-
-
   return context;
-
-
 }

@@ -55,6 +55,10 @@ export interface TryOnContextType {
     product: TryOnProduct
   ) => void;
 
+  selectProduct: (
+    product: TryOnProduct
+  ) => void;
+
 
 
   closeTryOn: () => void;
