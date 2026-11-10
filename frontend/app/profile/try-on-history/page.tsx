@@ -100,16 +100,16 @@ export default function TryOnHistoryPage() {
   return (
     <div className="tv-page min-h-screen">
       <Navbar />
-      <main className="mx-auto max-w-7xl px-6 py-10">
+      <main className="mx-auto max-w-7xl min-w-0 px-6 py-10 lg:pl-80">
         <Link href="/profile" className="text-sm font-semibold text-indigo-700 hover:underline">
           Back to Profile
         </Link>
-        <header className="mt-7 flex items-end justify-between gap-8">
+        <header className="mt-7 flex flex-wrap items-end justify-between gap-6">
           <div>
             <h1 className="text-4xl font-bold text-slate-950">Try on history</h1>
             <p className="mt-2 text-slate-600">Manage all try on result</p>
           </div>
-          <div className="flex items-end gap-4">
+          <div className="flex flex-wrap items-end gap-4">
             <label className="text-sm font-medium text-slate-700">
               Sort by
               <select
@@ -125,7 +125,7 @@ export default function TryOnHistoryPage() {
               type="button"
               disabled
               title="Download all is unavailable because illustrative Try-On results are not stored as image files."
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white opacity-50"
+              className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl bg-slate-300 px-5 py-3 font-semibold text-slate-600"
             >
               <Download size={18} /> Download all
             </button>
@@ -162,7 +162,7 @@ export default function TryOnHistoryPage() {
                 <h2 className="mb-5 text-xl font-bold text-slate-900">
                   {new Date(date).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
                 </h2>
-                <div className="grid grid-cols-4 gap-5">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
                   {records.map((item) => (
                     <article
                       key={item.id}
