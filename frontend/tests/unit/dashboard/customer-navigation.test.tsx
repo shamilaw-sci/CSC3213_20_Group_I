@@ -25,13 +25,13 @@ function setSession(role?: "CUSTOMER" | "MERCHANT" | "ADMIN") {
 describe("customer navigation", () => {
   beforeEach(() => vi.resetAllMocks());
 
-  it("shows public links and the existing merchant page for guests", () => {
+  it("shows public links and the shared sign-in route for guests", () => {
     setSession();
     const html = renderToStaticMarkup(<Navbar />);
 
     expect(html).toContain('href="/explore"');
     expect(html).toContain('href="/#how-it-works"');
-    expect(html).toContain('href="/merchant"');
+    expect(html).toContain('href="/login"');
     expect(html).toContain("Login as Merchant");
     expect(html).toContain("Cart");
     expect(html).not.toContain('href="/dashboard"');
@@ -44,8 +44,8 @@ describe("customer navigation", () => {
     expect(html).toContain('href="/dashboard"');
     expect(html).toContain('aria-current="page"');
     expect(html).toContain("Account menu");
-    expect(html).toContain('href="/merchant"');
-    expect(html).toContain("Login as Merchant");
+    expect(html).toContain('href="/merchant/onboarding"');
+    expect(html).toContain("Become a Merchant");
     expect(html).not.toContain('href="/pricing"');
   });
 
@@ -64,5 +64,19 @@ describe("customer navigation", () => {
 
     expect(html).toContain('href="/admin"');
     expect(html).not.toContain('href="/dashboard"');
+  });
+
+  it("keeps customer workspace navigation available for support pages", () => {
+    mocks.useAuth.mockReturnValue({
+      ready: true,
+      user: { id: "user-1", name: "Test User", role: "CUSTOMER" },
+      logout: vi.fn(),
+    });
+
+    const html = renderToStaticMarkup(<Navbar />);
+
+    expect(html).toContain('href="/help"');
+    expect(html).toContain('href="/plan"');
+    expect(html).toContain('href="/support"');
   });
 });

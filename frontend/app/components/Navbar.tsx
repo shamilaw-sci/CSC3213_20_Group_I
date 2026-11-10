@@ -47,7 +47,7 @@ export default function Navbar() {
           { label: "Merchant Analytics", href: "/merchant/analytics" },
         ]
       : [{ label: "Admin", href: "/admin" }];
-  const customerWorkspace = role === "CUSTOMER" && ["/dashboard", "/profile", "/favorites", "/recommendations"].some((route) => pathname === route || pathname.startsWith(`${route}/`));
+  const customerWorkspace = role === "CUSTOMER" && ["/dashboard", "/profile", "/favorites", "/recommendations", "/help", "/plan", "/support"].some((route) => pathname === route || pathname.startsWith(`${route}/`));
 
   function isActive(href: string) {
     const target = href.split("#")[0];
