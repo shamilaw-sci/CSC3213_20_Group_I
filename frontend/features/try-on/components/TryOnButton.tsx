@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 
 import { useTryOn } from "../hooks/useTryOn";
@@ -16,9 +17,15 @@ export default function TryOnButton({
 }: TryOnButtonProps) {
 
 
-  const {
-    openTryOn,
-  } = useTryOn();
+  const router = useRouter();
+  const { selectProduct } = useTryOn();
+
+  const handleTryOn = () => {
+    // Selecting an outfit takes the customer to Digital Twin. The fitting
+    // preview is intentionally opened later by the Generate My Look action.
+    selectProduct(product);
+    router.push("/profile?tab=digitalTwin");
+  };
 
 
 
@@ -26,7 +33,8 @@ export default function TryOnButton({
 
     <button
 
-      onClick={() => openTryOn(product)}
+      type="button"
+      onClick={handleTryOn}
 
       className="
         w-full

@@ -104,18 +104,20 @@ export default function TryOnHistoryPage() {
         <Link href="/profile" className="text-sm font-semibold text-indigo-700 hover:underline">
           Back to Profile
         </Link>
-        <header className="mt-7 flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <h1 className="text-4xl font-bold text-slate-950">Try on history</h1>
-            <p className="mt-2 text-slate-600">Manage all try on result</p>
-          </div>
-          <div className="flex flex-wrap items-end gap-4">
+        <header className="mt-7 rounded-3xl bg-gradient-to-br from-indigo-700 via-violet-700 to-fuchsia-600 p-6 text-white shadow-lg sm:p-8">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-100">Your fitting room</p>
+              <h1 className="mt-2 text-3xl font-black sm:text-4xl">Try-On History</h1>
+              <p className="mt-2 text-sm text-indigo-100 sm:text-base">Review your saved fitting guides and revisit products you explored.</p>
+            </div>
+            <div className="flex flex-wrap items-end gap-3">
             <label className="text-sm font-medium text-slate-700">
-              Sort by
+              <span className="text-indigo-100">Sort by</span>
               <select
                 value={sortOrder}
                 onChange={(event) => setSortOrder(event.target.value as "newest" | "oldest")}
-                className="mt-1 block rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900"
+                className="mt-1 block rounded-xl border-0 bg-white px-4 py-3 text-slate-900 shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 <option value="newest">Newest</option>
                 <option value="oldest">Oldest</option>
@@ -125,13 +127,14 @@ export default function TryOnHistoryPage() {
               type="button"
               disabled
               title="Download all is unavailable because illustrative Try-On results are not stored as image files."
-              className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl bg-slate-300 px-5 py-3 font-semibold text-slate-600"
+              className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl bg-white/60 px-5 py-3 font-semibold text-indigo-950"
             >
               <Download size={18} /> Download all
             </button>
+            </div>
           </div>
         </header>
-        <p className="mt-4 text-sm text-slate-600">
+        <p className="mt-4 rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-sm text-slate-600">
           Saved fitting guides are illustrative. The current Try-On system does not store a downloadable result image.
         </p>
 
@@ -148,11 +151,11 @@ export default function TryOnHistoryPage() {
         ) : error && items.length === 0 ? (
           <p role="alert" className="mt-12 rounded-xl bg-rose-50 p-4 text-rose-800">{error}</p>
         ) : items.length === 0 ? (
-          <section className="mt-12 rounded-3xl border border-slate-200 bg-white px-8 py-16 text-center">
+          <section className="mt-12 rounded-3xl border border-dashed border-indigo-200 bg-indigo-50/50 px-8 py-16 text-center">
             <Sparkles className="mx-auto text-indigo-600" size={32} />
             <h2 className="mt-4 text-2xl font-bold text-slate-900">No try-on history yet</h2>
             <p className="mt-2 text-slate-600">Your saved Try-On results will appear here.</p>
-            <Link href="/explore" className="mt-6 inline-block rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white">Explore products</Link>
+            <Link href="/explore" className="mt-6 inline-block rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white transition hover:bg-indigo-700">Explore products</Link>
           </section>
         ) : (
           <div className="mt-10 space-y-12">

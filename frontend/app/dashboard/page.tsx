@@ -18,10 +18,15 @@ export default async function CustomerDashboardPage() {
     <div className="tv-page min-h-screen bg-slate-50">
       <Navbar />
       <main className="mx-auto max-w-7xl px-5 py-8 sm:px-6 lg:py-10 lg:pl-80">
-        <div className="mb-8">
-          <p className="text-sm font-bold uppercase tracking-widest text-indigo-600">Your space</p>
-          <h1 className="mt-2 text-3xl font-bold text-slate-950">Welcome, {current.user.name}</h1>
-          <p className="mt-2 text-slate-600">Your profile, saved products, and fitting previews in one place.</p>
+        <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-700 via-violet-700 to-fuchsia-600 p-6 text-white shadow-lg sm:p-8">
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-100">Your fitting room</p>
+          <div className="mt-3 flex flex-wrap items-end justify-between gap-5">
+            <div>
+              <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Welcome, {current.user.name}</h1>
+              <p className="mt-2 max-w-2xl text-sm text-indigo-100 sm:text-base">Manage your fit profile, discover new styles, and revisit your fitting previews.</p>
+            </div>
+            <Link href="/explore" className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-indigo-700 shadow-sm transition hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Explore products <ArrowRight size={16} aria-hidden="true" /></Link>
+          </div>
         </div>
 
         <div className="min-w-0 space-y-6">
@@ -59,7 +64,7 @@ export default async function CustomerDashboardPage() {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="recommendations-heading">
+            <section className="rounded-3xl border border-indigo-100 bg-gradient-to-r from-white to-indigo-50/70 p-5 shadow-sm sm:p-6" aria-labelledby="recommendations-heading">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <div className="mb-3 inline-flex rounded-xl bg-violet-100 p-2 text-violet-700"><Sparkles size={20} aria-hidden="true" /></div>
@@ -76,9 +81,14 @@ export default async function CustomerDashboardPage() {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="tryons-heading">
-              <h2 id="tryons-heading" className="text-lg font-bold text-slate-950">Recent fitting previews</h2>
-              <p className="mt-1 text-sm text-slate-600">Saved illustrative Try-On sessions, not generated outfit photos.</p>
+            <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="tryons-heading">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 id="tryons-heading" className="text-lg font-bold text-slate-950">Recent fitting previews</h2>
+                  <p className="mt-1 text-sm text-slate-600">Saved illustrative Try-On sessions, not generated outfit photos.</p>
+                </div>
+                <Link href="/profile/try-on-history" className="text-sm font-semibold text-indigo-700 hover:underline">View history</Link>
+              </div>
               {overview.recentTryOns.length === 0 ? (
                 <div className="mt-5 rounded-xl bg-slate-50 px-4 py-5 text-sm text-slate-600">
                   No fitting previews saved yet. <Link href="/explore" className="font-semibold text-indigo-700 underline">Explore products</Link> to try an outfit.
