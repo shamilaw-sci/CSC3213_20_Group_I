@@ -49,6 +49,10 @@ export default function ProductCard({
             alt={product.title}
             fill
             unoptimized
+            onError={(event) => {
+              const image = event.currentTarget;
+              if (!image.src.endsWith("/placeholders/product.svg")) image.src = "/placeholders/product.svg";
+            }}
             className="object-cover"
           />
         </Link>

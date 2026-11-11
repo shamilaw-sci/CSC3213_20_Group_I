@@ -4,8 +4,10 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 import Navbar from "@/app/components/Navbar";
+import TryOnButton from "@/features/try-on/components/TryOnButton";
 import MerchantRedirectButton from "./MerchantRedirectButton";
 import RememberSelectedProduct from "./RememberSelectedProduct";
+import FavoriteProductButton from "./FavoriteProductButton";
 
 type ProductDetails = {
   id: string;
@@ -63,13 +65,14 @@ export default async function ProductDetailsPage({
           <div className="grid gap-4 sm:grid-cols-2">
             {gallery.map((image) => (
               <div key={image.id} className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-gray-100">
+                <FavoriteProductButton productId={product.id} />
                 <Image
                   src={image.url}
                   alt={image.alt ?? product.name}
                   fill
                   unoptimized
                   sizes="(min-width: 1024px) 35vw, 90vw"
-                  className="object-cover"
+                  className="object-contain bg-white p-2"
                 />
               </div>
             ))}
@@ -105,6 +108,20 @@ export default async function ProductDetailsPage({
             </div>
 
             <MerchantRedirectButton productId={product.id} />
+            <div className="mt-3">
+              <TryOnButton
+                product={{
+                  id: product.id,
+                  title: product.name,
+                  image: product.image ?? gallery[0].url,
+                  category: product.category.name,
+                  store: product.merchant.name,
+                  price: product.price,
+                  currency: product.currency,
+                  availableSizes: product.variants.map((variant) => variant.size).filter((size): size is string => Boolean(size)),
+                }}
+              />
+            </div>
           </div>
         </section>
       </main>

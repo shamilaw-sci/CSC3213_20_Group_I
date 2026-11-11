@@ -62,15 +62,16 @@ export default function ComparisonsPage() {
   }, []);
 
   return (
-    <div className="tv-page min-h-screen">
+    <div className="tv-page min-h-screen bg-slate-50">
       <Navbar />
-      <main className="mx-auto max-w-6xl px-6 py-8">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+      <main className="mx-auto max-w-7xl px-5 py-10 sm:px-6 lg:pl-80">
+        <div className="rounded-3xl bg-gradient-to-br from-indigo-700 via-violet-700 to-fuchsia-600 p-6 text-white shadow-lg sm:p-8">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Comparisons</h1>
-            <p className="mt-1 text-sm text-gray-500">Review saved product comparisons side by side.</p>
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-100">Compare your shortlist</p>
+            <h1 className="mt-2 text-3xl font-black">Comparisons</h1>
+            <p className="mt-2 text-sm text-indigo-100">Review saved products side by side before choosing your next outfit.</p>
           </div>
-          <Link href="/explore" className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white">
+          <Link href="/explore" className="mt-5 inline-flex rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-indigo-700 shadow-sm hover:bg-indigo-50">
             Find products
           </Link>
         </div>
@@ -111,7 +112,7 @@ export default function ComparisonsPage() {
                           alt={product.name}
                           fill
                           sizes="(min-width: 1280px) 20vw, (min-width: 768px) 40vw, 90vw"
-                          className="object-cover"
+                          className="object-contain bg-white p-2"
                         />
                       </div>
                       <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
