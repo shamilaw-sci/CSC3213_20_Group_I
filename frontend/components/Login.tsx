@@ -22,7 +22,12 @@ export default function Login() {
     setError("");
     try {
       const user = await login(String(data.get("email") ?? ""), String(data.get("password") ?? ""), data.get("rememberMe") === "on");
-      router.replace(user.role === "ADMIN" ? "/admin" : user.role === "MERCHANT" ? "/merchant" : "/profile");
+      const destination = user.role === "ADMIN" ? "/admin" : user.role === "MERCHANT" ? "/merchant" : "/profile";
+      if (user.role === "ADMIN") {
+        window.location.replace(destination);
+        return;
+      }
+      router.replace(destination);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-in failed. Please try again.");

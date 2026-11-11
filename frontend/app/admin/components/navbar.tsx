@@ -89,7 +89,7 @@ export default function Navbar() {
     setLogoutError("");
     try {
       await logout();
-      router.replace("/login");
+      router.replace("/");
       router.refresh();
     } catch {
       setLogoutError("Could not log out. Please try again.");
