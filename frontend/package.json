@@ -11,6 +11,7 @@
     "test:auth": "node --test tests/auth/*.test.mjs",
     "typecheck": "next typegen && tsc --noEmit --project tsconfig.typecheck.json",
     "db:generate": "prisma generate",
+    "db:seed-admin": "tsx scripts/seed-admin.ts",
     "test": "vitest run",
     "test:digital-twin": "vitest run tests/unit/digital-twin"
   },
@@ -44,6 +45,7 @@
     "eslint-config-next": "16.2.3",
     "prisma": "7.9.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^4.1.11"
   }
