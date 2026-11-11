@@ -13,7 +13,11 @@ type ProductVariant = {
   color: string | null;
   price: number | null;
   stockQuantity: number;
+  fitRangesCm?: FitRangesCm | null;
 };
+type FitRange = { min: string; max: string };
+type FitRangesCm = { chest?: FitRange; waist?: FitRange; hips?: FitRange; shoulder?: FitRange };
+const fitDimensions = [["chest", "Chest"], ["waist", "Waist"], ["hips", "Hips"], ["shoulder", "Shoulder"]] as const;
 type Product = {
   id: string;
   name: string;
@@ -40,6 +44,7 @@ type ProductFormState = {
   merchantUrl: string;
   status: Product["status"];
   imageUrl: string;
+  fitRanges: Record<string, FitRangesCm>;
 };
 
 const emptyForm: ProductFormState = {
@@ -54,6 +59,7 @@ const emptyForm: ProductFormState = {
   merchantUrl: "",
   status: "DRAFT",
   imageUrl: "",
+  fitRanges: {},
 };
 
 function slugifySku(name: string, size: string, index: number) {
@@ -68,6 +74,9 @@ function variantsFromForm(form: ProductFormState) {
     size,
     color: colors[index % Math.max(colors.length, 1)] || null,
     stockQuantity: Number(form.stock || 0),
+    fitRangesCm: form.fitRanges[size] && Object.values(form.fitRanges[size]).some((range) => range?.min || range?.max)
+      ? Object.fromEntries(Object.entries(form.fitRanges[size]).map(([dimension, range]) => [dimension, { min: Number(range.min), max: Number(range.max) }]))
+      : undefined,
   }));
 }
 
@@ -84,6 +93,7 @@ function productToForm(product: Product): ProductFormState {
     merchantUrl: product.merchantUrl,
     status: product.status,
     imageUrl: product.image ?? "",
+    fitRanges: Object.fromEntries(product.variants.filter((variant) => variant.size).map((variant) => [variant.size, variant.fitRangesCm ?? {}])),
   };
 }
 
@@ -159,6 +169,23 @@ export default function MerchantPage() {
     setImagePreview(URL.createObjectURL(file));
   }
 
+  function selectedSizes() {
+    return form.sizes.split(",").map((size) => size.trim()).filter(Boolean);
+  }
+
+  function updateFitRange(size: string, dimension: keyof FitRangesCm, field: keyof FitRange, value: string) {
+    setForm((current) => ({
+      ...current,
+      fitRanges: {
+        ...current.fitRanges,
+        [size]: {
+          ...current.fitRanges[size],
+          [dimension]: { ...current.fitRanges[size]?.[dimension], [field]: value },
+        },
+      },
+    }));
+  }
+
   async function uploadImage(image: FormDataEntryValue | null) {
     if (!(image instanceof File) || !image.size) return form.imageUrl || undefined;
     const upload = new FormData();
@@ -177,6 +204,19 @@ export default function MerchantPage() {
     try {
       const submitted = new FormData(event.currentTarget);
       const primaryImageUrl = await uploadImage(submitted.get("image"));
+      const variants = variantsFromForm(form);
+      for (const variant of variants) {
+        const ranges = form.fitRanges[variant.size];
+        if (!ranges) continue;
+        for (const [dimension, range] of Object.entries(ranges)) {
+          if (!range?.min && !range?.max) continue;
+          const min = Number(range.min);
+          const max = Number(range.max);
+          if (!Number.isFinite(min) || !Number.isFinite(max) || min < 0 || max < 0 || min > max) {
+            throw new Error(`${dimension} range for size ${variant.size} must have a valid minimum and maximum.`);
+          }
+        }
+      }
       const payload = {
         categoryId: form.categoryId,
         productName: form.productName,
@@ -186,7 +226,7 @@ export default function MerchantPage() {
         merchantUrl: form.merchantUrl,
         primaryImageUrl,
         status: form.status,
-        variants: variantsFromForm(form),
+        variants,
       };
 
       const response = await fetch(
@@ -317,6 +357,28 @@ export default function MerchantPage() {
               </select>
               <input value={form.sizes} onChange={(event) => updateField("sizes", event.target.value)} required placeholder="Sizes: S, M, L, XL" className="rounded-xl border p-3" />
               <input value={form.colors} onChange={(event) => updateField("colors", event.target.value)} placeholder="Colours: Red, Blue" className="rounded-xl border p-3" />
+              <section className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 sm:col-span-2">
+                <h3 className="font-bold text-indigo-950">Optional size chart (cm)</h3>
+                <p className="mt-1 text-sm text-indigo-800">Enter actual garment measurement ranges for each selected size. Leave blank if you do not have a size chart.</p>
+                <div className="mt-4 space-y-4">
+                  {selectedSizes().map((size) => (
+                    <div key={size} className="rounded-xl bg-white p-3">
+                      <p className="font-bold text-slate-900">Size {size}</p>
+                      <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                        {fitDimensions.map(([dimension, label]) => (
+                          <div key={dimension}>
+                            <label className="text-xs font-semibold text-slate-700">{label}</label>
+                            <div className="mt-1 flex gap-1">
+                              <input type="number" min="0" step="0.1" placeholder="Min" value={form.fitRanges[size]?.[dimension]?.min ?? ""} onChange={(event) => updateFitRange(size, dimension, "min", event.target.value)} className="w-full rounded-lg border p-2 text-sm" />
+                              <input type="number" min="0" step="0.1" placeholder="Max" value={form.fitRanges[size]?.[dimension]?.max ?? ""} onChange={(event) => updateFitRange(size, dimension, "max", event.target.value)} className="w-full rounded-lg border p-2 text-sm" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
               <input value={form.merchantUrl} onChange={(event) => updateField("merchantUrl", event.target.value)} required type="url" placeholder="Customer redirection / purchase link" className="rounded-xl border p-3 sm:col-span-2" />
               <input value={form.imageUrl} onChange={(event) => { updateField("imageUrl", event.target.value); setImagePreview(event.target.value); }} type="url" placeholder="Existing image URL" className="rounded-xl border p-3 sm:col-span-2" />
               <label className="relative flex min-h-48 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-indigo-300 p-4 text-sm font-semibold text-indigo-700 sm:col-span-2">

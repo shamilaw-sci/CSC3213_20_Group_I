@@ -4,6 +4,7 @@ type MeasurementProfile = {
   chestCm?: number | null;
   waistCm?: number | null;
   hipsCm?: number | null;
+  shoulderCm?: number | null;
 };
 
 const sizeOrder = ["XS", "S", "M", "L", "XL", "XXL"];
@@ -17,7 +18,8 @@ export const fitRangesCmSchema = z.object({
   chest: bodyRangeSchema.optional(),
   waist: bodyRangeSchema.optional(),
   hips: bodyRangeSchema.optional(),
-}).refine((value) => Boolean(value.chest || value.waist || value.hips), "At least one fit range is required.");
+  shoulder: bodyRangeSchema.optional(),
+}).refine((value) => Boolean(value.chest || value.waist || value.hips || value.shoulder), "At least one fit range is required.");
 
 export type FitRangesCm = z.infer<typeof fitRangesCmSchema>;
 
@@ -73,7 +75,8 @@ export function recommendSizeFromFitRanges(
   const exact = candidates.find((candidate) => (
     isInRange(profile.chestCm, candidate.fitRangesCm.chest) &&
     isInRange(profile.waistCm, candidate.fitRangesCm.waist) &&
-    isInRange(profile.hipsCm, candidate.fitRangesCm.hips)
+    isInRange(profile.hipsCm, candidate.fitRangesCm.hips) &&
+    isInRange(profile.shoulderCm, candidate.fitRangesCm.shoulder)
   ));
 
   if (exact) {
@@ -86,7 +89,8 @@ export function recommendSizeFromFitRanges(
       distance:
         rangeDistance(profile.chestCm, candidate.fitRangesCm.chest) +
         rangeDistance(profile.waistCm, candidate.fitRangesCm.waist) +
-        rangeDistance(profile.hipsCm, candidate.fitRangesCm.hips),
+        rangeDistance(profile.hipsCm, candidate.fitRangesCm.hips) +
+        rangeDistance(profile.shoulderCm, candidate.fitRangesCm.shoulder),
     }))
     .sort((left, right) => left.distance - right.distance)[0];
 
