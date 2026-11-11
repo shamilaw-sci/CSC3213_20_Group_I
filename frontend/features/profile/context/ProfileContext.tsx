@@ -166,6 +166,7 @@ export function ProfileProvider({
     });
     const measurementResult = await measurementResponse.json().catch(() => ({})) as { message?: string };
     if (!measurementResponse.ok) throw new Error(measurementResult.message ?? "Could not save measurements.");
+    if (typeof window !== "undefined") window.dispatchEvent(new Event("tryvora:measurements-updated"));
   };
 
   const saveProfile = async () => {

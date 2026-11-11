@@ -79,7 +79,12 @@ export default function RecommendationsPage() {
     }
 
     void loadRecommendations();
-    return () => controller.abort();
+    const refresh = () => void loadRecommendations();
+    window.addEventListener("tryvora:measurements-updated", refresh);
+    return () => {
+      controller.abort();
+      window.removeEventListener("tryvora:measurements-updated", refresh);
+    };
   }, []);
 
   return (
