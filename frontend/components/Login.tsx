@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
 import { useAuth } from "@/features/auth/context/AuthContext";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function Login() {
   const { login } = useAuth();
@@ -85,10 +86,9 @@ export default function Login() {
               </div>
 
               <div className="mt-2">
-                <input
+                <PasswordInput
                   id="password"
                   name="password"
-                  type="password"
                   required
                   autoComplete="current-password"
                   className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition"

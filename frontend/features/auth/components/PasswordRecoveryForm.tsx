@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRef, useState, type FormEvent } from "react";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function PasswordRecoveryForm({ token }: { token?: string }) {
   const resetting = token !== undefined;
@@ -52,9 +53,9 @@ export default function PasswordRecoveryForm({ token }: { token?: string }) {
           <form onSubmit={submit} aria-busy={busy} className="space-y-4">
             {resetting ? <>
               <div><label htmlFor="password" className="mb-1 block text-gray-700">New password</label>
-                <input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} maxLength={128} className={inputClass} /></div>
+                <PasswordInput id="password" name="password" autoComplete="new-password" required minLength={8} maxLength={128} className={inputClass} /></div>
               <div><label htmlFor="confirmPassword" className="mb-1 block text-gray-700">Confirm password</label>
-                <input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" required minLength={8} maxLength={128} className={inputClass} /></div>
+                <PasswordInput id="confirmPassword" name="confirmPassword" autoComplete="new-password" required minLength={8} maxLength={128} className={inputClass} /></div>
               <p className="text-sm text-gray-600">Use at least 8 characters, including an uppercase letter and a number.</p>
             </> : <div>
               <label htmlFor="email" className="mb-1 block text-gray-700">Email address</label>

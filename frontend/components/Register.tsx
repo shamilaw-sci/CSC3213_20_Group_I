@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
 import { useAuth } from "@/features/auth/context/AuthContext";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function RegisterPage() {
   const { register, startGuest } = useAuth();
@@ -192,8 +193,7 @@ export default function RegisterPage() {
                     Password
                   </label>
 
-                  <input
-                    type="password"
+                  <PasswordInput
                     name="password"
                     aria-label="Password"
                     autoComplete="new-password"
@@ -211,8 +211,7 @@ export default function RegisterPage() {
                     Confirm Password
                   </label>
 
-                  <input
-                    type="password"
+                  <PasswordInput
                     name="confirmPassword"
                     aria-label="Confirm password"
                     autoComplete="new-password"

@@ -41,9 +41,26 @@ function metadataValue(metadata: unknown, key: string) {
   return typeof value === "string" ? value : null;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const access = await requireAuthenticatedUser(["ADMIN"]);
   if ("error" in access) return access.error;
+  const searchTerm = new URL(request.url).searchParams.get("search")?.trim().slice(0, 100) ?? "";
+  const sessionSearch = searchTerm ? { OR: [
+    { sessionId: { contains: searchTerm } },
+    { ipAddress: { contains: searchTerm } },
+    { userAgent: { contains: searchTerm } },
+    { user: { OR: [{ userName: { contains: searchTerm } }, { userEmail: { contains: searchTerm } }] } },
+  ] } : {};
+  const auditSearch = searchTerm ? { OR: [
+    { action: { contains: searchTerm } },
+    { entityType: { contains: searchTerm } },
+    { entityId: { contains: searchTerm } },
+    { user: { userName: { contains: searchTerm } } },
+    { user: { userEmail: { contains: searchTerm } } },
+  ] } : {};
+  const failedSearch = !searchTerm || /failed|login/i.test(searchTerm)
+    ? { action: "AUTH_LOGIN_FAILED" }
+    : { action: "AUTH_LOGIN_FAILED", OR: [{ auditLogId: { contains: searchTerm } }, { ipAddress: { contains: searchTerm } }, { userAgent: { contains: searchTerm } }] };
   const now = new Date();
   const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const monthAgo = new Date(now);
@@ -55,10 +72,10 @@ export async function GET() {
   const since = weeklyChartStart < chartStart ? weeklyChartStart : chartStart;
 
   const [loginHistory, activeSessions, failedAttempts, adminAuditLogs, successfulEvents, failedEvents, successful24h, failed24h, adminActions30d, failedTryOns, stalledTryOns, unresolvedFeedback, failedLogins30d, restrictedUsers] = await Promise.all([
-    prisma.session.findMany({ orderBy: { createdAt: "desc" }, take: 50, include: { user: { select: { userName: true, userEmail: true, role: true } } } }),
-    prisma.session.findMany({ where: { revokedAt: null, expiryDate: { gt: now } }, orderBy: { createdAt: "desc" }, take: 100, include: { user: { select: { userName: true, userEmail: true, role: true } } } }),
-    prisma.auditlog.findMany({ where: { action: "AUTH_LOGIN_FAILED" }, orderBy: { timestamp: "desc" }, take: 100 }),
-    prisma.auditlog.findMany({ where: { adminId: { not: null } }, orderBy: { timestamp: "desc" }, take: 100, include: { user: { select: { userName: true, userEmail: true } } } }),
+    prisma.session.findMany({ where: sessionSearch, orderBy: { createdAt: "desc" }, take: searchTerm ? 100 : 50, include: { user: { select: { userName: true, userEmail: true, role: true } } } }),
+    prisma.session.findMany({ where: { revokedAt: null, expiryDate: { gt: now }, ...sessionSearch }, orderBy: { createdAt: "desc" }, take: searchTerm ? 100 : 100, include: { user: { select: { userName: true, userEmail: true, role: true } } } }),
+    prisma.auditlog.findMany({ where: failedSearch, orderBy: { timestamp: "desc" }, take: searchTerm ? 100 : 100 }),
+    prisma.auditlog.findMany({ where: { adminId: { not: null }, ...auditSearch }, orderBy: { timestamp: "desc" }, take: searchTerm ? 100 : 100, include: { user: { select: { userName: true, userEmail: true } } } }),
     prisma.session.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
     prisma.auditlog.findMany({ where: { action: "AUTH_LOGIN_FAILED", timestamp: { gte: since } }, select: { timestamp: true } }),
     prisma.session.count({ where: { createdAt: { gte: dayAgo } } }),

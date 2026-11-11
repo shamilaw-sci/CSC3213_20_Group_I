@@ -3,11 +3,13 @@ import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/server/auth/authorization";
 import { prisma } from "@/server/db/prisma";
 
-export async function GET() {
+export async function GET(request: Request) {
   const access = await requireAuthenticatedUser(["ADMIN"]);
   if ("error" in access) return access.error;
+  const search = new URL(request.url).searchParams.get("search")?.trim().slice(0, 100) ?? "";
+  const searchWhere = search ? { OR: [{ subject: { contains: search } }, { message: { contains: search } }, { user_feedback_userIdTouser: { is: { OR: [{ userName: { contains: search } }, { userEmail: { contains: search } }] } } }] } : {};
   const [items, open, inReview, resolved, closed] = await Promise.all([
-    prisma.feedback.findMany({ orderBy: { createdAt: "desc" }, take: 100, include: { user_feedback_userIdTouser: { select: { userName: true, userEmail: true } }, user_feedback_resolvedByIdTouser: { select: { userName: true } } } }),
+    prisma.feedback.findMany({ where: searchWhere, orderBy: { createdAt: "desc" }, take: 100, include: { user_feedback_userIdTouser: { select: { userName: true, userEmail: true } }, user_feedback_resolvedByIdTouser: { select: { userName: true } } } }),
     prisma.feedback.count({ where: { status: "OPEN" } }),
     prisma.feedback.count({ where: { status: "IN_REVIEW" } }),
     prisma.feedback.count({ where: { status: "RESOLVED" } }),

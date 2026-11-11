@@ -8,7 +8,8 @@ type FeedbackItem = { id: string; customer: { name: string; email: string }; typ
 type Data = { summary: { open: number; inReview: number; resolved: number; closed: number }; feedback: FeedbackItem[] };
 
 async function fetchFeedback() {
-  const response = await fetch("/api/v1/admin/feedback", { cache: "no-store" });
+  const search = typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("search")?.trim() ?? "";
+  const response = await fetch(`/api/v1/admin/feedback${search ? `?search=${encodeURIComponent(search)}` : ""}`, { cache: "no-store" });
   const body = await response.json();
   if (!response.ok) throw new Error(body.message ?? "Could not load feedback.");
   return body as Data;
@@ -17,6 +18,7 @@ async function fetchFeedback() {
 export default function FeedbackManagementPage() {
   const [data, setData] = useState<Data | null>(null);
   const [filter, setFilter] = useState<"ALL" | FeedbackStatus>("ALL");
+  const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
 
@@ -30,7 +32,11 @@ export default function FeedbackManagementPage() {
     return () => { active = false; };
   }, []);
 
-  const visible = useMemo(() => data?.feedback.filter((item) => filter === "ALL" || item.status === filter) ?? [], [data, filter]);
+  useEffect(() => { const term = new URLSearchParams(window.location.search).get("search"); if (term) setQuery(term); }, []);
+  const visible = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    return data?.feedback.filter((item) => (filter === "ALL" || item.status === filter) && (!term || `${item.subject ?? ""} ${item.message} ${item.customer.name} ${item.customer.email} ${item.type} ${item.status}`.toLowerCase().includes(term))) ?? [];
+  }, [data, filter, query]);
   function editItem(id: string, changes: Partial<FeedbackItem>) {
     setData((current) => current ? { ...current, feedback: current.feedback.map((item) => item.id === id ? { ...item, ...changes } : item) } : current);
   }
@@ -55,6 +61,7 @@ export default function FeedbackManagementPage() {
     <section className="space-y-6">
       <div><p className="text-sm font-bold uppercase tracking-[0.18em] text-purple-700">Customer support</p><h2 className="mt-1 text-3xl font-black text-slate-950">Feedback management</h2><p className="mt-2 text-slate-600">Review customer reports, update their status, and record resolution notes.</p></div>
       {error && <p role="alert" className="rounded-xl bg-red-100 p-4 text-red-800">{error}</p>}
+      <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search feedback by subject, message, or customer" aria-label="Search feedback" className="w-full max-w-lg rounded-xl border border-slate-200 bg-white px-4 py-3 outline-purple-600" />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{([['OPEN','Open'],['IN_REVIEW','In review'],['RESOLVED','Resolved'],['CLOSED','Closed']] as const).map(([status, label]) => <button key={status} type="button" onClick={() => setFilter(status)} className={`rounded-2xl p-5 text-left shadow ${filter === status ? "bg-purple-700 text-white" : "bg-white"}`}><p className="font-bold">{label}</p><p className="mt-2 text-3xl font-black">{data?.summary[status === "IN_REVIEW" ? "inReview" : status.toLowerCase() as "open" | "resolved" | "closed"] ?? 0}</p></button>)}</div>
       <div className="flex flex-wrap gap-2">{filters.map((status) => <button key={status} type="button" onClick={() => setFilter(status)} className={`rounded-full px-4 py-2 text-sm font-semibold ${filter === status ? "bg-slate-950 text-white" : "bg-white text-slate-700 shadow"}`}>{status === "ALL" ? "All feedback" : status.toLowerCase().replace("_", " ")}</button>)}</div>
       <div className="grid gap-5">
