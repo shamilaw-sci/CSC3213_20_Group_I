@@ -1,93 +1,82 @@
-"use client";
-
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import ProductGrid from "@/app/components/ProductGrid";
-import type { Product } from "@/app/data/products";
-import { useFavorites } from "@/features/favorites/useFavorites";
-import TryOnModal from "@/features/try-on/components/TryOnModal";
-
-type CatalogueProduct = {
-  id: string;
-  name: string;
-  image: string | null;
-  price: number;
-  currency: string;
-  merchant: { name: string };
-  category: { name: string; slug: string };
-  variants: { size: string | null }[];
-};
+const products = [
+  {
+    id: 1,
+    name: 'Basic Tee',
+    href: '#',
+    imageSrc: 'https://tailwindcss.com/plus-assets/img/ecommerce-images/product-page-01-related-product-01.jpg',
+    imageAlt: "Front of men's Basic Tee in black.",
+    price: '$35',
+    color: 'Black',
+  },
+  {
+    id: 2,
+    name: 'Basic Tee',
+    href: '#',
+    imageSrc: 'https://tailwindcss.com/plus-assets/img/ecommerce-images/product-page-01-related-product-02.jpg',
+    imageAlt: "Front of men's Basic Tee in white.",
+    price: '$35',
+    color: 'Aspen White',
+  },
+  {
+    id: 3,
+    name: 'Basic Tee',
+    href: '#',
+    imageSrc: 'https://tailwindcss.com/plus-assets/img/ecommerce-images/product-page-01-related-product-03.jpg',
+    imageAlt: "Front of men's Basic Tee in dark gray.",
+    price: '$35',
+    color: 'Charcoal',
+  },
+  {
+    id: 4,
+    name: 'Artwork Tee',
+    href: '#',
+    imageSrc: 'https://tailwindcss.com/plus-assets/img/ecommerce-images/product-page-01-related-product-04.jpg',
+    imageAlt: "Front of men's Artwork Tee in peach with white and brown dots forming an isometric cube.",
+    price: '$35',
+    color: 'Iso Dots',
+  },
+]
 
 export default function ProductsList() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [attempt, setAttempt] = useState(0);
-  const favorites = useFavorites();
-
-  useEffect(() => {
-    const controller = new AbortController();
-    async function loadProducts() {
-      setLoading(true);
-      setError("");
-      try {
-        const response = await fetch("/api/v1/products?pageSize=4&sort=newest", {
-          cache: "no-store",
-          signal: controller.signal,
-        });
-        if (!response.ok) throw new Error("Could not load products.");
-        const data = await response.json();
-        if (!Array.isArray(data.products)) throw new Error("Could not load products.");
-        const items = data.products.map((product: CatalogueProduct): Product => ({
-          id: product.id,
-          title: product.name,
-          image: product.image || "/placeholders/product.svg",
-          price: product.price,
-          currency: product.currency,
-          store: product.merchant.name,
-          category: product.category.name as Product["category"],
-          categorySlug: product.category.slug,
-          availableSizes: [...new Set(product.variants.flatMap((variant) => variant.size ? [variant.size] : []))],
-        }));
-        if (!controller.signal.aborted) setProducts(items);
-      } catch {
-        if (!controller.signal.aborted) {
-          setProducts([]);
-          setError("Could not load products. Please try again.");
-        }
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    }
-    void loadProducts();
-    return () => controller.abort();
-  }, [attempt]);
-
   return (
-    <section id="latest-products" aria-labelledby="latest-products-title" className="scroll-mt-28 bg-gradient-to-r from-pink-100 to-gray-100 px-6 py-20">
-      <div className="mx-auto max-w-7xl">
-        <h2 id="latest-products-title" className="text-center text-4xl font-semibold text-gray-950">Latest Outfits</h2>
-        <p className="mt-4 mb-10 text-center text-lg text-gray-600">Discover the latest arrivals from our partner stores and try them on.</p>
-        {loading ? (
-          <p role="status" className="py-16 text-center text-gray-600">Loading products…</p>
-        ) : error ? (
-          <div role="alert" className="rounded-xl bg-white p-8 text-center text-rose-700">
-            <p>{error}</p>
-            <button type="button" onClick={() => setAttempt((value) => value + 1)} className="mt-4 rounded-lg border border-rose-700 px-5 py-2 font-semibold hover:bg-rose-50">Try again</button>
-          </div>
-        ) : products.length === 0 ? (
-          <p role="status" className="py-16 text-center text-gray-600">No products are available yet. Check back soon for new arrivals.</p>
-        ) : (
-          <>
-            {favorites.error && <p role="alert" className="mb-4 text-rose-700">Favorites are unavailable: {favorites.error}</p>}
-            <ProductGrid products={products} favoriteIds={favorites.favoriteIds} favoriteStateUnavailable={favorites.loading || Boolean(favorites.error)} onFavoriteChange={favorites.updateFavorite} />
-          </>
-        )}
-        <div className="mt-10 text-center">
-          <Link href="/explore" className="inline-block rounded-lg border border-blue-600 px-6 py-3 font-semibold text-blue-700 transition hover:bg-blue-600 hover:text-white">Explore All Items</Link>
+    <div className="bg-gradient-to-r from-pink-100 to-gray-300 py-24 sm:py-32">
+      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
+        <p className="mt-2 text-4xl font-semibold tracking-tight sm:text-5xl lg:text-balance text-black text-center pb-5 ">
+            Trending Outfits
+          </p>
+        <h2 className="text-2xl  tracking-tight text-gray-600 text-center mb-20 ">Explore the latest fashion from top brands and try them on instantly
+
+</h2>
+
+        <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
+          {products.map((product) => (
+            <div key={product.id} className="group relative">
+              <img
+                alt={product.imageAlt}
+                src={product.imageSrc}
+                className="aspect-square w-full rounded-md bg-gray-200 object-cover group-hover:opacity-75 lg:aspect-auto lg:h-80"
+              />
+              <div className="mt-4 flex justify-between">
+                <div>
+                  <h3 className="text-md text-gray-700 font-semibold ">
+                    <a href={product.href}>
+                      <span aria-hidden="true" className="absolute inset-0" />
+                      {product.name}
+                    </a>
+                  </h3>
+                  <p className="mt-1 text-md text-gray-500">{product.color}</p>
+                </div>
+                <p className="text-xl font-medium  text-blue-900 pr-10 font-semibold">{product.price}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-      <TryOnModal />
-    </section>
-  );
+         <div className="flex justify-center">
+             <button className="px-6 py-3 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition">
+                Explore All Items
+            </button>
+        </div>
+    </div>
+  )
 }
