@@ -13,11 +13,16 @@ import { useAuth } from "@/features/auth/context/AuthContext";
 
 import type {
   ProfileContextType,
-  ProfileState,
   ProfileTab,
   Measurements,
   Account,
+  ProfileLoadStatus,
 } from "../types/profile";
+import {
+  createEmptyProfile,
+  mergeLoadedProfile,
+  profileScopeKey,
+} from "./profileSessionState";
 
 const ProfileContext = createContext<ProfileContextType | undefined>(
   undefined
@@ -31,41 +36,32 @@ export function ProfileProvider({
   children,
 }: ProfileProviderProps) {
   const { user, ready } = useAuth();
-  const [profile, setProfile] = useState<ProfileState>({
-    activeTab: "digitalTwin",
+  const userId = ready && user?.role === "CUSTOMER" ? user.id : null;
 
-    digitalTwin: {
-      image: null,
-    },
+  // A new user identity receives a fresh state tree before any Profile UI renders.
+  return (
+    <ScopedProfileProvider key={profileScopeKey(ready, userId)} userId={userId}>
+      {children}
+    </ScopedProfileProvider>
+  );
+}
 
-    measurements: {
-      height: 0,
-      weight: 0,
-      chest: 0,
-      waist: 0,
-      hips: 0,
-      shoulder: 0,
-      skinColor: "#dfbeaa",
-      gender: "Unisex",
-    },
-
-    account: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      dateOfBirth: "",
-      country: "",
-    },
-  });
+function ScopedProfileProvider({
+  children,
+  userId,
+}: ProfileProviderProps & { userId: string | null }) {
+  const [profile, setProfile] = useState(createEmptyProfile);
+  const [profileLoadStatus, setProfileLoadStatus] = useState<ProfileLoadStatus>(
+    userId ? "loading" : "ready"
+  );
 
   // -----------------------------
   // Change Active Tab
   // -----------------------------
 
   const changeTab = (tab: ProfileTab) => {
-    setProfile((prev) => ({
-      ...prev,
+    setProfile((previous) => ({
+      ...previous,
       activeTab: tab,
     }));
   };
@@ -75,8 +71,8 @@ export function ProfileProvider({
   // -----------------------------
 
   const uploadImage = (image: string) => {
-    setProfile((prev) => ({
-      ...prev,
+    setProfile((previous) => ({
+      ...previous,
       digitalTwin: {
         image,
       },
@@ -88,8 +84,8 @@ export function ProfileProvider({
   // -----------------------------
 
   const removeImage = () => {
-    setProfile((prev) => ({
-      ...prev,
+    setProfile((previous) => ({
+      ...previous,
       digitalTwin: {
         image: null,
       },
@@ -103,10 +99,10 @@ export function ProfileProvider({
   const updateMeasurements = (
     measurements: Partial<Measurements>
   ) => {
-    setProfile((prev) => ({
-      ...prev,
+    setProfile((previous) => ({
+      ...previous,
       measurements: {
-        ...prev.measurements,
+        ...previous.measurements,
         ...measurements,
       },
     }));
@@ -119,35 +115,48 @@ export function ProfileProvider({
   const updateAccount = (
     account: Partial<Account>
   ) => {
-    setProfile((prev) => ({
-      ...prev,
+    setProfile((previous) => ({
+      ...previous,
       account: {
-        ...prev.account,
+        ...previous.account,
         ...account,
       },
     }));
   };
 
   useEffect(() => {
-    if (!ready || !user || user.role !== "CUSTOMER") return;
+    if (!userId) return;
+
+    const controller = new AbortController();
 
     async function loadProfile() {
-      const [profileResponse, measurementResponse] = await Promise.all([
-        fetch("/api/v1/profiles/me", { cache: "no-store" }),
-        fetch("/api/v1/profiles/measurements", { cache: "no-store" }),
-      ]);
-      if (!profileResponse.ok) return;
-      const profileData = await profileResponse.json() as { account: Account };
-      const measurementData = measurementResponse.ok ? await measurementResponse.json() as { measurements: Partial<Measurements> } : null;
-      setProfile((previous) => ({
-        ...previous,
-        account: profileData.account,
-        measurements: measurementData ? { ...previous.measurements, ...measurementData.measurements } : previous.measurements,
-      }));
+      try {
+        const [profileResponse, measurementResponse] = await Promise.all([
+          fetch("/api/v1/profiles/me", { cache: "no-store", signal: controller.signal }),
+          fetch("/api/v1/profiles/measurements", { cache: "no-store", signal: controller.signal }),
+        ]);
+        if (!profileResponse.ok) throw new Error("Could not load profile.");
+        const profileData = await profileResponse.json() as { account: Account };
+        const measurementData = measurementResponse.ok
+          ? await measurementResponse.json() as { measurements: Partial<Measurements> }
+          : null;
+        if (controller.signal.aborted) return;
+        setProfile((previous) => mergeLoadedProfile(
+          previous,
+          profileData.account,
+          measurementData?.measurements ?? null,
+        ));
+        setProfileLoadStatus("ready");
+      } catch {
+        if (!controller.signal.aborted) {
+          setProfileLoadStatus("error");
+        }
+      }
     }
 
     void loadProfile();
-  }, [ready, user]);
+    return () => controller.abort();
+  }, [userId]);
 
   // -----------------------------
   // Save Profile
@@ -184,6 +193,7 @@ export function ProfileProvider({
     <ProfileContext.Provider
       value={{
         profile,
+        profileLoadStatus,
         changeTab,
         uploadImage,
         removeImage,

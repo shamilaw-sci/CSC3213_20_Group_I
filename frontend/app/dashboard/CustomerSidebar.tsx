@@ -18,21 +18,22 @@ const mainItems: SidebarItem[] = [
   { label: "Overview", href: "/dashboard", icon: House },
   { label: "Digital Twin", href: "/profile?tab=digitalTwin", icon: Shirt },
   { label: "My Measurements", href: "/profile?tab=measurements", icon: Ruler },
-  { label: "Virtual Try-On History", icon: History },
+  { label: "Virtual Try-On History", href: "/profile/try-on-history", icon: History },
   { label: "My Favorites", href: "/favorites", icon: Heart },
   { label: "Recommended For You", href: "/recommendations", icon: Sparkles },
 ];
 
 const accountItems: SidebarItem[] = [
-  { label: "Help & FAQ", icon: CircleHelp },
-  { label: "My Plan", icon: CreditCard },
+  { label: "Help & FAQ", href: "/help", icon: CircleHelp },
+  { label: "My Plan", href: "/plan", icon: CreditCard },
   { label: "Account Settings", href: "/profile?tab=account", icon: Settings },
-  { label: "Support", icon: LifeBuoy },
+  { label: "Support", href: "/support", icon: LifeBuoy },
 ];
 
-function SidebarBody({ collapsed, pathname, loggingOut, error, onNavigate, onLogout }: {
+function SidebarBody({ collapsed, pathname, activeTab, loggingOut, error, onNavigate, onLogout }: {
   collapsed: boolean;
   pathname: string;
+  activeTab: string | null;
   loggingOut: boolean;
   error: string;
   onNavigate: () => void;
@@ -44,7 +45,7 @@ function SidebarBody({ collapsed, pathname, loggingOut, error, onNavigate, onLog
         <h3 className={`px-3 pb-2 text-[11px] font-bold uppercase tracking-widest text-slate-500 ${collapsed ? "sr-only" : ""}`}>{title}</h3>
         <div className="grid gap-1">
           {items.map(({ label, href, icon: Icon }) => {
-            const content = <><Icon size={18} className="shrink-0" aria-hidden="true" /><span className={collapsed ? "sr-only" : "min-w-0 flex-1"}>{label}</span></>;
+            const content = <><Icon size={18} className="shrink-0" aria-hidden="true" /><span className={collapsed ? "sr-only" : "min-w-0 flex-1 whitespace-normal break-words leading-tight"}>{label}</span></>;
             if (!href) {
               return (
                 <div key={label} title={collapsed ? `${label} — unavailable` : undefined} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-400">
@@ -53,7 +54,9 @@ function SidebarBody({ collapsed, pathname, loggingOut, error, onNavigate, onLog
                 </div>
               );
             }
-            const active = href === "/dashboard" && pathname === "/dashboard";
+            const [hrefPath, hrefQuery] = href.split("?");
+            const expectedTab = hrefQuery?.startsWith("tab=") ? hrefQuery.slice(4) : null;
+            const active = pathname === hrefPath && (expectedTab ? activeTab === expectedTab : !expectedTab);
             return (
               <Link key={label} href={href} onClick={onNavigate} title={collapsed ? label : undefined} aria-current={active ? "page" : undefined} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${active ? "bg-indigo-600 text-white" : "text-slate-700 hover:bg-indigo-50 hover:text-indigo-700"}`}>
                 {content}
@@ -72,7 +75,7 @@ function SidebarBody({ collapsed, pathname, loggingOut, error, onNavigate, onLog
         {group("Account & support", accountItems)}
       </nav>
       <div className="mt-6 border-t border-slate-200 pt-4">
-        <button type="button" onClick={onLogout} disabled={loggingOut} title={collapsed ? "Log out" : undefined} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-wait disabled:opacity-60">
+        <button type="button" onClick={onLogout} disabled={loggingOut} title={collapsed ? "Log out" : undefined} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600 disabled:cursor-wait disabled:opacity-60">
           <LogOut size={18} className="shrink-0" aria-hidden="true" />
           <span className={collapsed ? "sr-only" : ""}>{loggingOut ? "Logging out…" : "Log out"}</span>
         </button>
@@ -86,6 +89,9 @@ export default function CustomerSidebar({ embedded = false }: { embedded?: boole
   const { logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const activeTab = typeof window === "undefined"
+    ? null
+    : new URLSearchParams(window.location.search).get("tab");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -108,6 +114,7 @@ export default function CustomerSidebar({ embedded = false }: { embedded?: boole
 
   const bodyProps = {
     pathname,
+    activeTab,
     loggingOut,
     error,
     onNavigate: () => setMobileOpen(false),
@@ -120,7 +127,7 @@ export default function CustomerSidebar({ embedded = false }: { embedded?: boole
         <Menu size={19} aria-hidden="true" /> Dashboard menu
       </button>
 
-      <aside className={`${embedded ? "fixed left-4 top-24 z-40" : ""} hidden shrink-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-[width] lg:flex lg:h-[calc(100vh-7rem)] lg:flex-col ${collapsed ? "lg:w-20" : "lg:w-64"}`}>
+      <aside className={`${embedded ? "fixed left-4 top-24 z-40" : ""} hidden shrink-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-[width] lg:flex lg:h-[calc(100vh-7rem)] lg:flex-col ${collapsed ? "lg:w-20" : "lg:w-72"}`}>
         <div className={`mb-5 flex items-center ${collapsed ? "justify-center" : "justify-between"}`}>
           {!collapsed && <p className="px-3 text-sm font-bold text-slate-900">Your fitting room</p>}
           <button type="button" aria-label={collapsed ? "Expand dashboard sidebar" : "Collapse dashboard sidebar"} aria-expanded={!collapsed} onClick={() => setCollapsed((value) => !value)} className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-indigo-600">

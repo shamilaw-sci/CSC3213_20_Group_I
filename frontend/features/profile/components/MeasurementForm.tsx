@@ -6,7 +6,7 @@ import { LoaderCircle, Save } from "lucide-react";
 
 import { useProfile } from "../hooks/useProfile";
 import Avatar from "./Avatar";
-import { recommendSize } from "../utils/sizeRecommendation";
+import { useTryOn } from "@/features/try-on/hooks/useTryOn";
 
 const sizes = ["XS", "S", "M", "L", "XL"] as const;
 const charts: Record<(typeof sizes)[number], { chest: number; waist: number; hips: number; shoulder: number }> = {
@@ -32,14 +32,20 @@ export default function MeasurementForm() {
   const [scoreVisible, setScoreVisible] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [saveAttempted, setSaveAttempted] = useState(false);
+  const { state: tryOnState } = useTryOn();
   const body = profile.measurements;
   const fitScore = useMemo(() => calculateFitScore(body, selectedSize), [body, selectedSize]);
   const hasCoreMeasurements = [body.chest, body.waist, body.hips, body.shoulder].every((value) => value > 0);
-  const recommendation = useMemo(() => recommendSize(body), [body]);
   const updateNumber = (field: (typeof fields)[number][0], value: string) => updateMeasurements({ [field]: Number(value) } as never);
 
   async function handleSave() {
     if (isSaving) return;
+    setSaveAttempted(true);
+    if (body.height < 100 || body.height > 250 || [body.chest, body.waist, body.hips, body.shoulder].some((value) => value <= 0)) {
+      setSaveError("Enter valid height, chest, waist, hip and shoulder measurements before saving.");
+      return;
+    }
     setIsSaving(true);
     setSaveError("");
     try {
@@ -80,14 +86,14 @@ export default function MeasurementForm() {
           <p className="mt-1 text-sm text-gray-600">An SVG silhouette that updates from your measurements.</p>
           <div className="mt-4 flex flex-col items-center justify-center rounded-xl bg-gray-50 p-3">
             <Avatar body={body} garmentSize={selectedSize} fitScore={scoreVisible && hasCoreMeasurements ? fitScore : null} />
-            <div className="mt-3 flex flex-wrap justify-center gap-2 text-xs font-semibold"><span className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-800">85–100% great fit</span><span className="rounded-full bg-amber-100 px-3 py-1 text-amber-800">65–84% check fit</span><span className="rounded-full bg-rose-100 px-3 py-1 text-rose-800">Below 65% tight/loose</span></div>
+            <p className="mt-3 text-center text-xs text-gray-500">Illustrative silhouette that updates from your saved measurements; it is not a body scan.</p>
             <p className="mt-3 text-sm font-medium text-gray-700">H: {body.height || "—"} cm · W: {body.weight || "—"} kg</p>
           </div>
         </section>
         <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900">Size Recommendation</h2>
-          {"error" in recommendation ? <p role="alert" className="mt-3 rounded-xl bg-rose-50 p-3 text-sm font-semibold text-rose-800">{recommendation.error}</p> : <div className="mt-3"><p className="text-2xl font-black text-indigo-700">Recommended Size: {recommendation.size}</p><p className="mt-1 font-bold text-slate-900">Fit Confidence: {recommendation.confidence}%</p><div className="mt-3 grid gap-2 sm:grid-cols-3">{(["chest", "waist", "hips"] as const).map((part) => <p key={part} className={`rounded-xl p-2 text-sm font-semibold ${recommendation.matches[part] ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"}`}>{recommendation.matches[part] ? "✓" : "!"} {part[0].toUpperCase() + part.slice(1)}: {recommendation.matches[part] ? "Suitable" : "Closest match"}</p>)}</div><p className="mt-3 text-sm text-gray-600">Rule-based estimate using chest, waist, and hip size ranges. When measurements fall between sizes, the size with the most matching measurements is selected.</p></div>}
-          <div className="mt-4 border-t pt-4"><h3 className="font-bold text-gray-900">Manual fit preview</h3><div className="mt-3 flex flex-wrap gap-2">{sizes.map((size) => <button type="button" key={size} onClick={() => { setSelectedSize(size); setScoreVisible(true); }} className={`rounded-lg border px-4 py-2 font-semibold transition ${selectedSize === size ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 bg-white text-gray-800 hover:bg-gray-50"}`}>{size}</button>)}</div></div>
+          <h2 className="text-xl font-bold text-gray-900">Your Size Recommendation</h2>
+          {!saveAttempted || !hasCoreMeasurements || body.height < 100 || body.height > 250 ? <p className="mt-3 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Save valid measurements and select an outfit with a product-specific size chart to see a recommendation.</p> : tryOnState.selectedProduct?.availableSizes?.length ? <p className="mt-3 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">This product lists sizes {tryOnState.selectedProduct.availableSizes.join(", ")}, but detailed chest, waist and hip ranges are not available for a reliable product-specific recommendation.</p> : <p className="mt-3 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Select an outfit with a size chart in Explore to get a product-specific recommendation.</p>}
+          <div className="mt-4 border-t pt-4"><h3 className="font-bold text-gray-900">Manual Size Preview</h3><p className="mt-1 text-sm text-gray-600">Choose a size to update the illustrative twin. Fit status is unavailable without the selected product&apos;s actual size ranges.</p><div className="mt-3 flex flex-wrap gap-2">{sizes.map((size) => <button type="button" key={size} onClick={() => { setSelectedSize(size); setScoreVisible(true); }} className={`rounded-lg border px-4 py-2 font-semibold transition ${selectedSize === size ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 bg-white text-gray-800 hover:bg-gray-50"}`}>{size}</button>)}</div></div>
         </section>
       </div>
     </div>
