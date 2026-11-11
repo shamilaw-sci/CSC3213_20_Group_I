@@ -1,6 +1,6 @@
 export default function Progress() {
   return (
-    <section id="how-it-works" className="scroll-mt-28 bg-gradient-to-r from-purple-100 to-white py-24 sm:py-32">
+    <section id="how-it-works" className="scroll-mt-6 bg-gradient-to-r from-purple-100 to-white py-24 sm:py-32">
 
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         

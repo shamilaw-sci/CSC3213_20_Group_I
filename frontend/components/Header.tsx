@@ -2,7 +2,7 @@ import Navbar from "@/app/components/Navbar";
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50">
+    <header>
       <Navbar />
     </header>
   );

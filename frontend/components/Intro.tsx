@@ -1,6 +1,3 @@
-import Link from "next/link";
-import Image from "next/image";
-
 export default function SplitSection() {
   return (
     <div className="w-full bg-white py-16 px-6 md:px-20">
@@ -15,7 +12,7 @@ export default function SplitSection() {
           </h2>
 
           <p className="mt-6 text-lg text-gray-600 leading-relaxed">
-            Our AI preserves your unique features while<br/> accurately rendering how clothes fit and drape on<br/> your body. Choose an outfit to open the Try-On preview
+            Our AI preserves your unique features while<br/> accurately rendering how clothes fit and drape on<br/> your body. Slide to compare the before and after
           </p>
 
           
@@ -42,17 +39,14 @@ export default function SplitSection() {
             </li>
 
           </ul>
-          <Link href="/explore" className="mt-8 inline-block rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white hover:bg-indigo-700">Try an Outfit</Link>
 
         </div>
 
        
         <div className="flex-1 flex justify-center">
-          <Image
-            src="/image 5.png"
-            width={500}
-            height={600}
-            alt="Illustration of a virtual outfit preview"
+          <img
+            src="image 5.png"
+            alt="section image"
             className="w-full max-w-sm md:max-w-md h-auto rounded-xl shadow-lg"
           />
         </div>
