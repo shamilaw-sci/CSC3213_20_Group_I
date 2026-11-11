@@ -1,6 +1,6 @@
 export default function Progress() {
   return (
-    <div className="bg-gradient-to-r from-purple-100 to-white py-24 sm:py-32">
+    <section id="how-it-works" className="scroll-mt-28 bg-gradient-to-r from-purple-100 to-white py-24 sm:py-32">
 
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         
@@ -11,7 +11,7 @@ export default function Progress() {
           </p>
 
           <p className="mt-6 text-lg/8 text-gray-800">
-            Get started in four simple steps and transform your shopping experience
+            From your profile to products, previews, and partner stores in four steps
           </p>
         </div>
       </div>
@@ -34,10 +34,10 @@ export default function Progress() {
               1
             </div>
             <p className="text-base font-semibold text-blue-800 mt-3 md:mt-5">
-              Upload Your Photo
+              Set Up Your Profile
             </p>
             <p className="text-black md:text-center mt-1">
-              Take a full-body photo in good lighting and upload it securely
+              Add measurements and, if you choose, upload a Digital Twin photo
             </p>
           </div>
 
@@ -47,10 +47,10 @@ export default function Progress() {
               2
             </div>
             <p className="text-base font-semibold text-blue-800 mt-3 md:mt-5">
-              Generate Digital Twin
+              Explore and Discover
             </p>
             <p className="text-black md:text-center mt-1">
-              Our AI creates a precise 3D model of your measurements
+              Browse products and get recommendations when fit or interest data is available
             </p>
           </div>
 
@@ -60,10 +60,10 @@ export default function Progress() {
               3
             </div>
             <p className="text-base font-semibold text-blue-800 mt-3 md:mt-5">
-              Try Clothes Instantly
+              Save and Preview
             </p>
             <p className="text-black md:text-center mt-1">
-              Browse thousands of items and see them on your Digital Twin
+              Save favorites and open the available Try-On preview for a product
             </p>
           </div>
 
@@ -73,15 +73,15 @@ export default function Progress() {
               4
             </div>
             <p className="text-base font-semibold text-blue-800 mt-3 md:mt-5">
-              Buy from Stores
+              Visit the Merchant
             </p>
             <p className="text-black md:text-center mt-1">
-              Shop confidently from partnered stores with perfect fit guaranteed
+              Continue to the merchant store for purchase; TryVora does not process payment
             </p>
           </div>
 
         </div>
       </div>
-    </div>
+    </section>
   );
 }

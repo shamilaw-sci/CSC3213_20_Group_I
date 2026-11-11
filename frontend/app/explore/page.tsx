@@ -8,6 +8,8 @@ import SearchFilterBar from "../components/SearchFilterBar";
 import CategoryTabs, { type CatalogueCategory } from "../components/CategoryTabs";
 import ProductGrid from "../components/ProductGrid";
 import type { Product } from "../data/products";
+import { useFavorites } from "@/features/favorites/useFavorites";
+import TryOnModal from "@/features/try-on/components/TryOnModal";
 
 type ProductResponse = {
   id: string;
@@ -21,6 +23,7 @@ type ProductResponse = {
 const pageSize = 12;
 
 export default function ExplorePage() {
+  const { favoriteIds, loading: favoritesLoading, error: favoritesError, updateFavorite } = useFavorites();
   const [category, setCategory] = useState("all");
   const [search, setSearch] = useState("");
   const [submittedSearch, setSubmittedSearch] = useState("");
@@ -183,9 +186,13 @@ export default function ExplorePage() {
         />
 
         {loading ? <p className="text-sm text-gray-400 mb-4">Loading database catalog...</p> : error ? <p className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p> : <p className="text-sm text-gray-400 mb-4">Showing {products.length} of {total} database products</p>}
+        {favoritesError && <p role="alert" className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">Favorites are unavailable: {favoritesError}</p>}
 
         <ProductGrid
           products={products}
+          favoriteIds={favoriteIds}
+          favoriteStateUnavailable={favoritesLoading || Boolean(favoritesError)}
+          onFavoriteChange={updateFavorite}
           selectedCompareIds={selectedCompareIds}
           compareDisabled={compareProducts.length >= 4}
           onToggleCompare={toggleCompareProduct}
@@ -257,6 +264,7 @@ export default function ExplorePage() {
           </div>
         )}
       </main>
+      <TryOnModal />
     </div>
   );
 }

@@ -5,7 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 
 import Navbar from "@/app/components/Navbar";
+import FavoriteButton from "@/app/components/FavoriteButton";
 import { useProfile } from "@/features/profile/hooks/useProfile";
+import { useFavorites } from "@/features/favorites/useFavorites";
 import TryOnButton from "@/features/try-on/components/TryOnButton";
 import TryOnModal from "@/features/try-on/components/TryOnModal";
 
@@ -36,6 +38,7 @@ type RecommendationResponse = {
 
 export default function RecommendationsPage() {
   const { changeTab } = useProfile();
+  const { favoriteIds, loading: favoritesLoading, error: favoritesError, updateFavorite } = useFavorites();
   const [data, setData] = useState<RecommendationResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [needsLogin, setNeedsLogin] = useState(false);
@@ -91,7 +94,7 @@ export default function RecommendationsPage() {
     <div className="tv-page min-h-screen">
       <Navbar />
 
-      <main className="mx-auto max-w-7xl px-6 py-10">
+      <main className="mx-auto max-w-7xl px-6 py-10 lg:pl-80">
         <div className="mb-8">
           <p className="text-sm font-semibold uppercase tracking-wide text-indigo-600">
             Your fitting-room picks
@@ -120,6 +123,11 @@ export default function RecommendationsPage() {
         {!loading && error && (
           <p role="alert" className="rounded-xl bg-rose-50 p-4 text-rose-700">
             {error}
+          </p>
+        )}
+        {favoritesError && (
+          <p role="alert" className="mb-6 rounded-xl bg-rose-50 p-4 text-rose-700">
+            Favorites are unavailable: {favoritesError}
           </p>
         )}
 
@@ -173,6 +181,12 @@ export default function RecommendationsPage() {
                           sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                           className="object-cover"
                           unoptimized
+                        />
+                        <FavoriteButton
+                          productId={product.id}
+                          isFavorite={favoriteIds.has(product.id)}
+                          disabled={favoritesLoading || Boolean(favoritesError)}
+                          onChange={updateFavorite}
                         />
                       </div>
 

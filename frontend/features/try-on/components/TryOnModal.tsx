@@ -19,6 +19,9 @@ export default function TryOnModal() {
     productId: string | number;
     size: string;
   } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [signInRequired, setSignInRequired] = useState(false);
   const product = state.selectedProduct;
 
   if (!state.isOpen || !product) return null;
@@ -30,6 +33,41 @@ export default function TryOnModal() {
   const price = product.currency
     ? `${product.currency} ${product.price.toFixed(2)}`
     : `$${product.price.toFixed(2)}`;
+  const isSaved = savedPreview?.productId === product.id && savedPreview.size === selectedSize;
+
+  async function savePreview() {
+    if (!product || !selectedSize || saving) return;
+    setSaveError("");
+    setSignInRequired(false);
+
+    if (typeof product.id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(product.id)) {
+      setSaveError("Only catalogue products can be saved to Try-On History. Choose a product from Explore.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await fetch("/api/v1/try-ons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          size: selectedSize,
+          ...(score === null ? {} : { fitPercentage: score }),
+        }),
+      });
+      if (response.status === 401) {
+        setSignInRequired(true);
+        throw new Error("Log in to save this fitting preview.");
+      }
+      if (!response.ok) throw new Error("Could not save this fitting preview. Please try again.");
+      setSavedPreview({ productId: product.id, size: selectedSize });
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Could not save this fitting preview.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <div
@@ -172,25 +210,26 @@ export default function TryOnModal() {
 
             <button
               type="button"
-              onClick={() => {
-                if (selectedSize) {
-                  setSavedPreview({ productId: product.id, size: selectedSize });
-                }
-              }}
-              disabled={selectedSize === null}
-              className="tv-button flex w-full items-center justify-center gap-2 px-5 py-3.5 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => void savePreview()}
+              disabled={selectedSize === null || saving || isSaved}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3.5 font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:bg-indigo-300 disabled:opacity-60"
             >
-              <Sparkles size={18} /> Save this fitting preview
+              <Sparkles size={18} /> {saving ? "Saving..." : isSaved ? "Preview saved" : "Save this fitting preview"}
             </button>
-            {savedPreview?.productId === product.id && savedPreview.size === selectedSize && (
+            {isSaved && (
               <p role="status" className="flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">
-                <CheckCircle2 size={18} /> Size {selectedSize} preview saved for this session.
+                <CheckCircle2 size={18} /> Size {selectedSize} illustrative fitting guide saved. <Link href="/profile/try-on-history" onClick={closeTryOn} className="underline">View history</Link>
+              </p>
+            )}
+            {saveError && (
+              <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm font-medium text-rose-800">
+                {saveError} {signInRequired && <Link href="/login" onClick={closeTryOn} className="underline">Log in</Link>}
               </p>
             )}
             <button
               type="button"
               onClick={closeTryOn}
-              className="tv-button-secondary flex w-full items-center justify-center gap-2 px-5 py-3"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-300 bg-white px-5 py-3 font-semibold text-indigo-700 transition hover:border-indigo-500 hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
               <ShoppingBag size={18} /> Continue shopping
             </button>

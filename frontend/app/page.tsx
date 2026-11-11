@@ -6,17 +6,21 @@ import Intro from "@/components/Intro";
 import ProductsList from "@/components/ProductsList";
 import DigitalTwin from "@/components/DigitalTwin";
 import Footer from "@/components/Footer";
+import HomeHelp from "@/components/HomeHelp";
 
 export default function Home() {
   return (
     <>
     <Header/>
+    <main>
     <Banner/>
     <WhySection/>
     <Progress/>
     <Intro/>
     <ProductsList/>
     <DigitalTwin/>
+    <HomeHelp/>
+    </main>
     <Footer/>
     </>
   );
