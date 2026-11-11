@@ -53,7 +53,7 @@ export default function ProductCard({
               const image = event.currentTarget;
               if (!image.src.endsWith("/placeholders/product.svg")) image.src = "/placeholders/product.svg";
             }}
-            className="object-cover"
+            className="object-contain bg-white p-2"
           />
         </Link>
 
