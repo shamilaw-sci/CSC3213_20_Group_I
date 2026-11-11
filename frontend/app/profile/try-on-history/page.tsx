@@ -177,7 +177,7 @@ export default function TryOnHistoryPage() {
                           className="relative block aspect-[3/4] w-full bg-indigo-50 text-left"
                         >
                           {item.product.image ? (
-                            <Image src={item.product.image} alt={`${item.product.name} product photo`} fill unoptimized className="object-cover" />
+                            <Image src={item.product.image} alt={`${item.product.name} product photo`} fill unoptimized className="object-contain bg-white p-2" />
                           ) : (
                             <span className="flex h-full items-center justify-center text-center font-semibold text-indigo-800">Product image unavailable</span>
                           )}

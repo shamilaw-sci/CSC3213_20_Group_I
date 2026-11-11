@@ -95,6 +95,8 @@ export default function MerchantPage() {
   const [form, setForm] = useState<ProductFormState>(emptyForm);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [feedUrl, setFeedUrl] = useState("");
+  const [syncing, setSyncing] = useState(false);
 
   const modalTitle = editing ? "Edit Catalog Product" : "Add Dress to Catalog";
   const categoryOptions = useMemo(() => categories, [categories]);
@@ -192,6 +194,23 @@ export default function MerchantPage() {
     }
   }
 
+  async function syncFeed(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSyncing(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/v1/merchant/sync", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ feedUrl }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message ?? "Could not synchronize the product feed.");
+      setMessage(`Product feed synchronized: ${result.sync?.upserted ?? 0} product(s) updated.`);
+      await load();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not synchronize the product feed.");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   return (
     <div className="tv-page min-h-screen">
       <Navbar />
@@ -206,6 +225,15 @@ export default function MerchantPage() {
         </section>
 
         {message && <p className="mt-6 rounded-xl bg-indigo-50 p-4 font-medium text-indigo-900">{message}</p>}
+
+        <section className="tv-card mt-6 p-6">
+          <h2 className="text-xl font-bold">Add multiple products</h2>
+          <p className="mt-1 text-sm text-gray-500">Import several catalogue products at once from a JSON feed hosted on your approved merchant website. Each imported product is saved as DRAFT for admin review.</p>
+          <form onSubmit={syncFeed} className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <input value={feedUrl} onChange={(event) => setFeedUrl(event.target.value)} required type="url" placeholder="https://your-store.example/catalog.json" className="min-w-0 flex-1 rounded-xl border p-3" />
+            <button type="submit" disabled={syncing} className="rounded-xl bg-indigo-600 px-5 py-3 font-bold text-white hover:bg-indigo-700 disabled:cursor-wait disabled:opacity-60">{syncing ? "Importing…" : "Import products"}</button>
+          </form>
+        </section>
 
         <section className="tv-card mt-8 p-6">
           <h2 className="text-xl font-bold">Catalog products</h2>
