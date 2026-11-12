@@ -319,6 +319,16 @@ model subscription {
   merchant         merchant            @relation(fields: [merchantId], references: [merchantId], onDelete: Cascade)
 }
 
+model customer_subscription {
+  subscriptionId String                     @id @db.Char(36)
+  userId         String                     @unique @db.Char(36)
+  plan           customer_subscription_plan @default(STARTER)
+  status         subscription_status        @default(DEMO_ACTIVE)
+  startedAt      DateTime                   @default(now())
+  updatedAt      DateTime
+  user           user                       @relation(fields: [userId], references: [userId], onDelete: Cascade)
+}
+
 model tryonresult {
   tryOnResultId   String       @id @db.Char(36)
   tryOnSessionId  String       @unique(map: "TryOnResult_tryOnSessionId_key") @db.Char(36)
@@ -361,23 +371,23 @@ model tryonsession {
 }
 
 model user {
-  userId                               String               @id @db.Char(36)
-  userName                             String               @db.VarChar(100)
-  userEmail                            String               @unique(map: "User_userEmail_key")
-  passwordHash                         String               @db.VarChar(255)
-  role                                 user_role            @default(CUSTOMER)
-  status                               user_status          @default(ACTIVE)
+  userId                               String                 @id @db.Char(36)
+  userName                             String                 @db.VarChar(100)
+  userEmail                            String                 @unique(map: "User_userEmail_key")
+  passwordHash                         String                 @db.VarChar(255)
+  role                                 user_role              @default(CUSTOMER)
+  status                               user_status            @default(ACTIVE)
   emailVerifiedAt                      DateTime?
   lastLoginAt                          DateTime?
-  createdAt                            DateTime             @default(now())
+  createdAt                            DateTime               @default(now())
   updatedAt                            DateTime
   deletedAt                            DateTime?
   auditlog                             auditlog[]
   comparison                           comparison[]
   digitaltwin                          digitaltwin[]
   favorite                             favorite[]
-  feedback_feedback_resolvedByIdTouser feedback[]           @relation("feedback_resolvedByIdTouser")
-  feedback_feedback_userIdTouser       feedback[]           @relation("feedback_userIdTouser")
+  feedback_feedback_resolvedByIdTouser feedback[]             @relation("feedback_resolvedByIdTouser")
+  feedback_feedback_userIdTouser       feedback[]             @relation("feedback_userIdTouser")
   guestsession                         guestsession[]
   merchant                             merchant?
   merchantredirect                     merchantredirect[]
@@ -385,6 +395,7 @@ model user {
   profile                              profile?
   session                              session[]
   tryonsession                         tryonsession[]
+  customerSubscription                 customer_subscription?
 
   @@index([createdAt], map: "User_createdAt_idx")
   @@index([role, status], map: "User_role_status_idx")
@@ -394,6 +405,12 @@ enum subscription_plan {
   FREE
   STANDARD
   PRO
+}
+
+enum customer_subscription_plan {
+  STARTER
+  STYLE_PLUS
+  STYLE_PRO
 }
 
 enum session_type {
