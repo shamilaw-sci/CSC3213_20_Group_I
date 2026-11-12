@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Activity, AlertTriangle, ChevronDown, ChevronUp, KeyRound, ShieldAlert, UserCheck } from "lucide-react";
+import { Activity, AlertTriangle, ChevronDown, ChevronUp, KeyRound, Search, ShieldAlert, UserCheck } from "lucide-react";
 
 import AdminTrendChart, { type TrendPoint } from "../components/adminTrendChart";
 
@@ -52,6 +52,7 @@ export default function SecurityDashboard() {
   const [loading, setLoading] = useState(true);
   const [revoking, setRevoking] = useState<string | null>(null);
   const [expandedTables, setExpandedTables] = useState<Record<string, boolean>>({});
+  const [query, setQuery] = useState("");
 
   function toggleTable(table: string) {
     setExpandedTables((current) => ({ ...current, [table]: !current[table] }));
@@ -73,7 +74,9 @@ export default function SecurityDashboard() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/api/v1/admin/security", { cache: "no-store", signal: controller.signal })
+    const search = new URLSearchParams(window.location.search).get("search")?.trim();
+    const securityUrl = search ? `/api/v1/admin/security?search=${encodeURIComponent(search)}` : "/api/v1/admin/security";
+    fetch(securityUrl, { cache: "no-store", signal: controller.signal })
       .then(async (response) => {
         const body = await response.json();
         if (!response.ok) throw new Error(body.message ?? "Could not load security information.");
@@ -83,6 +86,11 @@ export default function SecurityDashboard() {
       .catch((reason) => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Could not load security information."); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const term = new URLSearchParams(window.location.search).get("search");
+    if (term) setQuery(term);
   }, []);
 
   async function revokeSession(session: SessionRecord) {
@@ -110,6 +118,14 @@ export default function SecurityDashboard() {
     { label: "Failed attempts (24h)", value: data.summary.failedAttempts24h, icon: ShieldAlert, color: "text-red-700 bg-red-100" },
     { label: "Admin actions (30d)", value: data.summary.adminActions30d, icon: KeyRound, color: "text-purple-700 bg-purple-100" },
   ] : [];
+  const term = query.trim().toLowerCase();
+  const filteredData = data ? {
+    ...data,
+    activeSessions: data.activeSessions.filter((session) => !term || `${session.id} ${session.user.name} ${session.user.email} ${session.user.role} ${session.type} ${session.ipAddress ?? ""} ${session.userAgent ?? ""}`.toLowerCase().includes(term)),
+    loginHistory: data.loginHistory.filter((session) => !term || `${session.id} ${session.user.name} ${session.user.email} ${session.user.role} ${session.type} ${session.ipAddress ?? ""} ${session.userAgent ?? ""}`.toLowerCase().includes(term)),
+    failedAttempts: data.failedAttempts.filter((attempt) => !term || `${attempt.id} ${attempt.email} ${attempt.reason} failed login auth login failed ${attempt.ipAddress ?? ""} ${attempt.userAgent ?? ""}`.toLowerCase().includes(term)),
+    adminAuditLogs: data.adminAuditLogs.filter((event) => !term || `${event.id} ${event.action} ${event.entityType ?? ""} ${event.entityId ?? ""} ${event.admin?.name ?? ""} ${event.admin?.email ?? ""}`.toLowerCase().includes(term)),
+  } : null;
 
   return (
     <div className="space-y-8">
@@ -119,6 +135,7 @@ export default function SecurityDashboard() {
         <p className="mt-2 text-slate-600">Review authentication activity, revoke sessions, and inspect administrator actions.</p>
       </div>
       {error && <p role="alert" className="rounded-xl bg-red-100 p-4 text-red-800">{error}</p>}
+      <label className="flex w-full max-w-lg items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2"><Search size={18} className="text-slate-500" /><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search sessions, login activity, or audit logs" aria-label="Search security activity" className="w-full outline-none" /></label>
 
       {data && (
         <>
@@ -167,7 +184,7 @@ export default function SecurityDashboard() {
             <div className="mt-5 overflow-x-auto">
               <table className="w-full min-w-[850px] text-left text-sm">
                 <thead><tr className="border-b text-slate-500"><th className="p-3">Account</th><th className="p-3">Device</th><th className="p-3">IP address</th><th className="p-3">Signed in</th><th className="p-3">Expires</th><th className="p-3">Action</th></tr></thead>
-                <tbody>{(expandedTables.activeSessions ? data.activeSessions : data.activeSessions.slice(0, 5)).map((session) => (
+                <tbody>{(expandedTables.activeSessions ? filteredData!.activeSessions : filteredData!.activeSessions.slice(0, 5)).map((session) => (
                   <tr key={session.id} className="border-b last:border-0">
                     <td className="p-3"><span className="font-semibold">{session.user.name}</span><br /><span className="text-slate-500">{session.user.email}</span></td>
                     <td className="p-3">{deviceLabel(session.userAgent)}{session.current && <span className="ml-2 rounded-full bg-purple-100 px-2 py-1 text-xs font-bold text-purple-700">Current</span>}</td>
@@ -178,8 +195,8 @@ export default function SecurityDashboard() {
                   </tr>
                 ))}</tbody>
               </table>
-              {!data.activeSessions.length && <p className="py-6 text-sm text-slate-500">No active sessions found.</p>}
-              {data.activeSessions.length > 5 && <TableExpansionButton expanded={Boolean(expandedTables.activeSessions)} remaining={data.activeSessions.length - 5} onClick={() => toggleTable("activeSessions")} />}
+              {!filteredData!.activeSessions.length && <p className="py-6 text-sm text-slate-500">No active sessions match this search.</p>}
+              {filteredData!.activeSessions.length > 5 && <TableExpansionButton expanded={Boolean(expandedTables.activeSessions)} remaining={filteredData!.activeSessions.length - 5} onClick={() => toggleTable("activeSessions")} />}
             </div>
           </section>
 
@@ -188,12 +205,13 @@ export default function SecurityDashboard() {
             <div className="mt-5 overflow-x-auto">
               <table className="w-full min-w-[800px] text-left text-sm">
                 <thead><tr className="border-b text-slate-500"><th className="p-3">Account</th><th className="p-3">Role</th><th className="p-3">Device</th><th className="p-3">IP address</th><th className="p-3">Time</th><th className="p-3">Status</th></tr></thead>
-                <tbody>{(expandedTables.loginHistory ? data.loginHistory : data.loginHistory.slice(0, 5)).map((session) => {
+                <tbody>{(expandedTables.loginHistory ? filteredData!.loginHistory : filteredData!.loginHistory.slice(0, 5)).map((session) => {
                   const status = session.revokedAt ? "Revoked" : new Date(session.expiryDate) <= new Date() ? "Expired" : "Active";
                   return <tr key={session.id} className="border-b last:border-0"><td className="p-3"><span className="font-semibold">{session.user.name}</span><br /><span className="text-slate-500">{session.user.email}</span></td><td className="p-3">{session.user.role}</td><td className="p-3">{deviceLabel(session.userAgent)}</td><td className="p-3">{session.ipAddress ?? "Not recorded"}</td><td className="p-3">{formatDate(session.createdAt)}</td><td className="p-3"><span className={`rounded-full px-2 py-1 text-xs font-bold ${status === "Active" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"}`}>{status}</span></td></tr>;
                 })}</tbody>
               </table>
-              {data.loginHistory.length > 5 && <TableExpansionButton expanded={Boolean(expandedTables.loginHistory)} remaining={data.loginHistory.length - 5} onClick={() => toggleTable("loginHistory")} />}
+              {!filteredData!.loginHistory.length && <p className="py-6 text-sm text-slate-500">No login history matches this search.</p>}
+              {filteredData!.loginHistory.length > 5 && <TableExpansionButton expanded={Boolean(expandedTables.loginHistory)} remaining={filteredData!.loginHistory.length - 5} onClick={() => toggleTable("loginHistory")} />}
             </div>
           </section>
 
@@ -202,10 +220,10 @@ export default function SecurityDashboard() {
             <div className="mt-5 overflow-x-auto">
               <table className="w-full min-w-[700px] text-left text-sm">
                 <thead><tr className="border-b text-slate-500"><th className="p-3">Email entered</th><th className="p-3">Reason</th><th className="p-3">IP address</th><th className="p-3">Device</th><th className="p-3">Time</th></tr></thead>
-                <tbody>{(expandedTables.failedAttempts ? data.failedAttempts : data.failedAttempts.slice(0, 5)).map((attempt) => <tr key={attempt.id} className="border-b last:border-0"><td className="p-3 font-semibold">{attempt.email}</td><td className="p-3">{formatAction(attempt.reason)}</td><td className="p-3">{attempt.ipAddress ?? "Not recorded"}</td><td className="p-3">{deviceLabel(attempt.userAgent)}</td><td className="p-3">{formatDate(attempt.timestamp)}</td></tr>)}</tbody>
+                <tbody>{(expandedTables.failedAttempts ? filteredData!.failedAttempts : filteredData!.failedAttempts.slice(0, 5)).map((attempt) => <tr key={attempt.id} className="border-b last:border-0"><td className="p-3 font-semibold">{attempt.email}</td><td className="p-3">{formatAction(attempt.reason)}</td><td className="p-3">{attempt.ipAddress ?? "Not recorded"}</td><td className="p-3">{deviceLabel(attempt.userAgent)}</td><td className="p-3">{formatDate(attempt.timestamp)}</td></tr>)}</tbody>
               </table>
-              {!data.failedAttempts.length && <p className="py-6 text-sm text-slate-500">No failed login attempts have been recorded.</p>}
-              {data.failedAttempts.length > 5 && <TableExpansionButton expanded={Boolean(expandedTables.failedAttempts)} remaining={data.failedAttempts.length - 5} onClick={() => toggleTable("failedAttempts")} />}
+              {!filteredData!.failedAttempts.length && <p className="py-6 text-sm text-slate-500">No failed login attempts match this search.</p>}
+              {filteredData!.failedAttempts.length > 5 && <TableExpansionButton expanded={Boolean(expandedTables.failedAttempts)} remaining={filteredData!.failedAttempts.length - 5} onClick={() => toggleTable("failedAttempts")} />}
             </div>
           </section>
 
@@ -214,10 +232,10 @@ export default function SecurityDashboard() {
             <div className="mt-5 overflow-x-auto">
               <table className="w-full min-w-[700px] text-left text-sm">
                 <thead><tr className="border-b text-slate-500"><th className="p-3">Administrator</th><th className="p-3">Action</th><th className="p-3">Target</th><th className="p-3">Time</th></tr></thead>
-                <tbody>{(expandedTables.adminAuditLogs ? data.adminAuditLogs : data.adminAuditLogs.slice(0, 5)).map((event) => <tr key={event.id} className="border-b last:border-0"><td className="p-3"><span className="font-semibold">{event.admin?.name ?? "Administrator"}</span><br /><span className="text-slate-500">{event.admin?.email ?? "Unknown"}</span></td><td className="p-3">{formatAction(event.action)}</td><td className="p-3">{event.entityType ?? "—"}{event.entityId ? <><br /><span className="text-xs text-slate-500">{event.entityId}</span></> : null}</td><td className="p-3">{formatDate(event.timestamp)}</td></tr>)}</tbody>
+                <tbody>{(expandedTables.adminAuditLogs ? filteredData!.adminAuditLogs : filteredData!.adminAuditLogs.slice(0, 5)).map((event) => <tr key={event.id} className="border-b last:border-0"><td className="p-3"><span className="font-semibold">{event.admin?.name ?? "Administrator"}</span><br /><span className="text-slate-500">{event.admin?.email ?? "Unknown"}</span></td><td className="p-3">{formatAction(event.action)}</td><td className="p-3">{event.entityType ?? "—"}{event.entityId ? <><br /><span className="text-xs text-slate-500">{event.entityId}</span></> : null}</td><td className="p-3">{formatDate(event.timestamp)}</td></tr>)}</tbody>
               </table>
-              {!data.adminAuditLogs.length && <p className="py-6 text-sm text-slate-500">No administrator actions have been recorded.</p>}
-              {data.adminAuditLogs.length > 5 && <TableExpansionButton expanded={Boolean(expandedTables.adminAuditLogs)} remaining={data.adminAuditLogs.length - 5} onClick={() => toggleTable("adminAuditLogs")} />}
+              {!filteredData!.adminAuditLogs.length && <p className="py-6 text-sm text-slate-500">No audit log entries match this search.</p>}
+              {filteredData!.adminAuditLogs.length > 5 && <TableExpansionButton expanded={Boolean(expandedTables.adminAuditLogs)} remaining={filteredData!.adminAuditLogs.length - 5} onClick={() => toggleTable("adminAuditLogs")} />}
             </div>
           </section>
         </>

@@ -3,12 +3,14 @@ import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/server/auth/authorization";
 import { prisma } from "@/server/db/prisma";
 
-export async function GET() {
+export async function GET(request: Request) {
   const access = await requireAuthenticatedUser(["ADMIN"]);
   if ("error" in access) return access.error;
 
+  const search = new URL(request.url).searchParams.get("search")?.trim().slice(0, 100) ?? "";
+
   const [products, merchants, categories, draft, active, outOfStock, archived] = await Promise.all([
-    prisma.product.findMany({ orderBy: { updatedAt: "desc" }, take: 250, include: { merchant: { select: { merchantId: true, storeName: true } }, category: { select: { name: true } }, _count: { select: { productvariant: true, tryonsession: true } } } }),
+    prisma.product.findMany({ where: search ? { OR: [{ productName: { contains: search } }, { description: { contains: search } }, { category: { name: { contains: search } } }, { merchant: { storeName: { contains: search } } }] } : {}, orderBy: { updatedAt: "desc" }, take: 250, include: { merchant: { select: { merchantId: true, storeName: true } }, category: { select: { name: true } }, _count: { select: { productvariant: true, tryonsession: true } } } }),
     prisma.merchant.findMany({ orderBy: { storeName: "asc" }, select: { merchantId: true, storeName: true, status: true } }),
     prisma.category.findMany({ orderBy: { name: "asc" }, select: { name: true } }),
     prisma.product.count({ where: { status: "DRAFT" } }),

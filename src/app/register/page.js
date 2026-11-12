@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Header from "@/components/Header";
+import PasswordInput from "@/components/PasswordInput";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -146,8 +147,7 @@ localStorage.setItem(
             />
 
             {/* Password */}
-            <input
-              type="password"
+            <PasswordInput
               name="password"
               placeholder="Password"
               value={formData.password}
@@ -157,8 +157,7 @@ localStorage.setItem(
             />
 
             {/* Confirm Password */}
-            <input
-              type="password"
+            <PasswordInput
               name="confirmPassword"
               placeholder="Confirm Password"
               value={formData.confirmPassword}

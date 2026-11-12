@@ -11,7 +11,8 @@ type ProductForm = { merchantId: string; categoryName: string; productName: stri
 const emptyForm: ProductForm = { merchantId: "", categoryName: "", productName: "", description: "", price: "", currency: "USD", merchantUrl: "", primaryImageUrl: "", status: "DRAFT" };
 
 async function fetchCatalog() {
-  const response = await fetch("/api/v1/admin/products", { cache: "no-store" });
+  const search = typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("search")?.trim() ?? "";
+  const response = await fetch(`/api/v1/admin/products${search ? `?search=${encodeURIComponent(search)}` : ""}`, { cache: "no-store" });
   const body = await response.json();
   if (!response.ok) throw new Error(body.message ?? "Could not load the catalog.");
   return body as CatalogData;
@@ -38,9 +39,14 @@ export default function CatalogManagementPage() {
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    const term = new URLSearchParams(window.location.search).get("search");
+    if (term) setQuery(term);
+  }, []);
+
   const visible = useMemo(() => {
     const term = query.trim().toLowerCase();
-    return data?.products.filter((product) => (status === "ALL" || product.status === status) && (!term || `${product.name} ${product.merchant} ${product.category}`.toLowerCase().includes(term))) ?? [];
+    return data?.products.filter((product) => (status === "ALL" || product.status === status) && (!term || `${product.name} ${product.description ?? ""} ${product.merchant} ${product.category}`.toLowerCase().includes(term))) ?? [];
   }, [data, query, status]);
 
   function openEdit(product: Product) {

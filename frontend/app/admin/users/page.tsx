@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban, RotateCcw, ShieldCheck, Store, User, UserCheck } from "lucide-react";
+import { Ban, RotateCcw, Search, ShieldCheck, Store, User, UserCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 type UserRecord = {
@@ -45,10 +45,16 @@ function getTimeAgo(dateString: string) {
 
 export default function UsersPage() {
   const [users, setUsers] = useState<UserRecord[]>([]);
+  const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const changing = useRef(false);
+
+  useEffect(() => {
+    const term = new URLSearchParams(window.location.search).get("search");
+    if (term) setQuery(term);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -94,10 +100,13 @@ export default function UsersPage() {
     }
   }
 
+  const visibleUsers = users.filter((user) => !query.trim() || `${user.id} ${user.name} ${user.email} ${user.accountType} ${user.status}`.toLowerCase().includes(query.trim().toLowerCase()));
+
   return (
     <div className="rounded-2xl bg-white p-6 shadow">
       <h1 className="mb-5 text-3xl font-bold">User Details</h1>
       {error && <p role="alert" className="mb-4 rounded bg-red-50 p-3 text-red-700">{error}</p>}
+      <label className="mb-5 flex max-w-lg items-center gap-2 rounded-xl border border-slate-200 px-3 py-2"><Search size={18} className="text-slate-500" /><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search users by name, email, role, or status" aria-label="Search users" className="w-full outline-none" /></label>
       <div className="mb-6 grid gap-4 sm:grid-cols-2">
         <div className="flex items-center gap-4 rounded-2xl border border-purple-200 bg-purple-50 p-4">
           <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-purple-700 text-white"><UserCheck size={23} /></span>
@@ -117,8 +126,8 @@ export default function UsersPage() {
           </tr></thead>
           <tbody>
             {loading && <tr><td colSpan={7} className="p-4" role="status">Loading users...</td></tr>}
-            {!loading && !error && users.length === 0 && <tr><td colSpan={7} className="p-4">No users found.</td></tr>}
-            {users.map((user) => <tr key={user.id} className="border-b hover:bg-gray-100">
+            {!loading && !error && visibleUsers.length === 0 && <tr><td colSpan={7} className="p-4">No users match this search.</td></tr>}
+            {visibleUsers.map((user) => <tr key={user.id} className="border-b hover:bg-gray-100">
               <td className="p-2 py-7"><span className="font-semibold">{user.name}<br /></span><span className="italic text-gray-500">{user.email}</span></td>
               <td className="p-2"><RoleBadge accountType={user.accountType} /></td>
               <td className="p-2"><span className={`rounded-full px-3 py-2 text-xs font-bold ${user.status === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{user.status === "ACTIVE" ? "Active" : "Restricted"}</span></td>

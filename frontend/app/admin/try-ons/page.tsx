@@ -9,7 +9,8 @@ type Data = { summary: Record<TryOn["status"], number>; tryOns: TryOn[] };
 const statuses: Array<"ALL" | TryOn["status"]> = ["ALL", "PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED"];
 
 async function fetchTryOns() {
-  const response = await fetch("/api/v1/admin/try-ons", { cache: "no-store" });
+  const search = typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("search")?.trim() ?? "";
+  const response = await fetch(`/api/v1/admin/try-ons${search ? `?search=${encodeURIComponent(search)}` : ""}`, { cache: "no-store" });
   const body = await response.json();
   if (!response.ok) throw new Error(body.message ?? "Could not load try-on sessions.");
   return body as Data;
@@ -18,6 +19,7 @@ async function fetchTryOns() {
 export default function TryOnManagementPage() {
   const [data, setData] = useState<Data | null>(null);
   const [filter, setFilter] = useState<(typeof statuses)[number]>("ALL");
+  const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   const [pendingId, setPendingId] = useState<string | null>(null);
 
@@ -31,7 +33,11 @@ export default function TryOnManagementPage() {
     fetchTryOns().then((body) => { if (active) setData(body); }).catch((reason) => { if (active) setError(reason instanceof Error ? reason.message : "Could not load try-on sessions."); });
     return () => { active = false; };
   }, []);
-  const visible = useMemo(() => data?.tryOns.filter((item) => filter === "ALL" || item.status === filter) ?? [], [data, filter]);
+  useEffect(() => { const term = new URLSearchParams(window.location.search).get("search"); if (term) setQuery(term); }, []);
+  const visible = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    return data?.tryOns.filter((item) => (filter === "ALL" || item.status === filter) && (!term || `${item.id} ${item.product} ${item.customer.name} ${item.customer.email} ${item.status}`.toLowerCase().includes(term))) ?? [];
+  }, [data, filter, query]);
 
   async function manage(item: TryOn, action: "RETRY" | "CANCEL") {
     if (pendingId) return;
@@ -54,6 +60,7 @@ export default function TryOnManagementPage() {
     <section className="space-y-6">
       <div><p className="text-sm font-bold uppercase tracking-[0.18em] text-purple-700">Operations</p><h2 className="mt-1 text-3xl font-black text-slate-950">Try-on management</h2><p className="mt-2 text-slate-600">Inspect processing status, retry failures, and cancel stalled sessions.</p></div>
       {error && <p role="alert" className="rounded-xl bg-red-100 p-4 text-red-800">{error}</p>}
+      <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by product, customer, or session ID" aria-label="Search try-on sessions" className="w-full max-w-lg rounded-xl border border-slate-200 bg-white px-4 py-3 outline-purple-600" />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">{(["PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED"] as const).map((status) => <button key={status} type="button" onClick={() => setFilter(status)} className={`rounded-2xl p-5 text-left shadow ${filter === status ? "bg-purple-700 text-white" : "bg-white"}`}><p className="text-sm font-bold capitalize">{status.toLowerCase()}</p><p className="mt-2 text-3xl font-black">{data?.summary[status] ?? 0}</p></button>)}</div>
       <div className="flex flex-wrap gap-2">{statuses.map((status) => <button key={status} type="button" onClick={() => setFilter(status)} className={`rounded-full px-4 py-2 text-sm font-semibold ${filter === status ? "bg-slate-950 text-white" : "bg-white text-slate-700 shadow"}`}>{status === "ALL" ? "All sessions" : status.toLowerCase()}</button>)}</div>
       <div className="overflow-x-auto rounded-2xl bg-white p-5 shadow">

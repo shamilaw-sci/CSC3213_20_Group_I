@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
+import PasswordInput from "@/components/PasswordInput";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -185,8 +186,7 @@ if (registeredUser.password !== loginData.password) {
 
                 {/* Password */}
 
-                <input
-                  type="password"
+                <PasswordInput
                   name="password"
                   placeholder="Password"
                   value={loginData.password}

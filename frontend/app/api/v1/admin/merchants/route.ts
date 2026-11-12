@@ -3,11 +3,12 @@ import { NextResponse } from "next/server";
 import { requireAuthenticatedUser } from "@/server/auth/authorization";
 import { prisma } from "@/server/db/prisma";
 
-export async function GET() {
+export async function GET(request: Request) {
   const access = await requireAuthenticatedUser(["ADMIN"]);
   if ("error" in access) return access.error;
+  const search = new URL(request.url).searchParams.get("search")?.trim().slice(0, 100) ?? "";
   const [merchants, pending, active, suspended, rejected] = await Promise.all([
-    prisma.merchant.findMany({ orderBy: { updatedAt: "desc" }, take: 250, include: { user: { select: { userName: true, userEmail: true } }, subscription: { select: { plan: true, status: true } }, _count: { select: { product: true, merchantredirect: true } } } }),
+    prisma.merchant.findMany({ where: search ? { OR: [{ storeName: { contains: search } }, { email: { contains: search } }, { ownerName: { contains: search } }, { businessCategory: { contains: search } }] } : {}, orderBy: { updatedAt: "desc" }, take: 250, include: { user: { select: { userName: true, userEmail: true } }, subscription: { select: { plan: true, status: true } }, _count: { select: { product: true, merchantredirect: true } } } }),
     prisma.merchant.count({ where: { status: "PENDING" } }),
     prisma.merchant.count({ where: { status: "ACTIVE" } }),
     prisma.merchant.count({ where: { status: "SUSPENDED" } }),

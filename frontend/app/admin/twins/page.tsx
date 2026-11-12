@@ -34,6 +34,7 @@ function formatStorage(bytes: number) {
 export default function TwinsPage() {
   const [data, setData] = useState<TwinData | null>(null);
   const [selectedTwin, setSelectedTwin] = useState<Twin | null>(null);
+  const [query, setQuery] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -48,6 +49,13 @@ export default function TwinsPage() {
       .catch((reason) => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Could not load digital-twin statistics."); });
     return () => controller.abort();
   }, []);
+
+  useEffect(() => {
+    const term = new URLSearchParams(window.location.search).get("search");
+    if (term) setQuery(term);
+  }, []);
+
+  const visibleTwins = data?.twins.filter((twin) => !query.trim() || `${twin.name} ${twin.email} ${twin.status}`.toLowerCase().includes(query.trim().toLowerCase())) ?? [];
 
   const metrics = [
     { label: "Total digital twins created", value: data ? data.metrics.totalTwinsCreated.toLocaleString() : "—", icon: ScanLine, style: "from-purple-200 via-pink-100 to-white text-purple-800" },
@@ -78,10 +86,11 @@ export default function TwinsPage() {
 
       <div>
         <h3 className="mb-5 text-2xl font-black text-slate-950">Active digital twins</h3>
+        <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by user name or email" aria-label="Search digital twins" className="mb-5 w-full max-w-lg rounded-xl border border-slate-200 bg-white px-4 py-3 outline-purple-600" />
         {!data && !error && <p role="status" className="rounded-2xl bg-white p-6 shadow">Loading digital twins…</p>}
-        {data && data.twins.length === 0 && <p className="rounded-2xl bg-white p-6 text-slate-500 shadow">No active digital twins found.</p>}
+        {data && visibleTwins.length === 0 && <p className="rounded-2xl bg-white p-6 text-slate-500 shadow">No digital twins match this search.</p>}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-          {data?.twins.map((twin) => (
+          {visibleTwins.map((twin) => (
             <button key={twin.id} type="button" onClick={() => setSelectedTwin(twin)} className="overflow-hidden rounded-2xl bg-white text-left shadow transition hover:-translate-y-1 hover:shadow-xl">
               <Image src={twin.imageUrl} alt={`${twin.name}'s digital twin`} width={500} height={500} className="aspect-square w-full object-cover" unoptimized />
               <div className="p-4"><p className="truncate font-bold text-slate-950">{twin.name}</p><p className="truncate text-sm text-slate-500">{twin.email}</p></div>

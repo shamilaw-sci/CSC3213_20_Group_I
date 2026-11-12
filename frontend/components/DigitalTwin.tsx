@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export default function DigitalTwin() {
   return (
     <div className="bg-gradient-to-r from-blue-400 to-purple-600 py-20 px-6">
@@ -21,9 +19,9 @@ export default function DigitalTwin() {
 
         
         <div className="mt-8 mb-10  ">
-          <Link href="/profile?tab=digitalTwin" className="px-6 py-3 border border-white text-white rounded-lg hover:bg-blue-600 hover:text-white transition">
+          <button className="px-6 py-3 border border-white text-white rounded-lg hover:bg-blue-600 hover:text-white transition">
             Get Started
-          </Link>
+          </button>
         </div>
 
       </div>

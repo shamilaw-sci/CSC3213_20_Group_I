@@ -12,7 +12,8 @@ type MerchantForm = { storeName: string; email: string; ownerName: string; phone
 const initialForm: MerchantForm = { storeName: "", email: "", ownerName: "", phone: "", address: "", businessCategory: "", websiteUrl: "", storeDescription: "", status: "PENDING", plan: "FREE" };
 
 async function fetchMerchants() {
-  const response = await fetch("/api/v1/admin/merchants", { cache: "no-store" });
+  const search = typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("search")?.trim() ?? "";
+  const response = await fetch(`/api/v1/admin/merchants${search ? `?search=${encodeURIComponent(search)}` : ""}`, { cache: "no-store" });
   const body = await response.json();
   if (!response.ok) throw new Error(body.message ?? "Could not load merchants.");
   return body as MerchantData;
@@ -39,6 +40,7 @@ export default function MerchantManagementPage() {
 
   const load = useCallback(async () => { const body = await fetchMerchants(); setData(body); setError(""); }, []);
   useEffect(() => { let active = true; fetchMerchants().then((body) => { if (active) setData(body); }).catch((reason) => { if (active) setError(reason instanceof Error ? reason.message : "Could not load merchants."); }); return () => { active = false; }; }, []);
+  useEffect(() => { const term = new URLSearchParams(window.location.search).get("search"); if (term) setQuery(term); }, []);
   const visible = useMemo(() => { const term = query.trim().toLowerCase(); return data?.merchants.filter((merchant) => (status === "ALL" || merchant.status === status) && (plan === "ALL" || merchant.subscription.plan === plan) && (!term || `${merchant.storeName} ${merchant.email} ${merchant.ownerName ?? ""} ${merchant.businessCategory ?? ""}`.toLowerCase().includes(term))) ?? []; }, [data, plan, query, status]);
 
   function openEdit(merchant: Merchant) { setEditing(merchant); setForm(merchantPayload(merchant)); }

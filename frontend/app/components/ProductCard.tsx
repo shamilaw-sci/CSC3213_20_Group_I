@@ -53,7 +53,7 @@ export default function ProductCard({
               const image = event.currentTarget;
               if (!image.src.endsWith("/placeholders/product.svg")) image.src = "/placeholders/product.svg";
             }}
-            className="object-contain bg-white p-2"
+            className="object-cover"
           />
         </Link>
 
@@ -86,7 +86,7 @@ export default function ProductCard({
         </Link>
 
         <p className="mt-2 text-2xl font-bold text-indigo-600">
-          {product.currency ? `${product.currency} ${product.price.toFixed(2)}` : `$${product.price.toFixed(2)}`}
+          ${product.price.toFixed(2)}
         </p>
 
         {onToggleCompare && (
@@ -115,7 +115,6 @@ export default function ProductCard({
               category: product.category,
               store: product.store,
               price: product.price,
-
             })
           }
           className="w-full mt-5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition"
@@ -133,8 +132,6 @@ export default function ProductCard({
               category: product.category,
               image: product.image,
               price: product.price,
-              currency: product.currency,
-              availableSizes: product.availableSizes,
             }}
           />
         </div>
