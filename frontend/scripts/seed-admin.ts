@@ -64,10 +64,8 @@ async function main() {
 
   const now = new Date();
   const passwordHash = await bcrypt.hash(password, 12);
-
-  await prisma.user.upsert({
+  const admin = await prisma.user.upsert({
     where: { userEmail: email },
-
     create: {
       userId: randomUUID(),
       userName: name,
@@ -76,7 +74,6 @@ async function main() {
       role: "ADMIN",
       updatedAt: now,
     },
-
     update: {
       userName: name,
       passwordHash,
@@ -87,6 +84,11 @@ async function main() {
     },
   });
 
+  await prisma.adminprofile.upsert({
+    where: { userId: admin.userId },
+    create: { adminProfileId: randomUUID(), userId: admin.userId, department: "Administration", updatedAt: now },
+    update: { updatedAt: now },
+  });
   console.log("TryVora admin account is ready.");
 }
 

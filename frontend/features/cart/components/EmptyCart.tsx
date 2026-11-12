@@ -24,7 +24,7 @@ export default function EmptyCart() {
 
       {/* Description */}
       <p className="text-gray-500 mb-8 max-w-xs">
-        Looks like you haven't added any fashion items yet.
+        Looks like you haven&apos;t added any fashion items yet.
         Start exploring and build your perfect wardrobe.
       </p>
 

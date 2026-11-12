@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Header from "@/components/Header";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function LoginPage() {
   return (
@@ -23,8 +24,7 @@ export default function LoginPage() {
           />
 
           {/* Password */}
-          <input
-            type="password"
+          <PasswordInput
             placeholder="Password"
             className="w-full border rounded-lg p-3 mb-6 focus:outline-none focus:ring-2 focus:ring-violet-500"
           />

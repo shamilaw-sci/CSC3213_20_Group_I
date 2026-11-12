@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
 import { useAuth } from "@/features/auth/context/AuthContext";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function Login() {
   const { login } = useAuth();
@@ -21,7 +22,12 @@ export default function Login() {
     setError("");
     try {
       const user = await login(String(data.get("email") ?? ""), String(data.get("password") ?? ""), data.get("rememberMe") === "on");
-      router.replace(user.role === "ADMIN" ? "/admin" : user.role === "MERCHANT" ? "/merchant" : "/profile");
+      const destination = user.role === "ADMIN" ? "/admin" : user.role === "MERCHANT" ? "/merchant" : "/profile";
+      if (user.role === "ADMIN") {
+        window.location.replace(destination);
+        return;
+      }
+      router.replace(destination);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-in failed. Please try again.");
@@ -85,10 +91,9 @@ export default function Login() {
               </div>
 
               <div className="mt-2">
-                <input
+                <PasswordInput
                   id="password"
                   name="password"
-                  type="password"
                   required
                   autoComplete="current-password"
                   className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition"

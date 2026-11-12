@@ -24,6 +24,18 @@ model auditlog {
   @@index([entityType, entityId], map: "AuditLog_entityType_entityId_idx")
 }
 
+model adminprofile {
+  adminProfileId String   @id @db.Char(36)
+  userId         String   @unique(map: "AdminProfile_userId_key") @db.Char(36)
+  department     String?  @db.VarChar(100)
+  designation    String   @default("Administrator") @db.VarChar(100)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  avatarData     Bytes?
+  avatarMimeType String?  @db.VarChar(50)
+  user           user     @relation(fields: [userId], references: [userId], onDelete: Cascade, map: "AdminProfile_userId_fkey")
+}
+
 model category {
   categoryId  String    @id @db.Char(36)
   name        String    @unique(map: "Category_name_key") @db.VarChar(100)
@@ -128,6 +140,7 @@ model guestsession {
   convertedUserId  String?            @db.Char(36)
   createdAt        DateTime           @default(now())
   updatedAt        DateTime
+  restrictedAt     DateTime?
   comparison       comparison[]
   feedback         feedback[]
   user             user?              @relation(fields: [convertedUserId], references: [userId], map: "GuestSession_convertedUserId_fkey")
@@ -136,6 +149,7 @@ model guestsession {
 
   @@index([convertedUserId], map: "GuestSession_convertedUserId_idx")
   @@index([expiryDate], map: "GuestSession_expiryDate_idx")
+  @@index([restrictedAt, createdAt], map: "GuestSession_restrictedAt_createdAt_idx")
 }
 
 model measurement {
@@ -284,6 +298,7 @@ model profile {
   country     String?      @db.VarChar(100)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime
+  skinColor   String?      @db.VarChar(7)
   measurement measurement?
   user        user         @relation(fields: [userId], references: [userId], onDelete: Cascade, map: "Profile_userId_fkey")
 }
@@ -372,6 +387,7 @@ model user {
   createdAt                            DateTime             @default(now())
   updatedAt                            DateTime
   deletedAt                            DateTime?
+  adminprofile                         adminprofile?
   auditlog                             auditlog[]
   comparison                           comparison[]
   digitaltwin                          digitaltwin[]

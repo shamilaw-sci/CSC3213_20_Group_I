@@ -1,7 +1,6 @@
 import RegisterPage from "@/components/Register";
-import RegisterForm from "@/components/Register";
 
-export default function Register_form(){
+export default function RegisterRoute(){
     return(
         <RegisterPage></RegisterPage>
     );

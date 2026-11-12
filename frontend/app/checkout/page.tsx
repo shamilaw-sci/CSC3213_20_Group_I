@@ -154,8 +154,8 @@ export default function CheckoutPage() {
 
               <p className="text-gray-600 leading-relaxed mb-5">
 
-                When you complete checkout, you'll be redirected
-                to each merchant's website to finalize your purchase
+                When you complete checkout, you&apos;ll be redirected
+                to each merchant&apos;s website to finalize your purchase
                 securely.
 
               </p>
@@ -171,7 +171,7 @@ export default function CheckoutPage() {
 
 
                 <div>
-                  ✓ Merchant's return policy applies
+                  ✓ Merchant&apos;s return policy applies
                 </div>
 
 

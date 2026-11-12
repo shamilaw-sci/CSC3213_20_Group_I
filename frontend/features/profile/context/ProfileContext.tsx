@@ -36,7 +36,7 @@ export function ProfileProvider({
   children,
 }: ProfileProviderProps) {
   const { user, ready } = useAuth();
-  const userId = ready ? user?.id ?? null : null;
+  const userId = ready && user?.role === "CUSTOMER" ? user.id : null;
 
   // A new user identity receives a fresh state tree before any Profile UI renders.
   return (

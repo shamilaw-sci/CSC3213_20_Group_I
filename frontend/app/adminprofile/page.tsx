@@ -1,255 +1,237 @@
 "use client";
+
 import Link from "next/link";
-import {LayoutDashboard, Trash} from 'lucide-react';
+import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
+import { Camera, Eye, EyeOff, LayoutDashboard, Pencil, Save, ShieldCheck, Trash2, UserCircle, X } from "lucide-react";
 
+type AdminAccount = {
+  name: string;
+  email: string;
+  role: "ADMIN";
+  department: string;
+  designation: string;
+  createdAt: string;
+  lastLoginAt: string | null;
+  hasAvatar: boolean;
+};
 
-// Main Admin Profile Function
 export default function AdminProfile() {
+  const [account, setAccount] = useState<AdminAccount | null>(null);
+  const [savedAccount, setSavedAccount] = useState<AdminAccount | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [avatarVersion, setAvatarVersion] = useState(0);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
-  return (
-    <div className="min-h-screen bg-pink-50 p-6">
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/v1/admin/account", { cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        const body = await response.json();
+        if (!response.ok) throw new Error(body.message ?? "Could not load the admin account.");
+        if (!controller.signal.aborted) {
+          setAccount(body.account);
+          setSavedAccount(body.account);
+        }
+      })
+      .catch((reason) => {
+        if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Could not load the admin account.");
+      });
+    return () => controller.abort();
+  }, []);
 
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-3xl font-bold">
-          Admin Profile
-        </h1>
-        <Link
-          href="/admin"
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-purple-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-purple-800"
-        >
-          <LayoutDashboard size={20}/> Admin Desk
-        </Link>
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  function clearPasswords() {
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setShowCurrentPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+  }
 
-        {/* Left Side */}
-        <div className="space-y-6">
-          {ProfileHeader()}
-          {QuickActions()}
-        </div>
+  function cancelEditing() {
+    setAccount(savedAccount);
+    clearPasswords();
+    setError("");
+    setEditing(false);
+  }
 
-        {/* Right Side */}
-        <div className="lg:col-span-2 space-y-6">
-          {PersonalInfo()}
-          {ContactInfo()}
-          {/* {AccountInfo()} 
-          {SecurityCard()}
-          {Preferences()}*/}
-          {Permissions()}
-          {ActivityTimeline()}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-//Profile Header Component
-function ProfileHeader(){
-
-  return (
-
-    <div className="bg-gray-50 rounded-xl shadow p-8 text-center">
-
-      {/*Profile Picture*/}
-      <img
-        src="https://i.pravatar.cc/160"
-        className="w-28 h-28 rounded-full mx-auto"
-      />
-
-      {/*Name*/}
-      <h2 className="text-xl font-bold mt-4">
-        John Smith
-      </h2>
-
-      {/*Username*/}
-      <p className="text-gray-500">
-        @johnsmith
-      </p>
-
-      {/*Role*/}
-      <span className="inline-block mt-3 bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
-        Administrator
-      </span>
-
-      <p className="mt-3">
-        IT Department
-      </p>
-
-
-    </div>
-
-  );
-
-}
-
-
-
-//Personal Information Component
-function PersonalInfo(){
-
-  return (
-
-    <div className="bg-gray-50 p-6 rounded-xl shadow">
-
-      <h2 className="text-xl font-semibold mb-4">
-        Personal Information
-      </h2>
-
-      <div className="grid md:grid-cols-2 gap-4">
-        <p>Name: John Smith</p>
-        <p>Username: johnsmith</p>
-        <p>Employee ID: ADM001</p>
-        <p>Designation: Administrator</p>
-        <p>Department: IT</p>
-        <p>Joined: January 2025</p>
-      </div>
-
-    </div>
-  );
-}
-
-//Contact Information
-function ContactInfo(){
-  return (
-    <div className="bg-gray-50 p-6 rounded-xl shadow">
-      <h2 className="text-xl font-semibold mb-4">
-        Contact Information
-      </h2>
-      <p>Email: admin@example.com</p>
-      <p>Phone: +94 77 1234567</p>
-      <p>Address: Colombo, Sri Lanka</p>
-    </div>
-  );
-}
-{/* 
-  // 4. Account Information
-function AccountInfo(){
-  return (
-    <div className="bg-gray-50 p-6 rounded-xl shadow">
-      <h2 className="text-xl font-semibold mb-4">
-        Account Information
-      </h2>
-      <p>User ID: 10001</p>
-      <p>Role: Super Admin</p>
-      <p>Status: Active</p>
-      <p>Last Login: Today 9:30 AM</p>
-    </div>
-  );
-}
- 
-
-
-
-// 5. Security Component
-function SecurityCard(){
-  return (
-    <div className="bg-gray-50 p-6 rounded-xl shadow">
-      <h2 className="text-xl font-semibold mb-4">
-        Security
-      </h2>
-
-      <button className="border p-3 rounded-lg w-full mb-3">
-        Change Password
-      </button>
-
-      <button className="border p-3 rounded-lg w-full mb-3">
-        Enable Two Factor Authentication
-      </button>
-
-      <button className="border p-3 rounded-lg w-full">
-        Login History
-      </button>
-    </div>
-  );
-}
-   */}
-
-
-//Preferences Component
-function Preferences(){
-  return (
-    <div className="bg-gray-50 p-6 rounded-xl shadow">
-      <h2 className="text-xl font-semibold mb-4">
-        Preferences
-      </h2>
-
-      <p>Theme : Dark Mode</p>
-      <p>Language : English</p>
-      <p>Timezone : Asia/Colombo</p>
-    </div>
-  );
-}
-
-//Permissions Component
-function Permissions(){
-  const permissions=[
-    "User Management",
-    "Digital Twin Management",
-    "Garment Management",
-    "Reports",
-    "Analytics",
-    "Settings"
-  ];
-  return (
-    <div className="bg-gray-50 p-6 rounded-xl shadow">
-    <h2 className="text-xl font-semibold mb-4">
-      Permissions
-    </h2>
-    <div className="flex flex-wrap gap-2">
-    {
-      permissions.map((permission)=>(
-        <span
-        key={permission}
-        className="bg-green-100 text-green-700 px-3 py-1 rounded-full"
-        >
-          {permission}
-        </span>
-      ))
+  async function saveAccount(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!account || busy) return;
+    if (newPassword !== confirmPassword) {
+      setError("New passwords do not match.");
+      return;
     }
-    </div>
-    </div>
-  );
-}
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch("/api/v1/admin/account", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: account.name,
+          email: account.email,
+          department: account.department,
+          designation: account.designation,
+          currentPassword,
+          ...(newPassword ? { newPassword } : {}),
+        }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.message ?? "Could not update the admin account.");
+      setAccount(body.account);
+      setSavedAccount(body.account);
+      clearPasswords();
+      setEditing(false);
+      setMessage(body.passwordChanged ? "Profile and password updated." : "Profile updated.");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not update the admin account.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
+  async function uploadAvatar(event: ChangeEvent<HTMLInputElement>) {
+    const image = event.target.files?.[0];
+    event.target.value = "";
+    if (!image || !account) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const form = new FormData();
+      form.set("image", image);
+      const response = await fetch("/api/v1/admin/account/avatar", { method: "POST", body: form });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.message ?? "Could not upload the profile picture.");
+      const updated = { ...account, hasAvatar: true };
+      setAccount(updated);
+      setSavedAccount(updated);
+      setAvatarVersion((value) => value + 1);
+      setMessage("Profile picture updated.");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not upload the profile picture.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
-//Activity Timeline
-function ActivityTimeline(){
-return (
-  <div className="bg-gray-50 p-6 rounded-xl shadow">
-  <h2 className="text-xl font-semibold mb-4">
-    Recent Activity
-  </h2>
-  <ul className="space-y-3">
-    <li>
-      ✔ Logged in today
-    </li>
-    <li>
-      ✔ Updated profile
-    </li>
-    <li>
-      ✔ Created new user
-    </li>
-  </ul>
-  </div>
-  );
-}
+  async function removeAvatar() {
+    if (!account?.hasAvatar || busy) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch("/api/v1/admin/account/avatar", { method: "DELETE" });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.message ?? "Could not remove the profile picture.");
+      const updated = { ...account, hasAvatar: false };
+      setAccount(updated);
+      setSavedAccount(updated);
+      setMessage("Profile picture removed.");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not remove the profile picture.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
+  if (!account && !error) return <main className="min-h-screen bg-pink-50 p-6"><p>Loading admin profile…</p></main>;
 
-//Quick Actions
-function QuickActions(){
   return (
-    <div className="bg-gray-50 p-6 rounded-xl shadow">
-      <h2 className="font-semibold mb-4">
-        Quick Actions
-      </h2>
+    <main className="min-h-screen bg-pink-50 p-6">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-purple-700">Administrator</p>
+            <h1 className="text-3xl font-bold">Admin profile</h1>
+          </div>
+          <Link href="/admin" className="inline-flex items-center justify-center gap-2 rounded-full bg-purple-700 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-800">
+            <LayoutDashboard size={20} /> Admin dashboard
+          </Link>
+        </div>
 
-      <button className="w-full bg-blue-600 text-white p-3 rounded-lg mb-3">
-        Edit Profile
-      </button>
+        {error && <p role="alert" className="mb-5 rounded-xl bg-red-100 p-4 text-red-800">{error}</p>}
+        {message && <p role="status" className="mb-5 rounded-xl bg-green-100 p-4 text-green-800">{message}</p>}
 
-      <button className="w-full bg-gray-800 text-white p-3 rounded-lg">
-        Logout
-      </button>
-    </div>
+        {account && (
+          <section className="rounded-2xl bg-white p-6 shadow">
+            <div className="flex flex-col gap-6 border-b pb-6 sm:flex-row sm:items-center">
+              <div className="relative flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-full bg-purple-100 text-purple-700">
+                {account.hasAvatar ? (
+                  <div role="img" aria-label={`${account.name} profile picture`} className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url(/api/v1/admin/account/avatar?v=${avatarVersion})` }} />
+                ) : (
+                  <UserCircle size={72} />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h2 className="text-2xl font-bold">{account.name}</h2>
+                  <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">{account.role}</span>
+                </div>
+                <p className="mt-1 text-gray-600">{account.email}</p>
+                <p className="mt-1 text-sm text-gray-500">{account.designation}{account.department ? ` · ${account.department}` : ""}</p>
+              </div>
+              {!editing && (
+                <button type="button" onClick={() => { setEditing(true); setError(""); setMessage(""); }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-700 px-5 py-3 font-semibold text-white hover:bg-purple-800">
+                  <Pencil size={18} /> Edit profile
+                </button>
+              )}
+            </div>
+
+            {editing ? (
+              <form onSubmit={saveAccount} className="mt-6 space-y-6">
+                <div className="flex flex-wrap gap-3">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2 font-medium hover:bg-gray-50">
+                    <Camera size={18} /> Change picture
+                    <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadAvatar} disabled={busy} />
+                  </label>
+                  {account.hasAvatar && <button type="button" onClick={() => void removeAvatar()} disabled={busy} className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2 font-medium text-red-700 hover:bg-red-50"><Trash2 size={18} /> Remove picture</button>}
+                  <span className="self-center text-xs text-gray-500">JPG, PNG, or WebP; maximum 2 MB.</span>
+                </div>
+
+                <div className="grid gap-5 md:grid-cols-2">
+                  <label className="grid gap-2 text-sm font-medium">Name<input required minLength={2} maxLength={100} value={account.name} onChange={(event) => setAccount({ ...account, name: event.target.value })} className="rounded-xl border p-3" /></label>
+                  <label className="grid gap-2 text-sm font-medium">Email<input required type="email" maxLength={255} value={account.email} onChange={(event) => setAccount({ ...account, email: event.target.value })} className="rounded-xl border p-3" /></label>
+                  <label className="grid gap-2 text-sm font-medium">Department<input maxLength={100} value={account.department} onChange={(event) => setAccount({ ...account, department: event.target.value })} className="rounded-xl border p-3" /></label>
+                  <label className="grid gap-2 text-sm font-medium">Designation<input required minLength={2} maxLength={100} value={account.designation} onChange={(event) => setAccount({ ...account, designation: event.target.value })} className="rounded-xl border p-3" /></label>
+                </div>
+
+                <div className="border-t pt-6">
+                  <h3 className="mb-1 flex items-center gap-2 text-lg font-semibold"><ShieldCheck size={20} /> Security</h3>
+                  <p className="mb-5 text-sm text-gray-500">Your current password is required to save profile details. Leave the new password blank to keep it.</p>
+                  <div className="grid gap-5 md:grid-cols-3">
+                    <label className="grid gap-2 text-sm font-medium">Current password<div className="relative"><input required type={showCurrentPassword ? "text" : "password"} autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} className="w-full rounded-xl border p-3 pr-11" /><button type="button" onClick={() => setShowCurrentPassword((value) => !value)} aria-label={showCurrentPassword ? "Hide current password" : "Show current password"} className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-gray-500 hover:text-purple-700">{showCurrentPassword ? <EyeOff size={19} /> : <Eye size={19} />}</button></div></label>
+                    <label className="grid gap-2 text-sm font-medium">New password<div className="relative"><input type={showNewPassword ? "text" : "password"} autoComplete="new-password" minLength={8} maxLength={128} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} className="w-full rounded-xl border p-3 pr-11" /><button type="button" onClick={() => setShowNewPassword((value) => !value)} aria-label={showNewPassword ? "Hide new password" : "Show new password"} className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-gray-500 hover:text-purple-700">{showNewPassword ? <EyeOff size={19} /> : <Eye size={19} />}</button></div></label>
+                    <label className="grid gap-2 text-sm font-medium">Confirm new password<div className="relative"><input type={showConfirmPassword ? "text" : "password"} autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} className="w-full rounded-xl border p-3 pr-11" /><button type="button" onClick={() => setShowConfirmPassword((value) => !value)} aria-label={showConfirmPassword ? "Hide confirmed password" : "Show confirmed password"} className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-gray-500 hover:text-purple-700">{showConfirmPassword ? <EyeOff size={19} /> : <Eye size={19} />}</button></div></label>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <button disabled={busy} className="inline-flex items-center gap-2 rounded-xl bg-purple-700 px-5 py-3 font-semibold text-white hover:bg-purple-800 disabled:opacity-50"><Save size={18} /> {busy ? "Saving…" : "Save changes"}</button>
+                  <button type="button" onClick={cancelEditing} disabled={busy} className="inline-flex items-center gap-2 rounded-xl border px-5 py-3 font-semibold hover:bg-gray-50"><X size={18} /> Cancel</button>
+                </div>
+              </form>
+            ) : (
+              <dl className="mt-6 grid gap-5 sm:grid-cols-2">
+                <div className="rounded-xl bg-gray-50 p-4"><dt className="text-sm text-gray-500">Name</dt><dd className="mt-1 font-semibold">{account.name}</dd></div>
+                <div className="rounded-xl bg-gray-50 p-4"><dt className="text-sm text-gray-500">Email</dt><dd className="mt-1 break-all font-semibold">{account.email}</dd></div>
+                <div className="rounded-xl bg-gray-50 p-4"><dt className="text-sm text-gray-500">Department</dt><dd className="mt-1 font-semibold">{account.department || "Not set"}</dd></div>
+                <div className="rounded-xl bg-gray-50 p-4"><dt className="text-sm text-gray-500">Last login</dt><dd className="mt-1 font-semibold">{account.lastLoginAt ? new Date(account.lastLoginAt).toLocaleString() : "Not recorded"}</dd></div>
+              </dl>
+            )}
+          </section>
+        )}
+      </div>
+    </main>
   );
 }

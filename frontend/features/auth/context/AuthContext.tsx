@@ -63,9 +63,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const signedInUser = (await readJson(response)).user;
     if (!signedInUser) throw new Error("Could not start a user session.");
     setUser(signedInUser);
-    await convertGuest();
-    restoreGuestCart();
-    restoreSelectedProduct();
+    if (signedInUser.role !== "ADMIN") {
+      await convertGuest();
+      restoreGuestCart();
+      restoreSelectedProduct();
+    }
     return signedInUser;
   }
 
