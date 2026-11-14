@@ -9,7 +9,6 @@ import Navbar from "@/app/components/Navbar";
 import DigitalTwinTab from "@/features/profile/components/DigitalTwinTab";
 import MeasurementsTab from "@/features/profile/components/MeasurementsTab";
 import AccountTab from "@/features/profile/components/AccountTab";
-import TryOnModal from "@/features/try-on/components/TryOnModal";
 
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { useProfile } from "@/features/profile/hooks/useProfile";
@@ -83,7 +82,6 @@ export default function ProfilePage() {
 
       </main>
 
-      <TryOnModal />
 
     </div>
   );

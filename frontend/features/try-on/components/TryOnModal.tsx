@@ -2,96 +2,133 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CheckCircle2, Ruler, ShoppingBag, Sparkles, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { CheckCircle2, Ruler, ShoppingBag, Sparkles, UserRound, UserRoundPlus, X } from "lucide-react";
+import { type ChangeEvent, useEffect, useState } from "react";
 
+import { useAuth } from "@/features/auth/context/AuthContext";
 import { useProfile } from "@/features/profile/hooks/useProfile";
+import { validateImage } from "../utils/imageValidation";
+import { savePendingTryOn } from "../utils/pendingTryOn";
 import { useTryOn } from "../hooks/useTryOn";
+import type { TryOnProduct } from "../types/tryon";
 import InteractiveFittingPreview, { fitPercentage } from "./InteractiveFittingPreview";
 
 const illustrativeSizes = ["XS", "S", "M", "L", "XL", "XXL"];
 
 export default function TryOnModal() {
-  const { state, closeTryOn } = useTryOn();
-  const { profile, changeTab } = useProfile();
-  const [size, setSize] = useState("M");
-  const [savedPreview, setSavedPreview] = useState<{
-    productId: string | number;
-    size: string;
-  } | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState("");
+  const { state } = useTryOn();
+  if (!state.isOpen || !state.selectedProduct) return null;
+  return <TryOnModalView key={state.selectedProduct.id} product={state.selectedProduct} initialSize={state.selectedSize} />;
+}
+
+function TryOnModalView({ product, initialSize }: { product: TryOnProduct; initialSize?: string | null }) {
+  const { closeTryOn, setSelectedSize, goToTwinSetup } = useTryOn();
+  const { profile, profileLoadStatus, changeTab } = useProfile();
+  const { user, isGuest, ready: authReady, startGuest } = useAuth();
+  const router = useRouter();
+  const [size, setSize] = useState(initialSize ?? "M");
   const [signInRequired, setSignInRequired] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState("");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  const product = state.selectedProduct;
+  const [guestPhoto, setGuestPhoto] = useState<File | null>(null);
+  const [guestPhotoUrl, setGuestPhotoUrl] = useState<string | null>(null);
+  const [accessError, setAccessError] = useState("");
+  const [guestPhotoError, setGuestPhotoError] = useState("");
+  const [startingGuest, setStartingGuest] = useState(false);
+  const [guestChoiceVisible, setGuestChoiceVisible] = useState(true);
+  const sizeOptions = product?.availableSizes ?? illustrativeSizes;
+  const selectedSize = product
+    ? sizeOptions.includes(size) ? size : (sizeOptions[0] ?? null)
+    : null;
 
-  if (!state.isOpen || !product) return null;
+  useEffect(() => () => {
+    if (guestPhotoUrl) URL.revokeObjectURL(guestPhotoUrl);
+  }, [guestPhotoUrl]);
 
-  const sizeOptions = product.availableSizes ?? illustrativeSizes;
-  const selectedSize = sizeOptions.includes(size) ? size : (sizeOptions[0] ?? null);
+  useEffect(() => () => {
+    if (generatedImage?.startsWith("blob:")) URL.revokeObjectURL(generatedImage);
+  }, [generatedImage]);
+
   const hasListedSizes = product.availableSizes !== undefined;
   const score = selectedSize ? fitPercentage(profile.measurements, selectedSize) : null;
   const price = product.currency
     ? `${product.currency} ${product.price.toFixed(2)}`
     : `$${product.price.toFixed(2)}`;
-  const isSaved = savedPreview?.productId === product.id && savedPreview.size === selectedSize;
-
-  useEffect(() => {
-    setGeneratedImage(null);
-    setGenerateError("");
-    setSavedPreview(null);
-    setSignInRequired(false);
-  }, [product?.id]);
 
   async function generatePreview() {
     if (!product || !selectedSize || generating) return;
     setGenerating(true);
     setGenerateError("");
     try {
-      const response = await fetch("/api/v1/try-ons", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId: product.id, size: selectedSize, ...(score === null ? {} : { fitPercentage: score }) }) });
-      const body = await response.json().catch(() => ({})) as { message?: string; tryOn?: { id: string } };
-      if (response.status === 401) { setSignInRequired(true); throw new Error("Log in to generate a personalized try-on."); }
-      if (!response.ok || !body.tryOn?.id) throw new Error(body.message || "Could not generate your try-on. Please try again.");
-      setGeneratedImage(`/api/v1/try-ons/${body.tryOn.id}/image`);
-      setSavedPreview({ productId: product.id, size: selectedSize });
+      let response: Response;
+      if (isGuest && guestPhoto) {
+        const formData = new FormData();
+        formData.set("productId", String(product.id));
+        formData.set("size", selectedSize);
+        formData.set("image", guestPhoto);
+        if (score !== null) formData.set("fitPercentage", String(score));
+        response = await fetch("/api/v1/try-ons", { method: "POST", body: formData });
+      } else {
+        response = await fetch("/api/v1/try-ons", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId: product.id, size: selectedSize, ...(score === null ? {} : { fitPercentage: score }) }) });
+      }
+      if (response.status === 401) { setSignInRequired(true); throw new Error("Your session needs to be refreshed. Please choose Register or start a guest session again."); }
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({})) as { message?: string };
+        throw new Error(body.message || "Could not generate your try-on. Please try again.");
+      }
+      if (isGuest) {
+        const contentType = response.headers.get("content-type") ?? "";
+        if (!contentType.startsWith("image/")) throw new Error("The guest try-on did not return an image. Please try again.");
+        setGeneratedImage(URL.createObjectURL(await response.blob()));
+      } else {
+        const body = await response.json().catch(() => ({})) as { message?: string; tryOn?: { id: string } };
+        if (!body.tryOn?.id) throw new Error(body.message || "Could not generate your try-on. Please try again.");
+        setGeneratedImage(`/api/v1/try-ons/${body.tryOn.id}/image`);
+      }
+      setGuestPhoto(null);
+      setGuestPhotoUrl(null);
     } catch (error) { setGenerateError(error instanceof Error ? error.message : "Could not generate your try-on."); }
     finally { setGenerating(false); }
   }
 
-  async function savePreview() {
-    if (!product || !selectedSize || saving) return;
-    setSaveError("");
-    setSignInRequired(false);
+  async function continueAsGuest() {
+    if (startingGuest) return;
+    setStartingGuest(true);
+    setAccessError("");
+    try {
+      if (!isGuest) await startGuest();
+      setGuestChoiceVisible(false);
+    } catch (error) {
+      setAccessError(error instanceof Error ? error.message : "Could not start a guest session.");
+    } finally {
+      setStartingGuest(false);
+    }
+  }
 
-    if (typeof product.id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(product.id)) {
-      setSaveError("Only catalogue products can be saved to Try-On History. Choose a product from Explore.");
+  function registerToResume() {
+    if (!product) return;
+    savePendingTryOn(product, selectedSize);
+    const returnTo = "/profile?tab=digitalTwin";
+    const guestReturnTo = `${window.location.pathname}${window.location.search}`;
+    closeTryOn();
+    router.push(`/register?returnTo=${encodeURIComponent(returnTo)}&guestReturnTo=${encodeURIComponent(guestReturnTo)}`);
+  }
+
+  function handleGuestPhotoChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    const validation = validateImage(file);
+    if (!validation.valid) {
+      setGuestPhotoError(validation.error ?? "Choose a supported image.");
       return;
     }
-
-    setSaving(true);
-    try {
-      const response = await fetch("/api/v1/try-ons", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productId: product.id,
-          size: selectedSize,
-          ...(score === null ? {} : { fitPercentage: score }),
-        }),
-      });
-      if (response.status === 401) {
-        setSignInRequired(true);
-        throw new Error("Log in to save this fitting preview.");
-      }
-      if (!response.ok) throw new Error("Could not save this fitting preview. Please try again.");
-      setSavedPreview({ productId: product.id, size: selectedSize });
-    } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "Could not save this fitting preview.");
-    } finally {
-      setSaving(false);
-    }
+    if (guestPhotoUrl) URL.revokeObjectURL(guestPhotoUrl);
+    setGuestPhotoError("");
+    setGuestPhoto(file);
+    setGuestPhotoUrl(URL.createObjectURL(file));
   }
 
   return (
@@ -127,22 +164,33 @@ export default function TryOnModal() {
 
         <div className="grid gap-6 p-5 lg:grid-cols-[1.15fr_.85fr] sm:p-7">
           {generatedImage ? (
-            <section className="overflow-hidden rounded-3xl border border-indigo-100 bg-slate-50 p-4 shadow-inner sm:p-6"><div className="mb-4"><p className="flex items-center gap-2 text-sm font-bold text-indigo-700"><Sparkles size={17} /> Your AI Virtual Try-On</p><p className="mt-1 text-xs text-slate-500">Generated from your Digital Twin and this garment.</p></div><div className="relative mx-auto aspect-[2/3] max-h-[65vh] max-w-md overflow-hidden rounded-2xl bg-white"><Image src={generatedImage} alt={`${product.title} worn in your AI try-on`} fill unoptimized className="object-contain" /></div></section>
-          ) : selectedSize ? (
+            <section className="overflow-hidden rounded-3xl border border-indigo-100 bg-slate-50 p-4 shadow-inner sm:p-6"><div className="mb-4"><p className="flex items-center gap-2 text-sm font-bold text-indigo-700"><Sparkles size={17} /> Your AI Virtual Try-On</p><p className="mt-1 text-xs text-slate-500">{isGuest ? "Generated from your uploaded photo and this garment." : "Generated from your Digital Twin and this garment."}</p></div><div className="relative mx-auto aspect-[2/3] max-h-[65vh] max-w-md overflow-hidden rounded-2xl bg-white"><Image src={generatedImage} alt={`${product.title} worn in your AI try-on`} fill unoptimized className="object-contain" /></div></section>
+          ) : isGuest && guestPhotoUrl ? (
+            <section className="overflow-hidden rounded-3xl border border-indigo-100 bg-slate-50 p-4 shadow-inner sm:p-6"><div className="mb-4"><p className="text-sm font-bold text-indigo-700">Your photo for this guest try-on</p><p className="mt-1 text-xs text-slate-500">This photo will be used for this fitting session.</p></div><div className="relative mx-auto aspect-[2/3] max-h-[55vh] max-w-md overflow-hidden rounded-2xl bg-white"><Image src={guestPhotoUrl} alt="Your selected try-on photo" fill unoptimized className="object-contain" /></div><div className="mx-auto mt-4 flex max-w-md items-center justify-between gap-3"><button type="button" onClick={() => document.getElementById("guest-try-on-photo")?.click()} className="text-sm font-semibold text-indigo-700 underline">Choose a different photo</button><button type="button" onClick={() => { setGuestPhoto(null); setGuestPhotoUrl(null); setGuestPhotoError(""); setGuestChoiceVisible(true); }} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Cancel</button></div><input id="guest-try-on-photo" type="file" accept="image/png,image/jpeg" onChange={handleGuestPhotoChange} className="sr-only" /></section>
+          ) : isGuest && !guestChoiceVisible ? (
+            <section className="flex min-h-72 flex-col items-center justify-center rounded-3xl border border-indigo-100 bg-indigo-50 p-6 text-center"><label className="flex min-h-56 w-full max-w-md cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-indigo-300 bg-white p-6 font-semibold text-indigo-800 transition hover:border-indigo-500 hover:bg-indigo-50"><UserRound size={42} className="mb-4" aria-hidden="true" /><span className="text-lg">Add a photo to try this dress</span><span className="mt-2 text-sm font-normal text-slate-500">PNG or JPEG, up to 5 MB</span><input type="file" accept="image/png,image/jpeg" onChange={handleGuestPhotoChange} className="sr-only" /></label>{guestPhotoError && <p role="alert" className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-800">{guestPhotoError}</p>}</section>
+          ) : user && selectedSize ? (
             <InteractiveFittingPreview
               product={product}
               measurements={profile.measurements}
               size={selectedSize}
             />
-          ) : (
-            <section className="flex min-h-72 items-center justify-center rounded-3xl border border-indigo-100 bg-indigo-50 p-6 text-center">
-              <div>
-                <p className="font-bold text-indigo-950">Size-based preview unavailable</p>
-                <p className="mt-2 text-sm text-indigo-900">
-                  This merchant has not listed an in-stock size for this product yet.
-                </p>
+          ) : !user && (!isGuest || guestChoiceVisible) && authReady ? (
+            <section className="flex min-h-72 items-center justify-center rounded-3xl border border-indigo-100 bg-indigo-50 p-6">
+              <div className="grid w-full max-w-lg grid-cols-2 gap-4">
+                <button type="button" onClick={() => void continueAsGuest()} disabled={startingGuest} className="flex min-h-48 flex-col items-center justify-center gap-4 rounded-2xl border-2 border-indigo-200 bg-white p-6 text-center font-bold text-indigo-900 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50 disabled:cursor-wait disabled:opacity-60">
+                  <UserRound size={44} aria-hidden="true" />
+                  <span>{startingGuest ? "Starting guest session..." : "Continue as a guest"}</span>
+                </button>
+                <button type="button" onClick={registerToResume} className="flex min-h-48 flex-col items-center justify-center gap-4 rounded-2xl border-2 border-indigo-200 bg-white p-6 text-center font-bold text-indigo-900 shadow-sm transition hover:border-indigo-500 hover:bg-indigo-50">
+                  <UserRoundPlus size={44} aria-hidden="true" />
+                  <span>Register</span>
+                </button>
+                {accessError && <p role="alert" className="col-span-2 rounded-xl bg-rose-50 p-3 text-sm text-rose-800">{accessError}</p>}
               </div>
             </section>
+          ) : (
+            <section className="flex min-h-72 items-center justify-center rounded-3xl border border-indigo-100 bg-indigo-50 p-6 text-center"><p role="status" className="font-semibold text-indigo-900">{!authReady ? "Checking your session..." : "Add a photo to continue as a guest."}</p></section>
           )}
 
           <aside className="space-y-5">
@@ -199,7 +247,7 @@ export default function TryOnModal() {
                       <button
                         type="button"
                         key={item}
-                        onClick={() => setSize(item)}
+                        onClick={() => { setSize(item); setSelectedSize(item); setGeneratedImage(null); setGenerateError(""); }}
                         className={`rounded-xl border px-3 py-2.5 text-sm font-bold transition ${
                           item === selectedSize
                             ? "border-indigo-600 bg-indigo-600 text-white shadow-md"
@@ -214,57 +262,44 @@ export default function TryOnModal() {
               )}
             </section>
 
-            <section className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
+            {(user || isGuest) && <section className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
               <div className="flex gap-3">
                 <Ruler className="shrink-0 text-indigo-700" size={20} />
                 <div>
                   <h3 className="font-bold text-indigo-950">Make the result more personal</h3>
                   <p className="mt-1 text-sm leading-5 text-indigo-900">
-                    {profile.digitalTwin.image
-                      ? "Your reference photo is ready. Generate a realistic preview of this garment on you."
-                      : "Add your body image and measurements for a more personal fitting guide."}
+                    {user
+                      ? profile.digitalTwin.image
+                        ? "Your Digital Twin photo is ready to use for this try-on."
+                        : "Create your Digital Twin with a full-body photo, then return to this garment."
+                      : isGuest
+                        ? guestPhoto
+                          ? "Your photo is ready for a one-time guest try-on."
+                          : "Add a photo to try this garment as a guest."
+                        : "Register to use a saved Digital Twin, or continue as a guest with a photo."}
                   </p>
-                  <Link
-                    href="/profile"
-                    onClick={() => { closeTryOn(); changeTab("measurements"); }}
+                  {user && <Link
+                    href="/profile?tab=digitalTwin"
+                    onClick={() => { goToTwinSetup(); changeTab("digitalTwin"); }}
                     className="mt-3 inline-block text-sm font-bold text-indigo-700 underline underline-offset-2"
                   >
-                    Open profile measurements
-                  </Link>
+                    Open your Digital Twin
+                  </Link>}
                 </div>
               </div>
-            </section>
+            </section>}
 
-            <button
+            {user && profileLoadStatus === "ready" && !profile.digitalTwin.image && <div className="space-y-2"><p className="text-sm text-slate-600">Upload a photo to create your Digital Twin, then return to this fitting room.</p><Link href="/profile?tab=digitalTwin" onClick={goToTwinSetup} className="block w-full rounded-xl bg-indigo-600 px-5 py-3.5 text-center font-semibold text-white hover:bg-indigo-700">Create your Digital Twin</Link></div>}
+            {(user && profile.digitalTwin.image || isGuest && guestPhoto) && <button
               type="button"
               onClick={() => void generatePreview()}
-              disabled={selectedSize === null || generating || !profile.digitalTwin.image}
+              disabled={selectedSize === null || generating || (user !== null && profileLoadStatus !== "ready")}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3.5 font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300 disabled:opacity-60"
             >
-              <Sparkles size={18} /> {generating ? "Generating your try-on..." : generatedImage ? "Generate again" : "Generate AI try-on"}
-            </button>
-            {!profile.digitalTwin.image && <p className="text-sm text-slate-500">Add your Digital Twin photo to generate a personalized try-on.</p>}
-            {generateError && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm font-medium text-rose-800">{generateError} {signInRequired && <Link href="/login" onClick={closeTryOn} className="underline">Log in</Link>}</p>}
-            {generatedImage && <p role="status" className="flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800"><CheckCircle2 size={18} /> Your generated result is saved in <Link href="/profile/try-on-history" onClick={closeTryOn} className="underline">Try-On History</Link>.</p>}
-            {/* Legacy save button retained until AI generation succeeds. */}
-            {!generatedImage && <button
-              type="button"
-              onClick={() => void savePreview()}
-              disabled={selectedSize === null || saving || isSaved}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3.5 font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:bg-indigo-300 disabled:opacity-60"
-            >
-              <Sparkles size={18} /> {saving ? "Saving..." : isSaved ? "Preview saved" : "Save this fitting preview"}
+              <Sparkles size={18} /> {generating ? "Generating your try-on..." : generatedImage ? "Generate again" : "Try this on"}
             </button>}
-            {isSaved && !generatedImage && (
-              <p role="status" className="flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">
-                <CheckCircle2 size={18} /> Size {selectedSize} illustrative fitting guide saved. <Link href="/profile/try-on-history" onClick={closeTryOn} className="underline">View history</Link>
-              </p>
-            )}
-            {saveError && (
-              <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm font-medium text-rose-800">
-                {saveError} {signInRequired && <Link href="/login" onClick={closeTryOn} className="underline">Log in</Link>}
-              </p>
-            )}
+            {generateError && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm font-medium text-rose-800">{generateError} {signInRequired && <Link href="/login" onClick={closeTryOn} className="underline">Log in</Link>}</p>}
+            {generatedImage && (isGuest ? <p role="status" className="flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800"><CheckCircle2 size={18} /> Guest results are temporary and aren’t saved to Try-On History.</p> : <p role="status" className="flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800"><CheckCircle2 size={18} /> Your generated result is saved in <Link href="/profile/try-on-history" onClick={closeTryOn} className="underline">Try-On History</Link>.</p>)}
             <button
               type="button"
               onClick={closeTryOn}

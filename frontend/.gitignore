@@ -46,3 +46,6 @@ node_modules/
 
 # safe environment template
 !.env.example
+
+# private user images and generated try-on results
+/private-storage/

@@ -31,7 +31,11 @@ export default function RegisterPage() {
     setError("");
     try {
       await register({ name: String(data.get("name") ?? ""), email: String(data.get("email") ?? ""), password });
-      router.replace("/profile");
+      const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+      const safeReturnTo = returnTo?.startsWith("/") && !returnTo.startsWith("//")
+        ? returnTo
+        : "/profile";
+      router.replace(safeReturnTo);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
@@ -47,8 +51,14 @@ export default function RegisterPage() {
     setBusy(true);
     setError("");
     try {
+      window.sessionStorage.removeItem("tryvora-pending-merchant-redirect");
       await startGuest();
-      router.push("/explore");
+      const params = new URLSearchParams(window.location.search);
+      const returnTo = params.get("guestReturnTo") ?? params.get("returnTo");
+      const safeReturnTo = returnTo?.startsWith("/") && !returnTo.startsWith("//")
+        ? returnTo
+        : "/explore";
+      router.push(safeReturnTo);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start a guest session.");
     } finally {
@@ -275,6 +285,11 @@ export default function RegisterPage() {
                   Already have an account?{" "}
                   <Link
                     href="/login"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+                      router.push(returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login");
+                    }}
                     className="bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500 bg-clip-text font-bold text-transparent hover:opacity-80"
                   >
                     Login

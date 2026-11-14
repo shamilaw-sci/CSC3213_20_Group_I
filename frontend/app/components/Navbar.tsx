@@ -72,8 +72,7 @@ export default function Navbar() {
     try {
       await logout();
       setMenuOpen(false);
-      router.replace("/");
-      router.refresh();
+      window.location.assign("/");
     } catch {
       setAuthError("Could not log out. Please try again.");
     } finally {

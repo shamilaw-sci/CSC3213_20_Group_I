@@ -15,6 +15,7 @@ export default function DigitalTwinTab() {
   const { profile, uploadImage, removeImage } = useProfile();
   const tryOn = useTryOn();
   const { openTryOn } = tryOn;
+  const resumeAfterTwin = Boolean(tryOn.state.resumeAfterTwin);
   const guidelinesRef = useRef<HTMLDivElement>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -22,23 +23,10 @@ export default function DigitalTwinTab() {
   const [guidelinesOpen, setGuidelinesOpen] = useState(false);
 
   useEffect(() => {
-    async function loadTwin() {
-      try {
-        const response = await fetch("/api/v1/digital-twins/current", { cache: "no-store" });
-        if (!response.ok) {
-          setError("Could not load your Digital Twin photo. Please try again.");
-          return;
-        }
-        const result = await response.json() as { twin?: { imageUrl: string } | null };
-        if (result.twin) uploadImage(result.twin.imageUrl);
-      } catch {
-        setError("Could not load your Digital Twin photo. Please try again.");
-      }
+    if (resumeAfterTwin && profile.digitalTwin.image && tryOn.state.selectedProduct) {
+      openTryOn(tryOn.state.selectedProduct);
     }
-    void loadTwin();
-  // Load the saved twin once; uploadImage is a context action recreated on renders.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [resumeAfterTwin, profile.digitalTwin.image, tryOn.state.selectedProduct, openTryOn]);
 
   useEffect(() => {
     if (!guidelinesOpen) return;
@@ -66,6 +54,7 @@ export default function DigitalTwinTab() {
     const result = await response.json().catch(() => ({})) as { message?: string; twin?: { imageUrl: string } };
     if (!response.ok || !result.twin) throw new Error(result.message ?? "Could not save your digital twin.");
     uploadImage(result.twin.imageUrl);
+    if (resumeAfterTwin && selectedOutfit) openTryOn(selectedOutfit);
   }
 
   async function handleRemove() {
@@ -95,6 +84,7 @@ export default function DigitalTwinTab() {
   return (
     <div className="space-y-5">
       <div><h2 className="text-3xl font-bold text-gray-900">Digital Twin</h2><p className="mt-2 text-gray-500">Manage your full-body photo, then choose an outfit in Explore for an illustrative fitting preview.</p></div>
+      {resumeAfterTwin && selectedOutfit && <p role="status" className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm font-medium text-indigo-950">Finish creating your Digital Twin. Your fitting room will reopen for <span className="font-bold">{selectedOutfit.title}</span> when your photo is saved.</p>}
       <div className="grid gap-5 lg:grid-cols-2">
         <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900">Choose an outfit in Explore</h3>

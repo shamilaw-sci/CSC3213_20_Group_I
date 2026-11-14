@@ -9,7 +9,6 @@ import FavoriteButton from "@/app/components/FavoriteButton";
 import { useProfile } from "@/features/profile/hooks/useProfile";
 import { useFavorites } from "@/features/favorites/useFavorites";
 import TryOnButton from "@/features/try-on/components/TryOnButton";
-import TryOnModal from "@/features/try-on/components/TryOnModal";
 
 type Recommendation = {
   productId: string;
@@ -263,7 +262,6 @@ export default function RecommendationsPage() {
         )}
       </main>
 
-      <TryOnModal />
     </div>
   );
 }

@@ -2,8 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getCurrentGuestSession } from "@/server/auth/guest";
-import { getCurrentSession } from "@/server/auth/session";
+import { requireAuthenticatedUser } from "@/server/auth/authorization";
 import { prisma } from "@/server/db/prisma";
 
 const schema = z.object({
@@ -25,6 +24,11 @@ function isAllowedMerchantDestination(destinationUrl: string, merchantWebsite: s
 }
 
 export async function POST(request: Request) {
+  const access = await requireAuthenticatedUser(["CUSTOMER"]);
+  if ("error" in access) {
+    return NextResponse.json({ message: "Register or log in to continue to the merchant store." }, { status: 401 });
+  }
+
   const parsed = schema.safeParse(await request.json().catch(() => null));
 
   if (!parsed.success) {
@@ -44,13 +48,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Merchant destination is not allowed." }, { status: 400 });
   }
 
-  const [session, guest] = await Promise.all([getCurrentSession(), getCurrentGuestSession()]);
-
   await prisma.merchantredirect.create({
     data: {
       merchantRedirectId: randomUUID(),
-      userId: session?.user.id,
-      guestSessionId: session ? null : guest?.guestSessionId,
+      userId: access.user.id,
+      guestSessionId: null,
       productId: product.productId,
       merchantId: product.merchantId,
       destinationUrl: product.merchantUrl,

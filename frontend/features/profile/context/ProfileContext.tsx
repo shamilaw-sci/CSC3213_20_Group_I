@@ -131,21 +131,28 @@ function ScopedProfileProvider({
 
     async function loadProfile() {
       try {
-        const [profileResponse, measurementResponse] = await Promise.all([
+        const [profileResponse, measurementResponse, twinResponse] = await Promise.all([
           fetch("/api/v1/profiles/me", { cache: "no-store", signal: controller.signal }),
           fetch("/api/v1/profiles/measurements", { cache: "no-store", signal: controller.signal }),
+          fetch("/api/v1/digital-twins/current", { cache: "no-store", signal: controller.signal }),
         ]);
         if (!profileResponse.ok) throw new Error("Could not load profile.");
         const profileData = await profileResponse.json() as { account: Account };
         const measurementData = measurementResponse.ok
           ? await measurementResponse.json() as { measurements: Partial<Measurements> }
           : null;
+        const twinData = twinResponse.ok
+          ? await twinResponse.json() as { twin?: { imageUrl: string } | null }
+          : null;
         if (controller.signal.aborted) return;
-        setProfile((previous) => mergeLoadedProfile(
-          previous,
-          profileData.account,
-          measurementData?.measurements ?? null,
-        ));
+        setProfile((previous) => ({
+          ...mergeLoadedProfile(
+            previous,
+            profileData.account,
+            measurementData?.measurements ?? null,
+          ),
+          digitalTwin: { image: twinData?.twin?.imageUrl ?? null },
+        }));
         setProfileLoadStatus("ready");
       } catch {
         if (!controller.signal.aborted) {

@@ -8,6 +8,7 @@ type AuthUser = { id: string; name: string; email: string; role: "CUSTOMER" | "M
 type RegisterAccount = { name: string; email: string; password: string; rememberMe?: boolean };
 type AuthContextValue = {
   user: AuthUser | null;
+  isGuest: boolean;
   ready: boolean;
   register: (account: RegisterAccount) => Promise<void>;
   login: (email: string, password: string, rememberMe?: boolean) => Promise<AuthUser>;
@@ -26,6 +27,7 @@ async function readJson(response: Response) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
   const [ready, setReady] = useState(false);
   const [guestConversionError, setGuestConversionError] = useState("");
 
@@ -36,7 +38,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const response = await fetch("/api/v1/auth/session", { cache: "no-store", signal: controller.signal });
         if (response.ok) {
           const body = await readJson(response);
-          if (!controller.signal.aborted) setUser(body.user ?? null);
+          if (!controller.signal.aborted) {
+            setUser(body.user ?? null);
+            setIsGuest(false);
+          }
         }
       } catch {
         // Keep sign-in available when session restoration fails or is aborted.
@@ -53,9 +58,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const registeredUser = (await readJson(response)).user;
     if (!registeredUser) throw new Error("Could not start a user session.");
     setUser(registeredUser);
+    setIsGuest(false);
     await convertGuest();
     restoreGuestCart();
-    restoreSelectedProduct();
   }
 
   async function login(email: string, password: string, rememberMe = false) {
@@ -63,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const signedInUser = (await readJson(response)).user;
     if (!signedInUser) throw new Error("Could not start a user session.");
     setUser(signedInUser);
+    setIsGuest(false);
     if (signedInUser.role !== "ADMIN") {
       await convertGuest();
       restoreGuestCart();
@@ -74,11 +80,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function logout() {
     await readJson(await fetch("/api/v1/auth/logout", { method: "POST" }));
     setUser(null);
+    setIsGuest(false);
     setGuestConversionError("");
   }
 
   async function startGuest() {
     await readJson(await fetch("/api/v1/auth/guest", { method: "POST" }));
+    setIsGuest(true);
   }
 
   async function convertGuest() {
@@ -116,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, ready, register, login, logout, refresh, startGuest }}>
+    <AuthContext.Provider value={{ user, isGuest, ready, register, login, logout, refresh, startGuest }}>
       {user && guestConversionError && (
         <div role="alert" className="bg-amber-100 p-3 text-black">
           {guestConversionError}{" "}
