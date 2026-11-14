@@ -1,4 +1,11 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+
 export default function Footer() {
+  const [subscribeMessage, setSubscribeMessage] = useState("");
+
   return (
     <footer className="bg-gray-900 text-gray-300 px-6 py-12">
 
@@ -16,9 +23,8 @@ export default function Footer() {
         <div>
           <h3 className="text-white font-semibold mb-4">Company</h3>
           <ul className="space-y-2 text-sm">
-            <li><a href="#" className="hover:text-white">About</a></li>
-            <li><a href="#" className="hover:text-white">Careers</a></li>
-            <li><a href="#" className="hover:text-white">Blog</a></li>
+            <li><Link href="/about" className="hover:text-white">About Us</Link></li>
+            <li><Link href="/blog" className="hover:text-white">Blog</Link></li>
           </ul>
         </div>
 
@@ -26,9 +32,9 @@ export default function Footer() {
         <div>
           <h3 className="text-white font-semibold mb-4">Support</h3>
           <ul className="space-y-2 text-sm">
-            <li><a href="#" className="hover:text-white">Help Center</a></li>
-            <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
-            <li><a href="#" className="hover:text-white">Terms of Service</a></li>
+            <li><Link href="/help" className="hover:text-white">Help Center</Link></li>
+            <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
+            <li><Link href="/terms" className="hover:text-white">Terms &amp; Conditions</Link></li>
           </ul>
         </div>
 
@@ -45,10 +51,15 @@ export default function Footer() {
               placeholder="Enter email"
               className="w-full px-3 py-2 rounded-l-lg bg-gray-800 text-white outline-none"
             />
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700">
-              Subscribe
+            <button
+              type="button"
+              onClick={() => setSubscribeMessage("Thanks for your interest!")}
+              className="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700"
+            >
+              {subscribeMessage ? "Thanks!" : "Subscribe"}
             </button>
           </div>
+          {subscribeMessage && <p role="status" className="mt-2 text-sm text-gray-300">{subscribeMessage}</p>}
         </div>
 
       </div>

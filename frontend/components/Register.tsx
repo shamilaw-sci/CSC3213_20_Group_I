@@ -249,13 +249,13 @@ export default function RegisterPage() {
                     className="text-sm text-gray-600"
                   >
                     I agree to the{" "}
-                    <span className="font-semibold text-fuchsia-600">
+                    <Link href="/terms" className="font-semibold text-fuchsia-600 hover:underline">
                       Terms & Conditions
-                    </span>{" "}
+                    </Link>{" "}
                     and{" "}
-                    <span className="font-semibold text-fuchsia-600">
+                    <Link href="/privacy" className="font-semibold text-fuchsia-600 hover:underline">
                       Privacy Policy
-                    </span>
+                    </Link>
                   </label>
 
                 </div>

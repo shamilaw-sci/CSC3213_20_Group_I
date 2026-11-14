@@ -124,13 +124,13 @@ export default function Login() {
 
           {/* FOOTER */}
           <p className="mt-6 text-center text-sm text-gray-500">
-            Not a member?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/register" onClick={(event) => {
               event.preventDefault();
               const returnTo = new URLSearchParams(window.location.search).get("returnTo");
               router.push(returnTo ? `/register?returnTo=${encodeURIComponent(returnTo)}` : "/register");
             }} className="font-semibold text-indigo-500 hover:text-indigo-700">
-              Create an account
+              Register
             </Link>
           </p>
 

@@ -1,4 +1,17 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/features/auth/context/AuthContext";
+
 export default function DigitalTwin() {
+  const { user, isGuest, ready } = useAuth();
+  const router = useRouter();
+
+  function handleGetStarted() {
+    if (!ready) return;
+    router.push(user && !isGuest ? "/profile?tab=digitalTwin" : "/register");
+  }
+
   return (
     <div className="bg-gradient-to-r from-blue-400 to-purple-600 py-20 px-6">
 
@@ -19,8 +32,13 @@ export default function DigitalTwin() {
 
         
         <div className="mt-8 mb-10  ">
-          <button className="px-6 py-3 border border-white text-white rounded-lg hover:bg-blue-600 hover:text-white transition">
-            Get Started
+          <button
+            type="button"
+            onClick={handleGetStarted}
+            disabled={!ready}
+            className="px-6 py-3 border border-white text-white rounded-lg hover:bg-blue-600 hover:text-white transition disabled:cursor-wait disabled:opacity-70"
+          >
+            {ready ? "Get Started" : "Checking account…"}
           </button>
         </div>
 
