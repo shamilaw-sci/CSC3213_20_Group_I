@@ -37,7 +37,7 @@ export default function FavoritesPage() {
           {loading ? (
             <p className="text-sm text-gray-400">Loading favorites...</p>
           ) : !isAuthenticated ? (
-            <p className="text-sm text-gray-700">Log in to see your saved products. <Link href="/login" className="font-semibold text-indigo-600 underline">Log in</Link></p>
+            <p className="text-sm text-gray-700">Log in to see your saved products. <Link href="/login?returnTo=%2Ffavorites" className="font-semibold text-indigo-600 underline">Log in</Link></p>
           ) : error ? (
             <p className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>
           ) : products.length === 0 ? (

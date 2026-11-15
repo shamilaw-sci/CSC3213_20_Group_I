@@ -12,9 +12,10 @@ import { prisma } from "@/server/db/prisma";
 import { processDigitalTwinImage, DigitalTwinImageError } from "@/server/images/digital-twin-image";
 import { readEncryptedTwin } from "@/server/storage/digital-twin-storage";
 import { enforceRateLimit } from "@/server/security/rate-limit";
-import { generateTryOnImage, GeminiTryOnError } from "@/server/try-on/gemini";
+import { generateTryOnImage, FashnTryOnError } from "@/server/try-on/fashn";
 
 export const runtime = "nodejs";
+export const maxDuration = 300;
 
 const MAX_GARMENT_SIZE = 8 * 1024 * 1024;
 const MAX_GUEST_PHOTO_SIZE = 5 * 1024 * 1024;
@@ -29,6 +30,17 @@ function metadataValue(metadata: unknown, key: "size" | "fitPercentage") {
   if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return null;
   const value = (metadata as Record<string, unknown>)[key];
   return typeof value === "string" || typeof value === "number" ? value : null;
+}
+
+function fashnCategory(slug: string, name: string): "tops" | "bottoms" | "one-pieces" {
+  const category = `${slug} ${name}`.toLowerCase().replaceAll("_", "-");
+  if (/\b(dress|dresses|gown|gowns|jumpsuit|jumpsuits|romper|rompers|playsuit|playsuits|one-pieces?)\b/.test(category)) {
+    return "one-pieces";
+  }
+  if (/\b(bottoms?|pants|trousers|jeans|skirts?|shorts|leggings)\b/.test(category)) {
+    return "bottoms";
+  }
+  return "tops";
 }
 
 function parseGuestForm(formData: FormData) {
@@ -73,7 +85,7 @@ export async function GET() {
       status: session.status,
       createdAt: session.createdAt,
       imageUrl: session.tryonresult && !session.tryonresult.resultImagePath.startsWith("virtual://") ? `/api/v1/try-ons/${session.tryOnSessionId}/image` : null,
-      generated: session.tryonresult?.metadata && typeof session.tryonresult.metadata === "object" && (session.tryonresult.metadata as Record<string, unknown>).renderer === "gemini",
+      generated: session.tryonresult?.metadata && typeof session.tryonresult.metadata === "object" && ["gemini", "fashn-vton-1.5"].includes(String((session.tryonresult.metadata as Record<string, unknown>).renderer ?? "")),
       product: { id: session.product.productId, name: session.product.productName, image: session.product.primaryImageUrl },
       size: session.productvariant?.size ?? metadataValue(session.requestMetadata, "size"),
       fitPercentage: metadataValue(session.tryonresult?.metadata, "fitPercentage"),
@@ -134,21 +146,35 @@ export async function POST(request: Request) {
     }
   }
 
-  const product = await prisma.product.findFirst({ where: { productId: input.productId, status: "ACTIVE" } });
+  const product = await prisma.product.findFirst({
+    where: { productId: input.productId, status: "ACTIVE" },
+    include: {
+      category: { select: { slug: true, name: true } },
+      productvariant: { select: { productVariantId: true, size: true, stockQuantity: true } },
+    },
+  });
   if (!product) return NextResponse.json({ message: "Product not found." }, { status: 404 });
-  if (input.productVariantId) {
-    const variant = await prisma.productvariant.findFirst({ where: { productVariantId: input.productVariantId, productId: product.productId } });
-    if (!variant) return NextResponse.json({ message: "The selected size is not available for this product." }, { status: 400 });
+  const variants = product.productvariant ?? [];
+  const selectedVariant = input.productVariantId
+    ? variants.find((variant) => variant.productVariantId === input.productVariantId)
+    : variants.find((variant) => (variant.size ?? "One size") === (input.size ?? "One size") && (variant.stockQuantity ?? 0) > 0);
+  if (!selectedVariant) return NextResponse.json({ message: "Choose a size that is listed for this product and currently in stock." }, { status: 400 });
+  if ((selectedVariant.stockQuantity ?? 0) <= 0) return NextResponse.json({ message: "That size is now out of stock. Choose another available size." }, { status: 409 });
+  if (input.size && (selectedVariant.size ?? "One size") !== input.size) {
+    return NextResponse.json({ message: "The selected size does not match this product variant." }, { status: 400 });
   }
+  input.productVariantId = selectedVariant.productVariantId;
+  input.size = selectedVariant.size ?? "One size";
 
   let garmentImage: Buffer;
   try {
     if (!product.primaryImageUrl) return NextResponse.json({ message: "This product has no garment image available." }, { status: 400 });
-    const imageUrl = new URL(product.primaryImageUrl);
+    const appOrigin = new URL(process.env.APP_URL || "http://localhost:3000");
+    const imageUrl = new URL(product.primaryImageUrl, appOrigin);
     if (!["http:", "https:"].includes(imageUrl.protocol)) throw new Error("Unsupported image URL.");
     const host = imageUrl.hostname.toLowerCase();
     const privateHost = host === "localhost" || host === "127.0.0.1" || host === "::1" || host.endsWith(".local") || host.startsWith("10.") || host.startsWith("192.168.") || /^172\.(1[6-9]|2\d|3[01])\./.test(host);
-    if (privateHost && imageUrl.origin !== new URL(process.env.APP_URL || "http://localhost:3000").origin) throw new Error("Unsupported image host.");
+    if (privateHost && imageUrl.origin !== appOrigin.origin) throw new Error("Unsupported image host.");
     const imageResponse = await fetch(imageUrl, { signal: AbortSignal.timeout(15_000) });
     const contentType = imageResponse.headers.get("content-type")?.split(";")[0] ?? "";
     const declaredSize = Number(imageResponse.headers.get("content-length") ?? 0);
@@ -164,10 +190,10 @@ export async function POST(request: Request) {
   let generated: { buffer: Buffer; mimeType: string };
   const generationStartedAt = Date.now();
   try {
-    generated = await generateTryOnImage(personImage, garmentImage);
+    generated = await generateTryOnImage(personImage, garmentImage, fashnCategory(product.category.slug, product.category.name));
   } catch (error) {
-    const status = error instanceof GeminiTryOnError ? error.status : 502;
-    const message = error instanceof GeminiTryOnError ? error.message : "Gemini could not generate the fitting image. Please try again.";
+    const status = error instanceof FashnTryOnError ? error.status : 502;
+    const message = error instanceof FashnTryOnError ? error.message : "FASHN could not generate the fitting image. Please try again.";
     return NextResponse.json({ message }, { status });
   }
 
@@ -179,7 +205,7 @@ export async function POST(request: Request) {
       .jpeg({ quality: 88, mozjpeg: true })
       .toBuffer();
   } catch {
-    return NextResponse.json({ message: "Gemini returned an invalid fitting image. Please try again." }, { status: 502 });
+    return NextResponse.json({ message: "FASHN returned an invalid fitting image. Please try again." }, { status: 502 });
   }
 
   if (isGuest) {
@@ -221,7 +247,7 @@ export async function POST(request: Request) {
           tryOnSessionId: created.tryOnSessionId,
           resultImagePath: imagePath,
           processingMs: Date.now() - generationStartedAt,
-          metadata: { fitPercentage: input.fitPercentage ?? null, renderer: "gemini", mimeType: "image/jpeg" },
+          metadata: { fitPercentage: input.fitPercentage ?? null, renderer: "fashn-vton-1.5", mimeType: "image/jpeg" },
         },
       });
       return created;

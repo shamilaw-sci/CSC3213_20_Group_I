@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, ReactNode, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 import { TryOnContextType, TryOnState, TryOnProduct } from "../types/tryon";
 import { useAuth } from "@/features/auth/context/AuthContext";
@@ -10,6 +11,7 @@ export const TryOnContext = createContext<TryOnContextType | undefined>(undefine
 
 export function TryOnProvider({ children }: { children: ReactNode }) {
   const { user, isGuest, ready } = useAuth();
+  const pathname = usePathname();
   const [state, setState] = useState<TryOnState>({
     isOpen: false,
     selectedProduct: null,
@@ -18,16 +20,16 @@ export function TryOnProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ready || (!user && !isGuest)) return;
     const timer = window.setTimeout(() => {
-      const pending = takePendingTryOn();
+      const pending = takePendingTryOn(`${window.location.pathname}${window.location.search}`);
       if (pending) setState({
-        isOpen: !user && isGuest,
+        isOpen: true,
         selectedProduct: pending.product,
         selectedSize: pending.size,
-        resumeAfterTwin: Boolean(user),
+        resumeAfterTwin: false,
       });
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [ready, user, isGuest]);
+  }, [ready, user, isGuest, pathname]);
 
   const openTryOn = (product: TryOnProduct) => {
     setState((previous) => ({

@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
+import { z } from "zod";
 
 import { requireAuthenticatedUser } from "@/server/auth/authorization";
 import { prisma } from "@/server/db/prisma";
+
+const updateSchema = z.object({
+  name: z.string().trim().max(150).nullable().optional(),
+  productIds: z.array(z.string().uuid()).min(1).max(4).optional(),
+}).refine((value) => value.name !== undefined || value.productIds !== undefined);
 
 type DecimalLike = { toString: () => string };
 type ComparisonDetailsRow = {
@@ -109,4 +116,32 @@ export async function DELETE(
   }
 
   return NextResponse.json({ deleted: true });
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ comparisonId: string }> },
+) {
+  const access = await requireAuthenticatedUser();
+  if ("error" in access) return access.error;
+  const parsed = updateSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ message: "Enter a name or select between one and four products." }, { status: 400 });
+  const { comparisonId } = await params;
+  const existing = await prisma.comparison.findFirst({ where: { comparisonId, userId: access.user.id }, select: { comparisonId: true } });
+  if (!existing) return NextResponse.json({ message: "Comparison not found." }, { status: 404 });
+
+  if (parsed.data.productIds) {
+    const productIds = [...new Set(parsed.data.productIds)];
+    if (productIds.length !== parsed.data.productIds.length) return NextResponse.json({ message: "A product can only appear once in a comparison." }, { status: 400 });
+    const products = await prisma.product.findMany({ where: { productId: { in: productIds }, status: "ACTIVE" }, select: { productId: true } });
+    if (products.length !== productIds.length) return NextResponse.json({ message: "One or more products are unavailable." }, { status: 404 });
+    await prisma.$transaction(async (tx) => {
+      await tx.comparisonitem.deleteMany({ where: { comparisonId } });
+      await tx.comparisonitem.createMany({ data: productIds.map((productId) => ({ comparisonItemId: randomUUID(), comparisonId, productId })) });
+      await tx.comparison.update({ where: { comparisonId }, data: { ...(parsed.data.name === undefined ? {} : { name: parsed.data.name }), updatedAt: new Date() } });
+    });
+  } else {
+    await prisma.comparison.update({ where: { comparisonId }, data: { name: parsed.data.name, updatedAt: new Date() } });
+  }
+  return NextResponse.json({ updated: true });
 }

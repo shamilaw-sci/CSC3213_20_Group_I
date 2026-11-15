@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import GoBackButton from "@/app/components/GoBackButton";
 
 export const metadata: Metadata = {
   title: "Blog | Universal Virtual Fitting Room",
@@ -48,6 +49,7 @@ export default function BlogPage() {
     <>
       <Header />
       <main className="bg-gray-50 px-6 py-12 sm:py-16">
+        <div className="mx-auto max-w-6xl"><GoBackButton /></div>
         <div className="mx-auto max-w-6xl">
           <section className="rounded-3xl bg-gradient-to-br from-purple-700 via-fuchsia-600 to-blue-600 px-6 py-12 text-white shadow-lg sm:px-12 sm:py-14">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/80">The TryVora Blog</p>

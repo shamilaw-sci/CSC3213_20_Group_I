@@ -7,7 +7,10 @@ import { createPasswordResetMailer } from "@/server/auth/reset-email";
 
 export const runtime = "nodejs";
 
-const schema = z.object({ email: z.string().trim().toLowerCase().email() });
+const schema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  returnTo: z.string().max(2048).optional().refine((value) => value === undefined || (value.startsWith("/") && !value.startsWith("//"))),
+});
 const hash = (token: string) => createHash("sha256").update(token).digest("hex");
 export async function POST(request: Request) {
   const limit = enforceRateLimit(request, "forgot-password", 5, 15 * 60 * 1000);
@@ -31,7 +34,7 @@ export async function POST(request: Request) {
       await tx.passwordresettoken.create({ data: { passwordResetTokenId, userId: user.userId, tokenHash: hash(token), expiryDate: new Date(Date.now() + 60 * 60 * 1000) } });
     });
     try {
-      await sendResetEmail(user.userEmail, token);
+      await sendResetEmail(user.userEmail, token, parsed.data.returnTo);
     } catch {
       // Do not expose account existence, SMTP details, addresses, or tokens.
       console.error("Password-reset email delivery failed.");

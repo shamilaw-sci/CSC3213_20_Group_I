@@ -3,6 +3,7 @@ import { Fragment } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import GoBackButton from "@/app/components/GoBackButton";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions | Universal Virtual Fitting Room",
@@ -262,6 +263,7 @@ export default function TermsPage() {
     <>
       <Header />
       <main className="bg-gray-50 px-6 py-12 sm:py-16">
+        <div className="mx-auto max-w-6xl"><GoBackButton /></div>
         <article className="mx-auto max-w-4xl rounded-3xl bg-white px-6 py-10 shadow-sm ring-1 ring-gray-200 sm:px-10 sm:py-12">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-fuchsia-600">Universal Virtual Fitting Room</p>
           <h1 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Terms and Conditions</h1>

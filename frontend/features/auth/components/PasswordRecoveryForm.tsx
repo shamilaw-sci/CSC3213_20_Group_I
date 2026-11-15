@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRef, useState, type FormEvent } from "react";
 import PasswordInput from "@/components/PasswordInput";
 
-export default function PasswordRecoveryForm({ token }: { token?: string }) {
+export default function PasswordRecoveryForm({ token, returnTo }: { token?: string; returnTo?: string }) {
   const resetting = token !== undefined;
   const submitting = useRef(false);
   const [busy, setBusy] = useState(false);
@@ -26,7 +26,9 @@ export default function PasswordRecoveryForm({ token }: { token?: string }) {
     try {
       const response = await fetch(`/api/v1/auth/${resetting ? "reset-password" : "forgot-password"}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(resetting ? { token, password } : { email: String(data.get("email") ?? "") }),
+        body: JSON.stringify(resetting
+          ? { token, password }
+          : { email: String(data.get("email") ?? ""), ...(returnTo ? { returnTo } : {}) }),
       });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(body.message ?? "The request failed. Please try again.");
@@ -40,6 +42,8 @@ export default function PasswordRecoveryForm({ token }: { token?: string }) {
   }
 
   const invalidToken = resetting && (!token || token.length < 20 || token.length > 200);
+  const safeReturnTo = returnTo?.startsWith("/") && !returnTo.startsWith("//") ? returnTo : null;
+  const loginHref = safeReturnTo ? `/login?returnTo=${encodeURIComponent(safeReturnTo)}` : "/login";
   const inputClass = "w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900";
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-r from-purple-200 to-pink-100 px-4 py-12">
@@ -68,7 +72,7 @@ export default function PasswordRecoveryForm({ token }: { token?: string }) {
           </form>
         )}
         <div className="mt-6 flex justify-between gap-4 text-sm text-indigo-700">
-          <Link href="/login">Back to sign in</Link>
+          <Link href={loginHref}>Back to sign in</Link>
           {resetting && <Link href="/forgot-password">Request a new link</Link>}
         </div>
       </section>

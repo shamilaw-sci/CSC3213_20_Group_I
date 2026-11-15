@@ -3,16 +3,19 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Lightbulb, LoaderCircle, Shirt, Sparkles, X } from "lucide-react";
+import { CornerUpLeft, Lightbulb, LoaderCircle, Shirt, Sparkles, X } from "lucide-react";
 
 import { useTryOn } from "@/features/try-on/hooks/useTryOn";
+import { peekPendingTryOn } from "@/features/try-on/utils/pendingTryOn";
 import { useProfile } from "../hooks/useProfile";
 import PhotoGuidelines from "./PhotoGuidelines";
 import UploadBox from "./UploadBox";
 
 export default function DigitalTwinTab() {
   const { profile, uploadImage, removeImage } = useProfile();
+  const router = useRouter();
   const tryOn = useTryOn();
   const { openTryOn } = tryOn;
   const resumeAfterTwin = Boolean(tryOn.state.resumeAfterTwin);
@@ -21,6 +24,11 @@ export default function DigitalTwinTab() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState("");
   const [guidelinesOpen, setGuidelinesOpen] = useState(false);
+  const [pendingTryOn, setPendingTryOn] = useState<ReturnType<typeof peekPendingTryOn>>(null);
+
+  useEffect(() => {
+    setPendingTryOn(peekPendingTryOn());
+  }, []);
 
   useEffect(() => {
     if (resumeAfterTwin && profile.digitalTwin.image && tryOn.state.selectedProduct) {
@@ -84,6 +92,8 @@ export default function DigitalTwinTab() {
   return (
     <div className="space-y-5">
       <div><h2 className="text-3xl font-bold text-gray-900">Digital Twin</h2><p className="mt-2 text-gray-500">Manage your full-body photo, then choose an outfit in Explore for an illustrative fitting preview.</p></div>
+      {!profile.digitalTwin.image && <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">Upload a photo of yourself to unlock the rest of TryVora.</p>}
+      {pendingTryOn && <button type="button" disabled={!profile.digitalTwin.image} onClick={() => router.push(pendingTryOn.returnTo)} className="flex w-full items-center gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-left text-indigo-950 transition hover:bg-indigo-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-60"><span className="rounded-lg bg-white p-2 text-indigo-700"><CornerUpLeft size={20} aria-hidden="true" /></span><span><span className="block font-bold">Return to your fitting room</span><span className="mt-1 block text-sm">{profile.digitalTwin.image ? `Continue with ${pendingTryOn.product.title}.` : `Upload your photo to continue with ${pendingTryOn.product.title}.`}</span></span></button>}
       {resumeAfterTwin && selectedOutfit && <p role="status" className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm font-medium text-indigo-950">Finish creating your Digital Twin. Your fitting room will reopen for <span className="font-bold">{selectedOutfit.title}</span> when your photo is saved.</p>}
       <div className="grid gap-5 lg:grid-cols-2">
         <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">

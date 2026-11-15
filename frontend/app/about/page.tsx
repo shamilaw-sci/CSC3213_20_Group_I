@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import GoBackButton from "@/app/components/GoBackButton";
 
 export const metadata: Metadata = {
   title: "About Us | Universal Virtual Fitting Room",
@@ -66,6 +67,7 @@ export default function AboutPage() {
     <>
       <Header />
       <main className="bg-gray-50 px-6 py-12 sm:py-16">
+        <div className="mx-auto max-w-6xl"><GoBackButton /></div>
         <div className="mx-auto max-w-6xl">
           <section className="grid overflow-hidden rounded-3xl bg-gradient-to-br from-purple-700 via-fuchsia-600 to-blue-600 text-white shadow-lg lg:grid-cols-[1.1fr_0.9fr]">
             <div className="px-6 py-12 sm:px-12 sm:py-16">

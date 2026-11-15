@@ -6,7 +6,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import PasswordInput from "@/components/PasswordInput";
 
-export default function RegisterPage() {
+export default function RegisterPage({ requireAccount = false }: { requireAccount?: boolean }) {
   const { register, startGuest } = useAuth();
   const router = useRouter();
   const submitting = useRef(false);
@@ -34,8 +34,8 @@ export default function RegisterPage() {
       const returnTo = new URLSearchParams(window.location.search).get("returnTo");
       const safeReturnTo = returnTo?.startsWith("/") && !returnTo.startsWith("//")
         ? returnTo
-        : "/profile";
-      router.replace(safeReturnTo);
+        : "/profile?tab=digitalTwin";
+      router.replace(requireAccount ? safeReturnTo : "/profile?tab=digitalTwin");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
@@ -262,6 +262,7 @@ export default function RegisterPage() {
 
                 {/* Register Button */}
                 <p className="text-sm text-gray-600">Use at least 8 characters, including an uppercase letter and a number.</p>
+                {requireAccount && <p className="text-sm font-semibold text-indigo-700">Create an account or log in to continue to the merchant store.</p>}
                 {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
                 <button
                   type="submit"
@@ -272,14 +273,14 @@ export default function RegisterPage() {
                 </button>
 
                 {/* Guest */}
-                <button
+                {!requireAccount && <button
                   type="button"
                   disabled={busy}
                   onClick={continueAsGuest}
                   className="w-full rounded-xl border border-gray-300 py-3 font-semibold text-gray-700 transition hover:bg-gray-100"
                 >
                   Continue as Guest
-                </button>
+                </button>}
 
                 <div className="text-center text-sm text-gray-600">
                   Already have an account?{" "}

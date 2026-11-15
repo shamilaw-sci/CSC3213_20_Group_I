@@ -113,7 +113,7 @@ export default function RecommendationsPage() {
         {!loading && needsLogin && (
           <div className="rounded-2xl border bg-white p-6 text-gray-900">
             <p>Log in to see recommendations for your profile.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-indigo-600">
+            <Link href="/login?returnTo=%2Frecommendations" className="mt-4 inline-block font-semibold text-indigo-600">
               Log in
             </Link>
           </div>

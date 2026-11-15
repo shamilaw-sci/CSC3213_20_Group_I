@@ -39,7 +39,10 @@ export default function ProfilePage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (ready && !user) router.replace("/login");
+    if (ready && !user) {
+      const returnTo = `${window.location.pathname}${window.location.search}`;
+      router.replace(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+    }
   }, [ready, user, router]);
 
   if (!ready || !user || profileLoadStatus !== "ready") {

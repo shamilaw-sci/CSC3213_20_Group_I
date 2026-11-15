@@ -102,7 +102,7 @@ export default function TryOnHistoryPage() {
   return (
     <div className="tv-page min-h-screen">
       <Navbar />
-      <main className="mx-auto max-w-7xl px-6 py-10">
+      <main className="mx-auto max-w-7xl px-6 py-10 lg:pl-80">
         <Link href="/profile" className="text-sm font-semibold text-indigo-700 hover:underline">
           Back to Profile
         </Link>
@@ -143,7 +143,7 @@ export default function TryOnHistoryPage() {
           <section className="mt-12 rounded-2xl border border-slate-200 bg-white p-8">
             <h2 className="text-xl font-bold text-slate-900">Log in to view your Try-On history</h2>
             <p className="mt-2 text-slate-600">Only your saved fitting guides are shown here.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-indigo-700 underline">Log in</Link>
+            <Link href="/login?returnTo=%2Fprofile%2Ftry-on-history" className="mt-4 inline-block font-semibold text-indigo-700 underline">Log in</Link>
           </section>
         ) : loading || loadedUserId !== user.id ? (
           <p role="status" className="mt-12 text-slate-600">Loading Try-On history...</p>

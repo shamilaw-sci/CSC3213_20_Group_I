@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Heart } from "lucide-react";
 
 type FavoriteButtonProps = {
@@ -17,6 +18,7 @@ export default function FavoriteButton({
   disabled = false,
   onChange,
 }: FavoriteButtonProps) {
+  const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
@@ -46,7 +48,7 @@ export default function FavoriteButton({
       </button>
       {error && (
         <p role="alert" className="max-w-48 rounded-lg bg-white p-2 text-right text-xs text-rose-700 shadow">
-          {error === "Log in to save favorites." ? <Link href="/login" className="underline">{error}</Link> : error}
+          {error === "Log in to save favorites." ? <Link href="/login" onClick={(event) => { event.preventDefault(); const returnTo = `${window.location.pathname}${window.location.search}`; router.push(`/login?returnTo=${encodeURIComponent(returnTo)}`); }} className="underline">{error}</Link> : error}
         </p>
       )}
     </div>

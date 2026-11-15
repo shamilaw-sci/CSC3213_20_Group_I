@@ -26,7 +26,7 @@ export default function Login() {
       const safeReturnTo = requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//")
         ? requestedReturnTo
         : null;
-      const destination = user.role === "ADMIN" ? "/admin" : user.role === "MERCHANT" ? "/merchant" : safeReturnTo ?? "/profile";
+      const destination = user.role === "ADMIN" ? "/admin" : user.role === "MERCHANT" ? "/merchant" : safeReturnTo ?? "/profile?tab=digitalTwin";
       if (user.role === "ADMIN") {
         window.location.replace(destination);
         return;
@@ -89,7 +89,7 @@ export default function Login() {
                   Password
                 </label>
 
-                <Link href="/forgot-password" className="text-sm font-semibold text-indigo-500 hover:text-indigo-700">
+                <Link href="/forgot-password" onClick={(event) => { event.preventDefault(); const returnTo = new URLSearchParams(window.location.search).get("returnTo"); router.push(returnTo ? `/forgot-password?returnTo=${encodeURIComponent(returnTo)}` : "/forgot-password"); }} className="text-sm font-semibold text-indigo-500 hover:text-indigo-700">
                   Forgot password?
                 </Link>
               </div>
