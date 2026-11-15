@@ -2,6 +2,7 @@
 "use client"; 
 
 import React, { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 // Use relative imports to avoid module alias issues in this file
 import Navbar from "../components/Navbar";
 import SearchFilterBar from "../components/SearchFilterBar";
@@ -9,7 +10,6 @@ import CategoryTabs, { type CatalogueCategory } from "../components/CategoryTabs
 import ProductGrid from "../components/ProductGrid";
 import type { Product } from "../data/products";
 import { useFavorites } from "@/features/favorites/useFavorites";
-import TryOnModal from "@/features/try-on/components/TryOnModal";
 
 type ProductResponse = {
   id: string;
@@ -37,6 +37,7 @@ export default function ExplorePage() {
   const [compareName, setCompareName] = useState("");
   const [compareMessage, setCompareMessage] = useState("");
   const [savingComparison, setSavingComparison] = useState(false);
+  const [savedComparison, setSavedComparison] = useState<{ id: string; name: string } | null>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -139,7 +140,9 @@ export default function ExplorePage() {
         throw new Error(data.message ?? "Could not save comparison.");
       }
 
-      setCompareMessage("Comparison saved. Open Comparisons to review it.");
+      const savedId = data.comparison?.id as string | undefined;
+      if (savedId) setSavedComparison({ id: savedId, name: data.comparison.name ?? (compareName.trim() || "Saved comparison") });
+      setCompareMessage(savedId ? "Comparison saved." : "Comparison saved. Open Comparisons to review it.");
       setCompareProducts([]);
       setCompareName("");
     } catch (reason) {
@@ -176,6 +179,13 @@ export default function ExplorePage() {
             setPage(1);
           }}
         />
+
+        {savedComparison && (
+          <Link href={`/comparisons?comparisonId=${encodeURIComponent(savedComparison.id)}`} className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-2xl border border-indigo-200 bg-white p-4 shadow-2xl transition hover:-translate-y-0.5 hover:border-indigo-400 hover:shadow-indigo-200">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700" aria-hidden="true">↗</span>
+            <span><span className="block text-xs font-semibold uppercase tracking-wide text-indigo-600">Comparison saved</span><span className="block max-w-52 truncate font-bold text-slate-950">View {savedComparison.name}</span></span>
+          </Link>
+        )}
         <CategoryTabs
           active={category}
           categories={categories}
@@ -264,7 +274,6 @@ export default function ExplorePage() {
           </div>
         )}
       </main>
-      <TryOnModal />
     </div>
   );
 }

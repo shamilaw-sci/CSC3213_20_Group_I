@@ -10,15 +10,16 @@ export function createPasswordResetMailer() {
     throw new Error("APP_URL must be a valid application URL (HTTPS in production).");
   }
 
-  const resetUrl = (token: string) => {
+  const resetUrl = (token: string, returnTo?: string) => {
     const url = new URL("/reset-password", base);
     url.searchParams.set("token", token);
+    if (returnTo?.startsWith("/") && !returnTo.startsWith("//")) url.searchParams.set("returnTo", returnTo);
     return url.toString();
   };
 
   if (mode === "console" && !production) {
-    return async (_email: string, token: string) => {
-      console.info(`TryVora development password-reset link: ${resetUrl(token)}`);
+    return async (_email: string, token: string, returnTo?: string) => {
+      console.info(`TryVora development password-reset link: ${resetUrl(token, returnTo)}`);
     };
   }
   if (mode !== "smtp") throw new Error("Production reset delivery requires MAIL_TRANSPORT=smtp.");
@@ -37,10 +38,10 @@ export function createPasswordResetMailer() {
     connectionTimeout: 10_000, greetingTimeout: 10_000, socketTimeout: 20_000,
     disableFileAccess: true, disableUrlAccess: true,
   });
-  return async (email: string, token: string) => {
+  return async (email: string, token: string, returnTo?: string) => {
     const result = await transport.sendMail({
       from: SMTP_FROM, to: email, subject: "Reset your TryVora password",
-      text: `Use this link to reset your password:\n\n${resetUrl(token)}\n\nThis link expires in one hour and can be used once. If you did not request it, ignore this email.`,
+      text: `Use this link to reset your password:\n\n${resetUrl(token, returnTo)}\n\nThis link expires in one hour and can be used once. If you did not request it, ignore this email.`,
     });
     if (result.accepted.length === 0) throw new Error("Reset email was not accepted for delivery.");
   };

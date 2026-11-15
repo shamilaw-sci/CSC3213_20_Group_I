@@ -293,11 +293,6 @@ export default function Avatar({ body, garmentSize, fitScore }: AvatarProps) {
           {isFemale ? <FemaleIllustration {...illustrationProps} /> : <MaleIllustration {...illustrationProps} />}
         </g>
       </svg>
-      {garmentSize && (
-        <span className="-mt-1 rounded-full border border-violet-200 bg-white px-4 py-1.5 text-xs font-bold text-violet-700 shadow-md">
-          Size {garmentSize} Overlay
-        </span>
-      )}
     </div>
   );
 }

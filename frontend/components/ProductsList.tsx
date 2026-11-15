@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const products = [
   {
     id: 1,
@@ -73,9 +75,9 @@ export default function ProductsList() {
         </div>
       </div>
          <div className="flex justify-center">
-             <button className="px-6 py-3 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition">
+             <Link href="/explore" className="px-6 py-3 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition">
                 Explore All Items
-            </button>
+            </Link>
         </div>
     </div>
   )

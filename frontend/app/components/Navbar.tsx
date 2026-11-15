@@ -72,8 +72,7 @@ export default function Navbar() {
     try {
       await logout();
       setMenuOpen(false);
-      router.replace("/");
-      router.refresh();
+      window.location.assign("/");
     } catch {
       setAuthError("Could not log out. Please try again.");
     } finally {
@@ -104,8 +103,8 @@ export default function Navbar() {
             <div className="hidden items-center gap-3 xl:flex">
               {!user && (
                 <>
-                  <Link href="/login" className="text-sm font-semibold text-gray-700 hover:text-indigo-700 focus-visible:rounded focus-visible:outline-2 focus-visible:outline-indigo-600">Log in</Link>
-                  <Link href="/register" className="text-sm font-semibold text-gray-700 hover:text-indigo-700 focus-visible:rounded focus-visible:outline-2 focus-visible:outline-indigo-600">Register</Link>
+                  <Link href="/login" onClick={(event) => { event.preventDefault(); const currentPath = `${window.location.pathname}${window.location.search}`; const returnTo = window.location.pathname === "/" ? "/profile?tab=digitalTwin" : currentPath; router.push(`/login?returnTo=${encodeURIComponent(returnTo)}`); }} className="text-sm font-semibold text-gray-700 hover:text-indigo-700 focus-visible:rounded focus-visible:outline-2 focus-visible:outline-indigo-600">Log in</Link>
+                  <Link href="/register" onClick={(event) => { event.preventDefault(); const returnTo = `${window.location.pathname}${window.location.search}`; router.push(`/register?returnTo=${encodeURIComponent(returnTo)}`); }} className="text-sm font-semibold text-gray-700 hover:text-indigo-700 focus-visible:rounded focus-visible:outline-2 focus-visible:outline-indigo-600">Register</Link>
                 </>
               )}
               {(!user || role === "CUSTOMER") && (
@@ -155,8 +154,8 @@ export default function Navbar() {
           })}
           {ready && !user && (
             <div className="mt-2 border-t border-gray-100 pt-2">
-              <Link href="/login" onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-indigo-50">Log in</Link>
-              <Link href="/register" onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-indigo-50">Register</Link>
+              <Link href="/login" onClick={(event) => { event.preventDefault(); setMenuOpen(false); const currentPath = `${window.location.pathname}${window.location.search}`; const returnTo = window.location.pathname === "/" ? "/profile?tab=digitalTwin" : currentPath; router.push(`/login?returnTo=${encodeURIComponent(returnTo)}`); }} className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-indigo-50">Log in</Link>
+              <Link href="/register" onClick={(event) => { event.preventDefault(); setMenuOpen(false); const returnTo = `${window.location.pathname}${window.location.search}`; router.push(`/register?returnTo=${encodeURIComponent(returnTo)}`); }} className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-indigo-50">Register</Link>
             </div>
           )}
           {ready && (!user || role === "CUSTOMER") && (

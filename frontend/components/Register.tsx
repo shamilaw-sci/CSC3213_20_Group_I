@@ -6,7 +6,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import PasswordInput from "@/components/PasswordInput";
 
-export default function RegisterPage() {
+export default function RegisterPage({ requireAccount = false }: { requireAccount?: boolean }) {
   const { register, startGuest } = useAuth();
   const router = useRouter();
   const submitting = useRef(false);
@@ -31,7 +31,11 @@ export default function RegisterPage() {
     setError("");
     try {
       await register({ name: String(data.get("name") ?? ""), email: String(data.get("email") ?? ""), password });
-      router.replace("/profile");
+      const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+      const safeReturnTo = returnTo?.startsWith("/") && !returnTo.startsWith("//")
+        ? returnTo
+        : "/profile?tab=digitalTwin";
+      router.replace(requireAccount ? safeReturnTo : "/profile?tab=digitalTwin");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
@@ -47,8 +51,14 @@ export default function RegisterPage() {
     setBusy(true);
     setError("");
     try {
+      window.sessionStorage.removeItem("tryvora-pending-merchant-redirect");
       await startGuest();
-      router.push("/explore");
+      const params = new URLSearchParams(window.location.search);
+      const returnTo = params.get("guestReturnTo") ?? params.get("returnTo");
+      const safeReturnTo = returnTo?.startsWith("/") && !returnTo.startsWith("//")
+        ? returnTo
+        : "/explore";
+      router.push(safeReturnTo);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start a guest session.");
     } finally {
@@ -239,19 +249,20 @@ export default function RegisterPage() {
                     className="text-sm text-gray-600"
                   >
                     I agree to the{" "}
-                    <span className="font-semibold text-fuchsia-600">
+                    <Link href="/terms" className="font-semibold text-fuchsia-600 hover:underline">
                       Terms & Conditions
-                    </span>{" "}
+                    </Link>{" "}
                     and{" "}
-                    <span className="font-semibold text-fuchsia-600">
+                    <Link href="/privacy" className="font-semibold text-fuchsia-600 hover:underline">
                       Privacy Policy
-                    </span>
+                    </Link>
                   </label>
 
                 </div>
 
                 {/* Register Button */}
                 <p className="text-sm text-gray-600">Use at least 8 characters, including an uppercase letter and a number.</p>
+                {requireAccount && <p className="text-sm font-semibold text-indigo-700">Create an account or log in to continue to the merchant store.</p>}
                 {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
                 <button
                   type="submit"
@@ -262,19 +273,24 @@ export default function RegisterPage() {
                 </button>
 
                 {/* Guest */}
-                <button
+                {!requireAccount && <button
                   type="button"
                   disabled={busy}
                   onClick={continueAsGuest}
                   className="w-full rounded-xl border border-gray-300 py-3 font-semibold text-gray-700 transition hover:bg-gray-100"
                 >
                   Continue as Guest
-                </button>
+                </button>}
 
                 <div className="text-center text-sm text-gray-600">
                   Already have an account?{" "}
                   <Link
                     href="/login"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+                      router.push(returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login");
+                    }}
                     className="bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500 bg-clip-text font-bold text-transparent hover:opacity-80"
                   >
                     Login

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, LayoutDashboard, Menu, MessageSquareText, ScanLine, ShieldCheck, ShoppingBag, Store, UserRoundCog, UsersRound, WandSparkles } from "lucide-react";
+import { BarChart3, LayoutDashboard, Menu, MessageSquareText, PackageCheck, ScanLine, ShieldCheck, ShoppingBag, Store, UserRoundCog, UsersRound, WandSparkles } from "lucide-react";
 import { useState } from "react";
 
 const links = [
@@ -10,6 +10,7 @@ const links = [
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/users", label: "User management", icon: UsersRound },
   { href: "/admin/catalog", label: "Catalog", icon: ShoppingBag },
+  { href: "/admin/products", label: "Product approvals", icon: PackageCheck },
   { href: "/admin/merchants", label: "Merchants", icon: Store },
   { href: "/admin/twins", label: "Digital twin monitor", icon: ScanLine },
   { href: "/admin/try-ons", label: "Try-on management", icon: WandSparkles },

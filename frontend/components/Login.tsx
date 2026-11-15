@@ -22,7 +22,11 @@ export default function Login() {
     setError("");
     try {
       const user = await login(String(data.get("email") ?? ""), String(data.get("password") ?? ""), data.get("rememberMe") === "on");
-      const destination = user.role === "ADMIN" ? "/admin" : user.role === "MERCHANT" ? "/merchant" : "/profile";
+      const requestedReturnTo = new URLSearchParams(window.location.search).get("returnTo");
+      const safeReturnTo = requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//")
+        ? requestedReturnTo
+        : null;
+      const destination = user.role === "ADMIN" ? "/admin" : user.role === "MERCHANT" ? "/merchant" : safeReturnTo ?? "/profile?tab=digitalTwin";
       if (user.role === "ADMIN") {
         window.location.replace(destination);
         return;
@@ -85,7 +89,7 @@ export default function Login() {
                   Password
                 </label>
 
-                <Link href="/forgot-password" className="text-sm font-semibold text-indigo-500 hover:text-indigo-700">
+                <Link href="/forgot-password" onClick={(event) => { event.preventDefault(); const returnTo = new URLSearchParams(window.location.search).get("returnTo"); router.push(returnTo ? `/forgot-password?returnTo=${encodeURIComponent(returnTo)}` : "/forgot-password"); }} className="text-sm font-semibold text-indigo-500 hover:text-indigo-700">
                   Forgot password?
                 </Link>
               </div>
@@ -120,9 +124,13 @@ export default function Login() {
 
           {/* FOOTER */}
           <p className="mt-6 text-center text-sm text-gray-500">
-            Not a member?{" "}
-            <Link href="/register" className="font-semibold text-indigo-500 hover:text-indigo-700">
-              Create an account
+            Don&apos;t have an account?{" "}
+            <Link href="/register" onClick={(event) => {
+              event.preventDefault();
+              const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+              router.push(returnTo ? `/register?returnTo=${encodeURIComponent(returnTo)}` : "/register");
+            }} className="font-semibold text-indigo-500 hover:text-indigo-700">
+              Register
             </Link>
           </p>
 

@@ -2,7 +2,6 @@
 "use client";
 
 import { CheckCircle2, LoaderCircle, Mail, MapPin, Save, ShieldCheck, UserRound } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/features/auth/context/AuthContext";
@@ -21,7 +20,6 @@ const fields: Array<{ key: keyof Account; label: string; type: string; placehold
 export default function AccountTab() {
   const { profile, updateAccount, saveProfile } = useProfile();
   const { user, logout } = useAuth();
-  const router = useRouter();
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -58,7 +56,7 @@ export default function AccountTab() {
       return;
     }
     await logout();
-    router.replace("/");
+    window.location.assign("/");
   }
 
   return (

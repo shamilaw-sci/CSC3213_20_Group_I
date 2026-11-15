@@ -9,7 +9,6 @@ import Navbar from "@/app/components/Navbar";
 import DigitalTwinTab from "@/features/profile/components/DigitalTwinTab";
 import MeasurementsTab from "@/features/profile/components/MeasurementsTab";
 import AccountTab from "@/features/profile/components/AccountTab";
-import TryOnModal from "@/features/try-on/components/TryOnModal";
 
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { useProfile } from "@/features/profile/hooks/useProfile";
@@ -40,7 +39,10 @@ export default function ProfilePage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (ready && !user) router.replace("/login");
+    if (ready && !user) {
+      const returnTo = `${window.location.pathname}${window.location.search}`;
+      router.replace(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+    }
   }, [ready, user, router]);
 
   if (!ready || !user || profileLoadStatus !== "ready") {
@@ -83,7 +85,6 @@ export default function ProfilePage() {
 
       </main>
 
-      <TryOnModal />
 
     </div>
   );

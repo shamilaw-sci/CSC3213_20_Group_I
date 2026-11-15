@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 };
 
 export default async function ResetPasswordPage({ searchParams }: {
-  searchParams: Promise<{ token?: string | string[] }>;
+  searchParams: Promise<{ token?: string | string[]; returnTo?: string | string[] }>;
 }) {
-  const { token } = await searchParams;
-  return <PasswordRecoveryForm token={typeof token === "string" ? token : ""} />;
+  const { token, returnTo } = await searchParams;
+  return <PasswordRecoveryForm token={typeof token === "string" ? token : ""} returnTo={typeof returnTo === "string" ? returnTo : undefined} />;
 }

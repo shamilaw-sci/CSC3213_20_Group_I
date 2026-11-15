@@ -8,7 +8,7 @@ import { loadCustomerOverview } from "@/server/dashboard/load-customer-overview"
 
 export default async function CustomerDashboardPage() {
   const current = await getCurrentSession();
-  if (!current) redirect("/login");
+  if (!current) redirect("/login?returnTo=%2Fdashboard");
   if (current.user.role === "ADMIN") redirect("/admin");
   if (current.user.role === "MERCHANT") redirect("/merchant");
 

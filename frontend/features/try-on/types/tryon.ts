@@ -9,76 +9,23 @@ export interface TryOnProduct {
   availableSizes?: string[];
 }
 
-
-
-export interface UserPhoto {
-  file: File;
-  preview: string;
-}
-
-
-
 export interface TryOnResult {
   image: string;
   createdAt: string;
 }
 
-
-
 export interface TryOnState {
-
   isOpen: boolean;
-
-  isLoading: boolean;
-
-
   selectedProduct: TryOnProduct | null;
-
-
-  userPhoto: UserPhoto | null;
-
-
-  result: TryOnResult | null;
-
+  selectedSize?: string | null;
+  resumeAfterTwin?: boolean;
 }
 
-
-
-
 export interface TryOnContextType {
-
   state: TryOnState;
-
-
-
-  openTryOn: (
-    product: TryOnProduct
-  ) => void;
-
-  selectProduct: (
-    product: TryOnProduct
-  ) => void;
-
-
-
+  openTryOn: (product: TryOnProduct) => void;
+  selectProduct: (product: TryOnProduct) => void;
+  setSelectedSize: (size: string) => void;
+  goToTwinSetup: () => void;
   closeTryOn: () => void;
-
-
-
-  uploadPhoto: (
-    file: File
-  ) => void;
-
-
-
-  removePhoto: () => void;
-
-
-
-  generateTryOn: () => Promise<void>;
-
-
-
-  clearResult: () => void;
-
 }

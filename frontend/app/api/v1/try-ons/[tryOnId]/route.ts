@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireAuthenticatedUser } from "@/server/auth/authorization";
 import { prisma } from "@/server/db/prisma";
+import { unlink } from "node:fs/promises";
 
 export async function DELETE(
   _request: Request,
@@ -19,7 +20,7 @@ export async function DELETE(
   const deleted = await prisma.$transaction(async (tx) => {
     const ownedSession = await tx.tryonsession.findFirst({
       where: { tryOnSessionId: tryOnId, userId: access.user.id },
-      select: { tryOnSessionId: true },
+      select: { tryOnSessionId: true, tryonresult: { select: { resultImagePath: true } } },
     });
     if (!ownedSession) return false;
 
@@ -29,11 +30,12 @@ export async function DELETE(
       data: { tryOnSessionId: null },
     });
     await tx.tryonsession.delete({ where: { tryOnSessionId: tryOnId } });
-    return true;
+    return ownedSession.tryonresult?.resultImagePath.startsWith("virtual://") ? null : ownedSession.tryonresult?.resultImagePath ?? null;
   });
 
-  if (!deleted) {
+  if (deleted === false) {
     return NextResponse.json({ message: "Try-on not found." }, { status: 404 });
   }
+  if (deleted) await unlink(deleted).catch(() => undefined);
   return NextResponse.json({ deleted: true });
 }

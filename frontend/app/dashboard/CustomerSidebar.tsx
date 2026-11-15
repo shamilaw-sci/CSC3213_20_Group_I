@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import {
   ChevronLeft, ChevronRight, CircleHelp, CreditCard, Heart, History,
@@ -14,11 +14,19 @@ import { useAuth } from "@/features/auth/context/AuthContext";
 
 type SidebarItem = { label: string; icon: LucideIcon; href?: string };
 
+const TwoShirtsIcon: LucideIcon = (props) => (
+  <svg {...props} width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="m13.2 4.3 2.2-.8a2.1 2.1 0 0 0 4.2 0l2.1.8a1.5 1.5 0 0 1 1 1.4v2.1h-2v8.7h-7.4V7.8h-2V5.7a1.5 1.5 0 0 1 1-1.4Z" />
+    <path d="m2.3 6.1 2.2-.8a2.1 2.1 0 0 0 4.2 0l2.1.8a1.5 1.5 0 0 1 1 1.4v2.1h-2v8.7H2.4V9.6h-2V7.5a1.5 1.5 0 0 1 1-1.4Z" transform="translate(1 1)" />
+  </svg>
+);
+
 const mainItems: SidebarItem[] = [
   { label: "Overview", href: "/dashboard", icon: House },
   { label: "Digital Twin", href: "/profile?tab=digitalTwin", icon: Shirt },
   { label: "My Measurements", href: "/profile?tab=measurements", icon: Ruler },
   { label: "Virtual Try-On History", href: "/profile/try-on-history", icon: History },
+  { label: "My Comparisons", href: "/comparisons", icon: TwoShirtsIcon },
   { label: "My Favorites", href: "/favorites", icon: Heart },
   { label: "Recommended For You", href: "/recommendations", icon: Sparkles },
 ];
@@ -27,7 +35,7 @@ const accountItems: SidebarItem[] = [
   { label: "Help & FAQ", href: "/help", icon: CircleHelp },
   { label: "My Plan", href: "/plan", icon: CreditCard },
   { label: "Account Settings", href: "/profile?tab=account", icon: Settings },
-  { label: "Support", href: "/support", icon: LifeBuoy },
+  { label: "Support", href: "/help", icon: LifeBuoy },
 ];
 
 function SidebarBody({ collapsed, pathname, activeTab, loggingOut, error, onNavigate, onLogout }: {
@@ -87,7 +95,6 @@ function SidebarBody({ collapsed, pathname, activeTab, loggingOut, error, onNavi
 
 export default function CustomerSidebar({ embedded = false }: { embedded?: boolean }) {
   const { logout } = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
   const activeTab = typeof window === "undefined"
     ? null
@@ -104,8 +111,7 @@ export default function CustomerSidebar({ embedded = false }: { embedded?: boole
     try {
       await logout();
       setMobileOpen(false);
-      router.replace("/");
-      router.refresh();
+      window.location.assign("/");
     } catch {
       setError("Could not log out. Please try again.");
       setLoggingOut(false);
