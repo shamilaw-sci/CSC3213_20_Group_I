@@ -131,12 +131,20 @@ function ScopedProfileProvider({
 
     async function loadProfile() {
       try {
+        const requestInit: RequestInit = {
+          cache: "no-store",
+          credentials: "same-origin",
+          signal: controller.signal,
+        };
         const [profileResponse, measurementResponse, twinResponse] = await Promise.all([
-          fetch("/api/v1/profiles/me", { cache: "no-store", signal: controller.signal }),
-          fetch("/api/v1/profiles/measurements", { cache: "no-store", signal: controller.signal }),
-          fetch("/api/v1/digital-twins/current", { cache: "no-store", signal: controller.signal }),
+          fetch("/api/v1/profiles/me", requestInit),
+          fetch("/api/v1/profiles/measurements", requestInit),
+          fetch("/api/v1/digital-twins/current", requestInit),
         ]);
-        if (!profileResponse.ok) throw new Error("Could not load profile.");
+        if (!profileResponse.ok) {
+          const errorBody = await profileResponse.json().catch(() => null) as { message?: string } | null;
+          throw new Error(errorBody?.message ?? `Could not load profile (${profileResponse.status}).`);
+        }
         const profileData = await profileResponse.json() as { account: Account };
         const measurementData = measurementResponse.ok
           ? await measurementResponse.json() as { measurements: Partial<Measurements> }
@@ -189,7 +197,7 @@ function ScopedProfileProvider({
     const profileResponse = await fetch("/api/v1/profiles/me", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(profile.account),
+      body: JSON.stringify({ ...profile.account, dateOfBirth: profile.account.dateOfBirth.trim() || null }),
     });
     const profileResult = await profileResponse.json().catch(() => ({})) as { message?: string };
     if (!profileResponse.ok) throw new Error(profileResult.message ?? "Could not save account details.");

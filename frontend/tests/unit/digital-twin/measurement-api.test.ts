@@ -122,7 +122,10 @@ describe("Measurement API", () => {
     expect(response.status).toBe(200);
     expect(mocks.profileFindUnique).toHaveBeenCalledWith({
       where: { userId: "user-123" },
-      include: { measurement: true },
+      select: {
+        gender: true,
+        measurement: true,
+      },
     });
     expect(body).toEqual({
       measurements: {
@@ -209,6 +212,7 @@ describe("Measurement API", () => {
     expect(mocks.profileUpdate).toHaveBeenCalledWith({
       where: { profileId: "profile-123" },
       data: expect.objectContaining({ gender: "Male" }),
+      select: { profileId: true, gender: true },
     });
     expect(body).toEqual({
       measurements: {
@@ -228,6 +232,7 @@ describe("Measurement API", () => {
     expect(mocks.profileUpdate).toHaveBeenCalledWith({
       where: { profileId: "profile-123" },
       data: expect.not.objectContaining({ gender: expect.anything() }),
+      select: { profileId: true, gender: true },
     });
     expect(body.measurements.gender).toBe("Female");
   });

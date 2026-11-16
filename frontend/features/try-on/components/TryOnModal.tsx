@@ -359,11 +359,11 @@ function TryOnModalView({ product, initialSize }: { product: TryOnProduct; initi
                         : "Register to use a saved Digital Twin, or continue as a guest with a photo."}
                   </p>
                   {user && <Link
-                    href="/profile?tab=digitalTwin"
-                    onClick={() => { goToTwinSetup(); changeTab("digitalTwin"); }}
+                    href="/profile?tab=measurements"
+                    onClick={() => { changeTab("measurements"); closeTryOn(); }}
                     className="mt-3 inline-block text-sm font-bold text-indigo-700 underline underline-offset-2"
                   >
-                    Open your Digital Twin
+                    Open My Measurements
                   </Link>}
                 </div>
               </div>

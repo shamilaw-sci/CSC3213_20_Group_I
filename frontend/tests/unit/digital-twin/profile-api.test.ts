@@ -137,7 +137,19 @@ describe("Profile API", () => {
     expect(response.status).toBe(200);
     expect(mocks.userFindUnique).toHaveBeenCalledWith({
       where: { userId: "user-123" },
-      include: { profile: true },
+      select: {
+        userId: true,
+        userName: true,
+        userEmail: true,
+        role: true,
+        profile: {
+          select: {
+            phone: true,
+            country: true,
+            dateOfBirth: true,
+          },
+        },
+      },
     });
     expect(body).toEqual({
       user: {

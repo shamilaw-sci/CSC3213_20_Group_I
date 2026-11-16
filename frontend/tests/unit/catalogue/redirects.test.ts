@@ -16,6 +16,9 @@ vi.mock("@/server/auth/guest", () => ({
 vi.mock("@/server/auth/session", () => ({
   getCurrentSession: mocks.getCurrentSession,
 }));
+vi.mock("@/server/auth/authorization", () => ({
+  requireAuthenticatedUser: mocks.getCurrentSession,
+}));
 
 vi.mock("@/server/db/prisma", () => ({
   prisma: {
@@ -52,9 +55,7 @@ describe("Merchant redirect tracking API", () => {
     vi.resetAllMocks();
     mocks.productFindFirst.mockResolvedValue(ACTIVE_PRODUCT);
     mocks.merchantRedirectCreate.mockResolvedValue({});
-    mocks.getCurrentSession.mockResolvedValue({
-      user: { id: "user-123" },
-    });
+    mocks.getCurrentSession.mockResolvedValue({ user: { id: "user-123", role: "CUSTOMER" } });
     mocks.getCurrentGuestSession.mockResolvedValue({
       guestSessionId: "guest-123",
     });
@@ -89,8 +90,8 @@ describe("Merchant redirect tracking API", () => {
     });
   });
 
-  it("falls back to a guest session when no user is signed in", async () => {
-    mocks.getCurrentSession.mockResolvedValue(null);
+  it("requires a signed-in customer", async () => {
+    mocks.getCurrentSession.mockResolvedValue({ error: Response.json({ message: "Authentication is required." }, { status: 401 }) });
 
     const response = await POST(
       redirectRequest({
@@ -98,14 +99,8 @@ describe("Merchant redirect tracking API", () => {
       }),
     );
 
-    expect(response.status).toBe(201);
-    expect(mocks.merchantRedirectCreate).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        userId: undefined,
-        guestSessionId: "guest-123",
-        source: "product_detail",
-      }),
-    });
+    expect(response.status).toBe(401);
+    expect(mocks.merchantRedirectCreate).not.toHaveBeenCalled();
   });
 
   it("rejects missing products and unsafe merchant URLs", async () => {

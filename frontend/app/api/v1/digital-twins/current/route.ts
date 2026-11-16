@@ -22,6 +22,12 @@ export const runtime = "nodejs";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const supportedTypes = new Set(["image/jpeg", "image/png"]);
 
+function storageConfigurationError() {
+  if (!process.env.DATA_ENCRYPTION_KEY) return "Digital Twin storage is not configured on the server. Please contact the administrator.";
+  if (!process.env.DIGITAL_TWIN_URL_SIGNING_SECRET) return "Digital Twin image access is not configured on the server. Please contact the administrator.";
+  return null;
+}
+
 function twinResponse(
   twin: {
     digitalTwinId: string;
@@ -44,6 +50,8 @@ function twinResponse(
 export async function GET() {
   const access = await requireAuthenticatedUser(["CUSTOMER", "MERCHANT", "ADMIN"]);
   if ("error" in access) return access.error;
+  const configurationError = storageConfigurationError();
+  if (configurationError) return NextResponse.json({ message: configurationError }, { status: 503 });
   const twin = await prisma.digitaltwin.findFirst({ where: { userId: access.user.id, status: "READY", deletedAt: null }, orderBy: { createdAt: "desc" } });
   return NextResponse.json({ twin: twin ? twinResponse(twin, access.user.id) : null });
 }
@@ -51,13 +59,24 @@ export async function GET() {
 export async function POST(request: Request) {
   const access = await requireAuthenticatedUser(["CUSTOMER", "MERCHANT", "ADMIN"]);
   if ("error" in access) return access.error;
+  const configurationError = storageConfigurationError();
+  if (configurationError) {
+    console.error("Digital Twin upload unavailable: required server configuration is missing.");
+    return NextResponse.json({ message: configurationError }, { status: 503 });
+  }
   const formData = await request.formData().catch(() => null);
   const file = formData?.get("image");
   if (!(file instanceof File)) return NextResponse.json({ message: "Provide an image file using the image field." }, { status: 400 });
   if (!supportedTypes.has(file.type)) return NextResponse.json({ message: "Only PNG and JPEG images are supported." }, { status: 400 });
   if (!file.size || file.size > MAX_FILE_SIZE) return NextResponse.json({ message: "Image size must be no larger than 5 MB." }, { status: 400 });
 
-  const profile = await prisma.profile.findUnique({ where: { userId: access.user.id }, include: { measurement: true } });
+  const profile = await prisma.profile.findUnique({
+    where: { userId: access.user.id },
+    select: {
+      profileId: true,
+      measurement: true,
+    },
+  });
   if (!profile) return NextResponse.json({ message: "Create a profile before uploading a digital twin." }, { status: 409 });
   const image = Buffer.from(await file.arrayBuffer());
   const isJpeg = image.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]));
@@ -77,17 +96,22 @@ export async function POST(request: Request) {
   const snapshot = profile.measurement ? { height: profile.measurement.heightCm?.toString(), weight: profile.measurement.weightKg?.toString(), chest: profile.measurement.chestCm?.toString(), waist: profile.measurement.waistCm?.toString(), hips: profile.measurement.hipsCm?.toString(), shoulder: profile.measurement.shoulderCm?.toString() } : null;
   const processingStartedAt = new Date();
 
-  await prisma.digitaltwin.create({
-    data: {
-      digitalTwinId: twinId,
-      userId: access.user.id,
-      encryptedImagePath: filePath,
-      measurementsSnapshot: snapshot ?? undefined,
-      status: "PROCESSING",
-      processingError: null,
-      updatedAt: processingStartedAt,
-    },
-  });
+  try {
+    await prisma.digitaltwin.create({
+      data: {
+        digitalTwinId: twinId,
+        userId: access.user.id,
+        encryptedImagePath: filePath,
+        measurementsSnapshot: snapshot ?? undefined,
+        status: "PROCESSING",
+        processingError: null,
+        updatedAt: processingStartedAt,
+      },
+    });
+  } catch (error) {
+    console.error("Digital Twin PROCESSING record could not be created.", error);
+    return NextResponse.json({ message: "Your Digital Twin could not be saved because the profile database is unavailable." }, { status: 503 });
+  }
 
   try {
     const processedImage = await processDigitalTwinImage(image);

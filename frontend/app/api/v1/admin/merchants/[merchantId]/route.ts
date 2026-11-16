@@ -37,7 +37,14 @@ export async function PATCH(request: Request, context: { params: Promise<{ merch
     await tx.merchant.update({ where: { merchantId }, data: { storeName: parsed.data.storeName, email: parsed.data.email, ownerName: parsed.data.ownerName || null, phone: parsed.data.phone || null, address: parsed.data.address || null, businessCategory: parsed.data.businessCategory || null, websiteUrl: parsed.data.websiteUrl || null, storeDescription: parsed.data.storeDescription || null, status: parsed.data.status, updatedAt: now } });
     if (merchant.userId) {
       const enabled = parsed.data.status === "ACTIVE";
-      await tx.user.update({ where: { userId: merchant.userId }, data: { status: enabled ? "ACTIVE" : "SUSPENDED", updatedAt: now } });
+      await tx.user.update({
+        where: { userId: merchant.userId },
+        data: {
+          status: enabled ? "ACTIVE" : "SUSPENDED",
+          ...(enabled ? { role: "MERCHANT" } : {}),
+          updatedAt: now,
+        },
+      });
       if (!enabled) await tx.session.updateMany({ where: { userId: merchant.userId, revokedAt: null }, data: { revokedAt: now, updatedAt: now } });
     }
     await tx.subscription.upsert({

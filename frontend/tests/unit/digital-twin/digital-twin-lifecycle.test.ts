@@ -95,6 +95,8 @@ function uploadRequest() {
 describe("Digital Twin upload lifecycle", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    process.env.DATA_ENCRYPTION_KEY = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+    process.env.DIGITAL_TWIN_URL_SIGNING_SECRET = "test-digital-twin-signing-secret-012345678901";
 
     mocks.requireAuthenticatedUser.mockResolvedValue({
       user: {

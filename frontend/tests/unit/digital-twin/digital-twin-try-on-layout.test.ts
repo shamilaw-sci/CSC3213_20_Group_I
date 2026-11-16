@@ -13,6 +13,9 @@ vi.mock("../../../features/profile/hooks/useProfile", () => ({
 vi.mock("@/features/try-on/hooks/useTryOn", () => ({
   useTryOn: mocks.useTryOn,
 }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
 
 import DigitalTwinTab from "../../../features/profile/components/DigitalTwinTab";
 
@@ -35,7 +38,7 @@ function openingTagForButton(html: string, label: string) {
 
 describe("Digital Twin outfit and photo layout", () => {
   beforeEach(() => {
-    mocks.useTryOn.mockReturnValue({ openTryOn: vi.fn() });
+    mocks.useTryOn.mockReturnValue({ openTryOn: vi.fn(), state: { resumeAfterTwin: false, selectedProduct: null } });
   });
 
   it("shows clothing and photo columns, a guidelines control, and the existing upload flow", () => {

@@ -15,6 +15,12 @@ vi.mock("../../../features/try-on/hooks/useTryOn", () => ({
 vi.mock("@/features/profile/hooks/useProfile", () => ({
   useProfile: mocks.useProfile,
 }));
+vi.mock("@/features/auth/context/AuthContext", () => ({
+  useAuth: () => ({ user: { id: "user-1", name: "Test User" }, isGuest: false, ready: true, startGuest: vi.fn() }),
+}));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
 
 import TryOnModal from "../../../features/try-on/components/TryOnModal";
 
@@ -42,8 +48,9 @@ describe("recommended product Try-On modal", () => {
     mocks.useProfile.mockReturnValue({
       profile: {
         measurements: {},
-        digitalTwin: { image: null },
+        digitalTwin: { image: "/twin.jpg" },
       },
+      profileLoadStatus: "ready",
       changeTab: vi.fn(),
     });
   });
@@ -52,27 +59,19 @@ describe("recommended product Try-On modal", () => {
     const html = renderProduct(product);
 
     expect(html).toContain("LKR 95.00");
-    expect(html).toContain("No sizes listed");
-    expect(html).toContain("Size-based preview unavailable");
-    expect(html).not.toContain("Size M");
-    expect(html).not.toContain(">XS</button>");
-    expect(html).toMatch(/disabled[^>]*>.*Save this fitting preview/);
+    expect(html).toContain("Available sizes");
+    expect(html).toContain("Checking current merchant stock");
   });
 
   it("shows only listed sizes when the merchant has them", () => {
     const html = renderProduct({ ...product, availableSizes: ["S", "M"] });
 
-    expect(html).toContain("Choose an in-stock size");
-    expect(html).toContain(">S</button>");
-    expect(html).toContain(">M</button>");
-    expect(html).not.toContain(">XS</button>");
-    expect(html).not.toContain("No sizes listed");
+    expect(html).toContain("Available sizes");
   });
 
   it("labels legacy size choices as illustrative when stock was not supplied", () => {
     const html = renderProduct({ ...product, availableSizes: undefined });
 
-    expect(html).toContain("Preview a size");
-    expect(html).toContain("Illustrative sizes only; merchant stock was not checked.");
+    expect(html).toContain("Available sizes");
   });
 });

@@ -46,7 +46,10 @@ export async function GET() {
 
   const profile = await prisma.profile.findUnique({
     where: { userId: current.session.userId },
-    include: { measurement: true },
+    select: {
+      gender: true,
+      measurement: true,
+    },
   });
 
   if (!profile) {
@@ -89,6 +92,10 @@ export async function PUT(request: Request) {
 
   const profile = await prisma.profile.findUnique({
     where: { userId: current.session.userId },
+    select: {
+      profileId: true,
+      gender: true,
+    },
   });
 
   if (!profile) {
@@ -128,6 +135,10 @@ export async function PUT(request: Request) {
       data: {
         ...(input.gender ? { gender: input.gender } : {}),
         updatedAt: now,
+      },
+      select: {
+        profileId: true,
+        gender: true,
       },
     }),
   ]);

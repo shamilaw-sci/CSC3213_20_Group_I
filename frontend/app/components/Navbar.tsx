@@ -32,6 +32,9 @@ export default function Navbar() {
         ? [homeLink, exploreLink, { label: "Admin", href: "/admin" }, howItWorksLink]
         : [homeLink, exploreLink, howItWorksLink];
 
+  const merchantEntryHref = role === "CUSTOMER" ? "/merchant/onboarding" : "/login";
+  const merchantEntryLabel = role === "CUSTOMER" ? "Become a Merchant" : "Login as Merchant";
+
   const accountLinks = role === "CUSTOMER"
     ? [
         { label: "Profile", href: "/profile" },
@@ -44,7 +47,7 @@ export default function Navbar() {
           { label: "Merchant Analytics", href: "/merchant/analytics" },
         ]
       : [{ label: "Admin", href: "/admin" }];
-  const customerWorkspace = role === "CUSTOMER" && ["/dashboard", "/profile", "/favorites", "/recommendations"].some((route) => pathname === route || pathname.startsWith(`${route}/`));
+  const customerWorkspace = role === "CUSTOMER" && ["/dashboard", "/profile", "/favorites", "/recommendations", "/help", "/plan", "/support"].some((route) => pathname === route || pathname.startsWith(`${route}/`));
 
   function isActive(href: string) {
     const target = href.split("#")[0];
@@ -72,7 +75,8 @@ export default function Navbar() {
     try {
       await logout();
       setMenuOpen(false);
-      window.location.assign("/");
+      router.replace("/");
+      router.refresh();
     } catch {
       setAuthError("Could not log out. Please try again.");
     } finally {
@@ -103,12 +107,12 @@ export default function Navbar() {
             <div className="hidden items-center gap-3 xl:flex">
               {!user && (
                 <>
-                  <Link href="/login" onClick={(event) => { event.preventDefault(); const currentPath = `${window.location.pathname}${window.location.search}`; const returnTo = window.location.pathname === "/" ? "/profile?tab=digitalTwin" : currentPath; router.push(`/login?returnTo=${encodeURIComponent(returnTo)}`); }} className="text-sm font-semibold text-gray-700 hover:text-indigo-700 focus-visible:rounded focus-visible:outline-2 focus-visible:outline-indigo-600">Log in</Link>
-                  <Link href="/register" onClick={(event) => { event.preventDefault(); const returnTo = `${window.location.pathname}${window.location.search}`; router.push(`/register?returnTo=${encodeURIComponent(returnTo)}`); }} className="text-sm font-semibold text-gray-700 hover:text-indigo-700 focus-visible:rounded focus-visible:outline-2 focus-visible:outline-indigo-600">Register</Link>
+                  <Link href="/login" className="text-sm font-semibold text-gray-700 hover:text-indigo-700 focus-visible:rounded focus-visible:outline-2 focus-visible:outline-indigo-600">Log in</Link>
+                  <Link href="/register" className="text-sm font-semibold text-gray-700 hover:text-indigo-700 focus-visible:rounded focus-visible:outline-2 focus-visible:outline-indigo-600">Register</Link>
                 </>
               )}
               {(!user || role === "CUSTOMER") && (
-                <Link href="/merchant" className="rounded-lg border border-indigo-600 px-3 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Login as Merchant</Link>
+                <Link href={merchantEntryHref} className="rounded-lg border border-indigo-600 px-3 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">{merchantEntryLabel}</Link>
               )}
             </div>
           )}
@@ -154,12 +158,12 @@ export default function Navbar() {
           })}
           {ready && !user && (
             <div className="mt-2 border-t border-gray-100 pt-2">
-              <Link href="/login" onClick={(event) => { event.preventDefault(); setMenuOpen(false); const currentPath = `${window.location.pathname}${window.location.search}`; const returnTo = window.location.pathname === "/" ? "/profile?tab=digitalTwin" : currentPath; router.push(`/login?returnTo=${encodeURIComponent(returnTo)}`); }} className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-indigo-50">Log in</Link>
-              <Link href="/register" onClick={(event) => { event.preventDefault(); setMenuOpen(false); const returnTo = `${window.location.pathname}${window.location.search}`; router.push(`/register?returnTo=${encodeURIComponent(returnTo)}`); }} className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-indigo-50">Register</Link>
+              <Link href="/login" onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-indigo-50">Log in</Link>
+              <Link href="/register" onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-indigo-50">Register</Link>
             </div>
           )}
           {ready && (!user || role === "CUSTOMER") && (
-            <Link href="/merchant" onClick={() => setMenuOpen(false)} className="mt-2 block rounded-lg border border-indigo-600 px-3 py-2 text-center text-sm font-semibold text-indigo-700 hover:bg-indigo-50">Login as Merchant</Link>
+            <Link href={merchantEntryHref} onClick={() => setMenuOpen(false)} className="mt-2 block rounded-lg border border-indigo-600 px-3 py-2 text-center text-sm font-semibold text-indigo-700 hover:bg-indigo-50">{merchantEntryLabel}</Link>
           )}
           {ready && user && (
             <div className="mt-2 border-t border-gray-100 pt-2">

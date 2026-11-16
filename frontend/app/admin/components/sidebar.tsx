@@ -14,7 +14,7 @@ const links = [
   { href: "/admin/merchants", label: "Merchants", icon: Store },
   { href: "/admin/twins", label: "Digital twin monitor", icon: ScanLine },
   { href: "/admin/try-ons", label: "Try-on management", icon: WandSparkles },
-  { href: "/admin/feedback", label: "Feedback management", icon: MessageSquareText },
+  { href: "/admin/support", label: "Support tickets", icon: MessageSquareText },
   { href: "/admin/security", label: "Security", icon: ShieldCheck },
   { href: "/adminprofile", label: "Admin profile", icon: UserRoundCog },
 ];

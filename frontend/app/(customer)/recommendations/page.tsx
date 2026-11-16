@@ -9,6 +9,7 @@ import FavoriteButton from "@/app/components/FavoriteButton";
 import { useProfile } from "@/features/profile/hooks/useProfile";
 import { useFavorites } from "@/features/favorites/useFavorites";
 import TryOnButton from "@/features/try-on/components/TryOnButton";
+import TryOnModal from "@/features/try-on/components/TryOnModal";
 
 type Recommendation = {
   productId: string;
@@ -81,12 +82,7 @@ export default function RecommendationsPage() {
     }
 
     void loadRecommendations();
-    const refresh = () => void loadRecommendations();
-    window.addEventListener("tryvora:measurements-updated", refresh);
-    return () => {
-      controller.abort();
-      window.removeEventListener("tryvora:measurements-updated", refresh);
-    };
+    return () => controller.abort();
   }, []);
 
   return (
@@ -94,26 +90,26 @@ export default function RecommendationsPage() {
       <Navbar />
 
       <main className="mx-auto max-w-7xl px-6 py-10 lg:pl-80">
-        <div className="mb-8">
-          <p className="text-sm font-semibold uppercase tracking-wide text-indigo-600">
+        <div className="mb-8 rounded-3xl bg-gradient-to-br from-indigo-700 via-violet-700 to-fuchsia-600 p-6 text-white shadow-lg sm:p-8">
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-100">
             Your fitting-room picks
           </p>
-          <h1 className="mt-2 text-3xl font-bold text-gray-900">
+          <h1 className="mt-2 text-3xl font-black sm:text-4xl">
             Recommended For You
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 max-w-3xl text-sm text-indigo-100 sm:text-base">
             Suggestions based on available size information and your saved
             product interests. Fit percentages are project-level estimates,
             not guarantees.
           </p>
         </div>
 
-        {loading && <p role="status">Loading recommendations...</p>}
+        {loading && <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-label="Loading recommendations">{[1, 2, 3].map((item) => <div key={item} className="h-[34rem] animate-pulse rounded-2xl bg-slate-200" />)}</div>}
 
         {!loading && needsLogin && (
           <div className="rounded-2xl border bg-white p-6 text-gray-900">
             <p>Log in to see recommendations for your profile.</p>
-            <Link href="/login?returnTo=%2Frecommendations" className="mt-4 inline-block font-semibold text-indigo-600">
+            <Link href="/login" className="mt-4 inline-block font-semibold text-indigo-600">
               Log in
             </Link>
           </div>
@@ -170,7 +166,7 @@ export default function RecommendationsPage() {
                   return (
                     <article
                       key={item.productId}
-                      className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+                      className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg"
                     >
                       <div className="relative aspect-[4/3] bg-gray-100">
                         <Image
@@ -262,6 +258,7 @@ export default function RecommendationsPage() {
         )}
       </main>
 
+      <TryOnModal />
     </div>
   );
 }

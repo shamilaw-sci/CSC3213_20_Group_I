@@ -1,5 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("server-only", () => ({}));
+vi.mock("@/server/auth/guest", () => ({ getCurrentGuestSession: vi.fn().mockResolvedValue(null) }));
+vi.mock("@/server/auth/session", () => ({ getCurrentSession: vi.fn().mockResolvedValue(null) }));
+vi.mock("@/server/images/digital-twin-image", () => ({ processDigitalTwinImage: vi.fn(), DigitalTwinImageError: class extends Error {} }));
+vi.mock("@/server/storage/digital-twin-storage", () => ({ readEncryptedTwin: vi.fn() }));
+vi.mock("@/server/security/rate-limit", () => ({ enforceRateLimit: vi.fn(() => ({ allowed: true })) }));
+vi.mock("@/server/try-on/fashn", () => ({ generateTryOnImage: vi.fn(), FashnTryOnError: class extends Error {} }));
+
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   sessions: vi.fn(),

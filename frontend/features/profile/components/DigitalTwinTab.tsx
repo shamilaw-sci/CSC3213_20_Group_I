@@ -91,7 +91,13 @@ export default function DigitalTwinTab() {
 
   return (
     <div className="space-y-5">
-      <div><h2 className="text-3xl font-bold text-gray-900">Digital Twin</h2><p className="mt-2 text-gray-500">Manage your full-body photo, then choose an outfit in Explore for an illustrative fitting preview.</p></div>
+      <header className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-700 via-violet-700 to-fuchsia-600 p-6 text-white shadow-xl sm:p-8">
+        <div className="absolute -right-10 -top-12 h-40 w-40 rounded-full bg-white/10" aria-hidden="true" />
+        <div className="relative flex items-start gap-4">
+          <div className="rounded-2xl bg-white/15 p-3"><Shirt size={28} aria-hidden="true" /></div>
+          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-100">Your personal fitting room</p><h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Your Digital Twin</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-indigo-100 sm:text-base">Manage your personal photo and keep your virtual fitting room ready.</p></div>
+        </div>
+      </header>
       {!profile.digitalTwin.image && <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">Upload a photo of yourself to unlock the rest of TryVora.</p>}
       {pendingTryOn && <button type="button" disabled={!profile.digitalTwin.image} onClick={() => router.push(pendingTryOn.returnTo)} className="flex w-full items-center gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-left text-indigo-950 transition hover:bg-indigo-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-60"><span className="rounded-lg bg-white p-2 text-indigo-700"><CornerUpLeft size={20} aria-hidden="true" /></span><span><span className="block font-bold">Return to your fitting room</span><span className="mt-1 block text-sm">{profile.digitalTwin.image ? `Continue with ${pendingTryOn.product.title}.` : `Upload your photo to continue with ${pendingTryOn.product.title}.`}</span></span></button>}
       {resumeAfterTwin && selectedOutfit && <p role="status" className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm font-medium text-indigo-950">Finish creating your Digital Twin. Your fitting room will reopen for <span className="font-bold">{selectedOutfit.title}</span> when your photo is saved.</p>}

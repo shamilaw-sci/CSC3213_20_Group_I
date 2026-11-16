@@ -1,10 +1,12 @@
 "use client";
 
 import { ShoppingBag } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCart } from "../hooks/useCart";
 
 export default function EmptyCart() {
   const { closeCart } = useCart();
+  const router = useRouter();
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-6 py-12 text-center">
@@ -30,7 +32,7 @@ export default function EmptyCart() {
 
       {/* Button */}
       <button
-        onClick={closeCart}
+        onClick={() => { closeCart(); router.push("/explore"); }}
         className="w-full max-w-xs rounded-2xl bg-gradient-to-r from-indigo-500 to-cyan-400 py-4 text-white font-semibold shadow-lg hover:opacity-90 transition"
       >
         Continue Shopping

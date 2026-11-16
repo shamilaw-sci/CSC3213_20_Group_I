@@ -4,6 +4,12 @@ const mocks = vi.hoisted(() => ({
   requireAuthenticatedUser: vi.fn(),
   productCount: vi.fn(),
   productFindMany: vi.fn(),
+  merchantFindMany: vi.fn(),
+  categoryFindMany: vi.fn(),
+  draftCount: vi.fn(),
+  activeCount: vi.fn(),
+  outOfStockCount: vi.fn(),
+  archivedCount: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -18,6 +24,8 @@ vi.mock("@/server/db/prisma", () => ({
       count: mocks.productCount,
       findMany: mocks.productFindMany,
     },
+    merchant: { findMany: mocks.merchantFindMany },
+    category: { findMany: mocks.categoryFindMany },
   },
 }));
 
@@ -44,6 +52,7 @@ const PRODUCT = {
   },
   _count: {
     productvariant: 3,
+    tryonsession: 4,
   },
 };
 
@@ -59,6 +68,8 @@ describe("Admin products API", () => {
     });
     mocks.productCount.mockResolvedValue(1);
     mocks.productFindMany.mockResolvedValue([PRODUCT]);
+    mocks.merchantFindMany.mockResolvedValue([]);
+    mocks.categoryFindMany.mockResolvedValue([]);
   });
 
   it("requires an admin before listing products", async () => {
@@ -73,63 +84,30 @@ describe("Admin products API", () => {
   });
 
   it("lists products with pagination and summary fields", async () => {
-    const response = await GET(adminRequest("?page=2&pageSize=10&status=DRAFT&q=dress"));
+    const response = await GET(adminRequest("?search=dress"));
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(mocks.productCount).toHaveBeenCalledWith({
-      where: expect.objectContaining({
-        status: "DRAFT",
-        OR: expect.any(Array),
-      }),
-    });
+    expect(mocks.productCount).toHaveBeenCalledWith({ where: { status: "DRAFT" } });
     expect(mocks.productFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        skip: 10,
-        take: 10,
+        take: 250,
         orderBy: { updatedAt: "desc" },
         include: {
-          merchant: true,
-          category: true,
-          _count: { select: { productvariant: true } },
+          merchant: { select: { merchantId: true, storeName: true } },
+          category: { select: { name: true } },
+          _count: { select: { productvariant: true, tryonsession: true } },
         },
       }),
     );
-    expect(body).toEqual({
-      products: [
-        {
-          id: "product-1",
-          name: "Evening Dress",
-          status: "DRAFT",
-          price: 120,
-          currency: "LKR",
-          image: "https://cdn.example.test/dress.jpg",
-          createdAt: "2026-09-01T10:00:00.000Z",
-          updatedAt: "2026-09-02T10:00:00.000Z",
-          merchant: {
-            id: "merchant-1",
-            name: "Colombo Fashion",
-            email: "merchant@example.test",
-          },
-          category: {
-            id: "category-1",
-            name: "Dresses",
-            slug: "dresses",
-          },
-          variantCount: 3,
-        },
-      ],
-      page: 2,
-      pageSize: 10,
-      total: 1,
-    });
+    expect(body.products[0]).toMatchObject({ id: "product-1", name: "Evening Dress", merchant: "Colombo Fashion", category: "Dresses", variants: 3, tryOns: 4 });
+    expect(body.summary).toEqual({ draft: 1, active: 1, outOfStock: 1, archived: 1, total: 4 });
   });
 
-  it("rejects invalid status filters", async () => {
+  it("ignores unsupported legacy status filters and returns the current catalogue shape", async () => {
     const response = await GET(adminRequest("?status=PENDING"));
 
-    expect(response.status).toBe(400);
-    expect(mocks.productCount).not.toHaveBeenCalled();
-    expect(mocks.productFindMany).not.toHaveBeenCalled();
+    expect(response.status).toBe(200);
+    expect(mocks.productFindMany).toHaveBeenCalled();
   });
 });

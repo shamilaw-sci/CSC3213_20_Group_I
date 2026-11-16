@@ -136,7 +136,7 @@ export default function DigitalTwinCropDialog({ photo, onCancel, onUpload }: Dig
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-labelledby="crop-photo-title">
-      <section className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
+      <section className="max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-2xl bg-white p-4 shadow-2xl sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3 id="crop-photo-title" className="text-xl font-bold text-gray-900">Adjust your Digital Twin photo</h3>
@@ -144,9 +144,9 @@ export default function DigitalTwinCropDialog({ photo, onCancel, onUpload }: Dig
           </div>
           <button type="button" disabled={isWorking} onClick={onCancel} aria-label="Cancel photo crop" className="rounded-full p-2 text-gray-700 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-indigo-600 disabled:opacity-50"><X size={20} /></button>
         </div>
-        <div className="mt-5 flex flex-wrap items-start justify-center gap-6">
+        <div className="mt-4 flex flex-col items-center justify-center gap-4 sm:mt-5 sm:flex-row sm:items-start sm:gap-6">
           <div
-            className="relative aspect-[2/3] w-full max-w-[300px] touch-none overflow-hidden rounded-xl border-2 border-indigo-500 bg-gray-100 cursor-grab active:cursor-grabbing"
+            className="relative h-[34vh] min-h-[220px] max-h-[320px] aspect-[2/3] shrink-0 touch-none overflow-hidden rounded-xl border-2 border-indigo-500 bg-gray-100 cursor-grab active:cursor-grabbing"
             role="img"
             aria-label="Adjustable Digital Twin photo crop preview"
             onPointerDown={handlePointerDown}
@@ -167,7 +167,7 @@ export default function DigitalTwinCropDialog({ photo, onCancel, onUpload }: Dig
               }}
             />
           </div>
-          <div className="w-full max-w-xs space-y-5 text-sm text-gray-700">
+          <div className="w-full max-w-xs space-y-3 text-sm text-gray-700 sm:space-y-4">
             <div>
               <label htmlFor="twin-crop-zoom" className="flex justify-between font-semibold text-gray-900"><span>Zoom</span><span>{zoom.toFixed(1)}×</span></label>
               <input id="twin-crop-zoom" type="range" min="1" max={maxZoom} step="0.01" value={zoom} disabled={isWorking || maxZoom <= 1} onChange={(event) => setZoom(Number(event.target.value))} className="mt-2 w-full accent-indigo-600 disabled:opacity-50" />
@@ -186,7 +186,7 @@ export default function DigitalTwinCropDialog({ photo, onCancel, onUpload }: Dig
           </div>
         </div>
         {error && <p role="alert" className="mt-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="mt-4 flex justify-end gap-3 sm:mt-6">
           <button type="button" disabled={isWorking} onClick={onCancel} className="rounded-xl border border-gray-300 px-5 py-3 font-semibold text-gray-800 hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-indigo-600 disabled:opacity-50">Cancel</button>
           <button type="button" disabled={isWorking} onClick={() => void uploadCroppedPhoto()} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-indigo-600 disabled:cursor-wait disabled:opacity-60">{isWorking && <LoaderCircle size={18} className="animate-spin" />}{working === "uploading" ? "Uploading…" : working === "preparing" ? "Preparing…" : "Use this crop"}</button>
         </div>

@@ -43,7 +43,19 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { userId: current.session.userId },
-    include: { profile: true },
+    select: {
+      userId: true,
+      userName: true,
+      userEmail: true,
+      role: true,
+      profile: {
+        select: {
+          phone: true,
+          country: true,
+          dateOfBirth: true,
+        },
+      },
+    },
   });
   if (!user) return NextResponse.json({ message: "User not found." }, { status: 404 });
   return NextResponse.json(formatProfile(user));
@@ -56,7 +68,22 @@ export async function PATCH(request: Request) {
   if (!parsed.success) return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "Invalid profile details." }, { status: 400 });
 
   const input = parsed.data;
-  const existing = await prisma.user.findUnique({ where: { userId: current.session.userId }, include: { profile: true } });
+  const existing = await prisma.user.findUnique({
+    where: { userId: current.session.userId },
+    select: {
+      userId: true,
+      userName: true,
+      userEmail: true,
+      role: true,
+      profile: {
+        select: {
+          phone: true,
+          country: true,
+          dateOfBirth: true,
+        },
+      },
+    },
+  });
   if (!existing) return NextResponse.json({ message: "User not found." }, { status: 404 });
 
   const names = accountName(existing.userName);
@@ -75,6 +102,11 @@ export async function PATCH(request: Request) {
         where: { userId: existing.userId },
         create: { profileId: randomUUID(), userId: existing.userId, phone: input.phone ?? null, country: input.country ?? null, dateOfBirth: input.dateOfBirth ? new Date(`${input.dateOfBirth}T00:00:00.000Z`) : null, updatedAt: now },
         update: { phone: input.phone ?? existing.profile?.phone ?? null, country: input.country ?? existing.profile?.country ?? null, dateOfBirth: input.dateOfBirth === undefined ? existing.profile?.dateOfBirth ?? null : input.dateOfBirth ? new Date(`${input.dateOfBirth}T00:00:00.000Z`) : null, updatedAt: now },
+        select: {
+          phone: true,
+          country: true,
+          dateOfBirth: true,
+        },
       });
       return { ...savedUser, profile: savedProfile };
     });

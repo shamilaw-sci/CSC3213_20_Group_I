@@ -13,7 +13,7 @@ type CurrentMerchantResult =
     };
 
 export async function requireCurrentMerchant(options: { allowedStatuses?: merchantModel["status"][] } = {}): Promise<CurrentMerchantResult> {
-  const access = await requireAuthenticatedUser();
+  const access = await requireAuthenticatedUser(["MERCHANT"]);
 
   if ("error" in access) {
     return access;

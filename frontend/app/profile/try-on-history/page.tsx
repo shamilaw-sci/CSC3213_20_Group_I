@@ -15,8 +15,6 @@ type SavedTryOn = {
   product: { id: string; name: string; image: string | null };
   size: string | null;
   fitPercentage: number | null;
-  imageUrl: string | null;
-  generated: boolean;
 };
 
 function groupByDate(items: SavedTryOn[], order: "newest" | "oldest") {
@@ -102,39 +100,34 @@ export default function TryOnHistoryPage() {
   return (
     <div className="tv-page min-h-screen">
       <Navbar />
-      <main className="mx-auto max-w-7xl px-6 py-10 lg:pl-80">
+      <main className="mx-auto max-w-7xl min-w-0 px-6 py-10 lg:pl-80">
         <Link href="/profile" className="text-sm font-semibold text-indigo-700 hover:underline">
           Back to Profile
         </Link>
-        <header className="mt-7 flex items-end justify-between gap-8">
-          <div>
-            <h1 className="text-4xl font-bold text-slate-950">Try on history</h1>
-            <p className="mt-2 text-slate-600">Manage all try on result</p>
-          </div>
-          <div className="flex items-end gap-4">
+        <header className="mt-7 rounded-3xl bg-gradient-to-br from-indigo-700 via-violet-700 to-fuchsia-600 p-6 text-white shadow-lg sm:p-8">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-100">Your fitting room</p>
+              <h1 className="mt-2 text-3xl font-black sm:text-4xl">Try-On History</h1>
+              <p className="mt-2 text-sm text-indigo-100 sm:text-base">Review your saved fitting guides and revisit products you explored.</p>
+            </div>
+            <div className="flex flex-wrap items-end gap-3">
             <label className="text-sm font-medium text-slate-700">
-              Sort by
+              <span className="text-indigo-100">Sort by</span>
               <select
                 value={sortOrder}
                 onChange={(event) => setSortOrder(event.target.value as "newest" | "oldest")}
-                className="mt-1 block rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900"
+                className="mt-1 block rounded-xl border-0 bg-white px-4 py-3 text-slate-900 shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 <option value="newest">Newest</option>
                 <option value="oldest">Oldest</option>
               </select>
             </label>
-            <button
-              type="button"
-              disabled
-              title="Download all is not available yet."
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white opacity-50"
-            >
-              <Download size={18} /> Download all
-            </button>
+            </div>
           </div>
         </header>
-        <p className="mt-4 text-sm text-slate-600">
-          Your AI generated Try-On results are saved here privately with your fitting history.
+        <p className="mt-4 rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-sm text-slate-600">
+          Saved fitting guides are illustrative. The current Try-On system does not store a downloadable result image.
         </p>
 
         {!ready ? (
@@ -143,18 +136,18 @@ export default function TryOnHistoryPage() {
           <section className="mt-12 rounded-2xl border border-slate-200 bg-white p-8">
             <h2 className="text-xl font-bold text-slate-900">Log in to view your Try-On history</h2>
             <p className="mt-2 text-slate-600">Only your saved fitting guides are shown here.</p>
-            <Link href="/login?returnTo=%2Fprofile%2Ftry-on-history" className="mt-4 inline-block font-semibold text-indigo-700 underline">Log in</Link>
+            <Link href="/login" className="mt-4 inline-block font-semibold text-indigo-700 underline">Log in</Link>
           </section>
         ) : loading || loadedUserId !== user.id ? (
           <p role="status" className="mt-12 text-slate-600">Loading Try-On history...</p>
         ) : error && items.length === 0 ? (
           <p role="alert" className="mt-12 rounded-xl bg-rose-50 p-4 text-rose-800">{error}</p>
         ) : items.length === 0 ? (
-          <section className="mt-12 rounded-3xl border border-slate-200 bg-white px-8 py-16 text-center">
+          <section className="mt-12 rounded-3xl border border-dashed border-indigo-200 bg-indigo-50/50 px-8 py-16 text-center">
             <Sparkles className="mx-auto text-indigo-600" size={32} />
             <h2 className="mt-4 text-2xl font-bold text-slate-900">No try-on history yet</h2>
             <p className="mt-2 text-slate-600">Your saved Try-On results will appear here.</p>
-            <Link href="/explore" className="mt-6 inline-block rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white">Explore products</Link>
+            <Link href="/explore" className="mt-6 inline-block rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white transition hover:bg-indigo-700">Explore products</Link>
           </section>
         ) : (
           <div className="mt-10 space-y-12">
@@ -164,7 +157,7 @@ export default function TryOnHistoryPage() {
                 <h2 className="mb-5 text-xl font-bold text-slate-900">
                   {new Date(date).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
                 </h2>
-                <div className="grid grid-cols-4 gap-5">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
                   {records.map((item) => (
                     <article
                       key={item.id}
@@ -178,22 +171,20 @@ export default function TryOnHistoryPage() {
                           aria-label={`Select saved fitting guide for ${item.product.name}`}
                           className="relative block aspect-[3/4] w-full bg-indigo-50 text-left"
                         >
-                          {item.imageUrl ? (
-                            <Image src={item.imageUrl} alt={`${item.product.name} AI try-on result`} fill unoptimized className="object-cover" />
-                          ) : item.product.image ? (
+                          {item.product.image ? (
                             <Image src={item.product.image} alt={`${item.product.name} product photo`} fill unoptimized className="object-cover" />
                           ) : (
                             <span className="flex h-full items-center justify-center text-center font-semibold text-indigo-800">Product image unavailable</span>
                           )}
                         </button>
                         <span className="absolute left-3 top-3 rounded-lg bg-slate-950/80 px-3 py-1 text-xs font-semibold text-white">
-                          {item.generated ? "AI Virtual Try-On" : "Illustrative fitting guide"}
+                          Illustrative fitting guide
                         </span>
                         <div className="absolute right-3 top-3 flex gap-2 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
                           <button
                             type="button"
                             disabled
-                            title={item.imageUrl ? "Open the generated result above to view it." : "A downloadable Try-On image was not stored."}
+                            title="A downloadable Try-On image was not stored."
                             aria-label={`Download ${item.product.name} Try-On result unavailable`}
                             className="rounded-lg bg-white p-2 text-slate-400 shadow"
                           >
