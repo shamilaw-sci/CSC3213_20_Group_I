@@ -26,6 +26,19 @@ type MerchantResponse = {
   productCount: number;
 };
 
+type ApiError = { message?: string };
+
+async function readJson<T>(response: Response): Promise<T | null> {
+  const body = await response.text();
+  if (!body) return null;
+
+  try {
+    return JSON.parse(body) as T;
+  } catch {
+    return null;
+  }
+}
+
 const pageSizeOptions = [12, 24, 48];
 
 export default function ExplorePage() {
@@ -83,8 +96,9 @@ export default function ExplorePage() {
         if (inStock) params.set("inStock", "true");
 
         const response = await fetch(`/api/v1/products?${params}`, { cache: "no-store" });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message ?? "Could not load catalog.");
+        const data = await readJson<{ products: ProductResponse[]; total: number } & ApiError>(response);
+        if (!response.ok) throw new Error(data?.message ?? "Could not load catalogue data. Please try again.");
+        if (!data) throw new Error("The catalogue service returned an invalid response.");
         setProducts(data.products.map((product: ProductResponse) => ({
           id: product.id,
           title: product.name,

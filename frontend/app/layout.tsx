@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/features/auth/context/AuthContext";
 import { CartProvider } from "@/features/cart/context/CartContext";
+import CartDrawer from "@/features/cart/components/CartDrawer";
 import { ProfileProvider } from "@/features/profile/context/ProfileContext";
 import { TryOnProvider } from "@/features/try-on/context/TryOnContext";
 import "./globals.css";
@@ -27,6 +28,7 @@ export default function RootLayout({
           <ProfileProvider>
             <CartProvider>
               <TryOnProvider>{children}</TryOnProvider>
+              <CartDrawer />
             </CartProvider>
           </ProfileProvider>
         </AuthProvider>

@@ -29,6 +29,10 @@ function createPrismaClient() {
     password: decodeURIComponent(databaseUrl.password),
     database: databaseName,
     connectionLimit: 5,
+    // Local MySQL installations that use caching_sha2_password need the
+    // connector to retrieve the server's public key during authentication.
+    allowPublicKeyRetrieval:
+      process.env.DATABASE_ALLOW_PUBLIC_KEY_RETRIEVAL === "true",
   });
 
   return new PrismaClient({ adapter });
