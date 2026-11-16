@@ -38,8 +38,8 @@ function outputImageUrl(output: unknown) {
 }
 
 async function readImageOutput(output: unknown, token: string, signal: AbortSignal) {
-  if (typeof output === "string" && output.startsWith("data:image/")) {
-    const match = output.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/s);
+  if (typeof output === "string" &&  output.startsWith("data:image/")) {
+   const match = output.match(/^data:(image\/(?:png|jpeg|webp));base64,([\s\S]+)$/);
     if (!match) throw new FashnTryOnError("FASHN returned an unsupported image format.", 502);
     return { buffer: Buffer.from(match[2], "base64"), mimeType: match[1] };
   }

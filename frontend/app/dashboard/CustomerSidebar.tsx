@@ -12,10 +12,30 @@ import {
 
 import { useAuth } from "@/features/auth/context/AuthContext";
 
-type SidebarItem = { label: string; icon: LucideIcon; href?: string };
+type SidebarItem = {
+  label: string;
+  icon: React.ComponentType<
+    React.ComponentProps<"svg"> & { size?: number }
+  >;
+  href?: string;
+};
 
-const TwoShirtsIcon: LucideIcon = (props) => (
-  <svg {...props} width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+const TwoShirtsIcon = ({
+  size = 18,
+  ...props
+}: React.ComponentProps<"svg"> & { size?: number }) => (
+  <svg
+    {...props}
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.7"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
     <path d="m13.2 4.3 2.2-.8a2.1 2.1 0 0 0 4.2 0l2.1.8a1.5 1.5 0 0 1 1 1.4v2.1h-2v8.7h-7.4V7.8h-2V5.7a1.5 1.5 0 0 1 1-1.4Z" />
     <path d="m2.3 6.1 2.2-.8a2.1 2.1 0 0 0 4.2 0l2.1.8a1.5 1.5 0 0 1 1 1.4v2.1h-2v8.7H2.4V9.6h-2V7.5a1.5 1.5 0 0 1 1-1.4Z" transform="translate(1 1)" />
   </svg>
