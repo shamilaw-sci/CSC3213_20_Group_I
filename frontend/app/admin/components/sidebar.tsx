@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, LayoutDashboard, Menu, MessageSquareText, PackageCheck, ScanLine, ShieldCheck, ShoppingBag, Store, UserRoundCog, UsersRound, WandSparkles } from "lucide-react";
+import { BarChart3, LayoutDashboard, Menu, MessageSquareText, MessageSquareWarning, PackageCheck, ScanLine, ShieldCheck, ShoppingBag, Store, UserRoundCog, UsersRound, WandSparkles } from "lucide-react";
 import { useState } from "react";
 
 const links = [
@@ -15,6 +15,7 @@ const links = [
   { href: "/admin/twins", label: "Digital twin monitor", icon: ScanLine },
   { href: "/admin/try-ons", label: "Try-on management", icon: WandSparkles },
   { href: "/admin/support", label: "Support tickets", icon: MessageSquareText },
+  { href: "/admin/feedback", label: "Feedback management", icon: MessageSquareWarning },
   { href: "/admin/security", label: "Security", icon: ShieldCheck },
   { href: "/adminprofile", label: "Admin profile", icon: UserRoundCog },
 ];

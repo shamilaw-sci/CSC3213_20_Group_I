@@ -56,7 +56,6 @@ export default function AccountTab() {
       return;
     }
     await logout();
-    window.location.assign("/");
   }
 
   return (

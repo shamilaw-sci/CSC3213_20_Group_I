@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Clock3, ScanLine, ShieldCheck, UsersRound } from "lucide-react";
+import { ArrowUpRight, Clock3, MessageSquareWarning, ScanLine, ShieldCheck, UsersRound } from "lucide-react";
 
 import { dashboardRangeStart, getAdminDashboardOverview, type DashboardRange } from "@/server/modules/analytics/admin-dashboard";
 import DashboardDateFilter from "./components/dashboardDateFilter";
@@ -58,6 +58,14 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
           </Link>
         ))}
       </div>
+
+      <Link href="/admin/feedback" className="flex flex-col gap-4 rounded-3xl border border-purple-100 bg-white/90 p-6 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <span className="rounded-2xl bg-purple-100 p-3 text-purple-700"><MessageSquareWarning size={26} /></span>
+          <div><h3 className="text-lg font-bold text-slate-950">Feedback management</h3><p className="mt-1 text-sm text-slate-600">Review customer feedback, update statuses, and record resolution notes.</p></div>
+        </div>
+        <span className="inline-flex items-center gap-2 text-sm font-bold text-purple-800">Open feedback <ArrowUpRight size={16} /></span>
+      </Link>
 
       <section className="rounded-3xl bg-white/90 p-6 shadow-lg">
         <div className="mb-5 flex items-center justify-between"><div><h3 className="text-xl font-black text-slate-950">Recent activity</h3><p className="text-sm text-slate-500">Latest events within the selected date range.</p></div><Clock3 className="text-purple-700" /></div>

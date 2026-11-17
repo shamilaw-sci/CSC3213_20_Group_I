@@ -5,7 +5,6 @@ import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 
 import type { Product } from "@/app/data/products";
-import { useCart } from "@/features/cart/hooks/useCart";
 import TryOnButton from "@/features/try-on/components/TryOnButton";
 import FavoriteButton from "./FavoriteButton";
 
@@ -35,8 +34,6 @@ export default function ProductCard({
   favoriteStateUnavailable = false,
   onFavoriteChange,
 }: ProductCardProps) {
-  const { addToCart } = useCart();
-
   return (
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300">
 
@@ -105,25 +102,8 @@ export default function ProductCard({
           </button>
         )}
 
-        {/* Add To Cart */}
-        <button
-          onClick={() =>
-            addToCart({
-              id: product.id,
-              image: product.image,
-              title: product.title,
-              category: product.category,
-              store: product.store,
-              price: product.price,
-            })
-          }
-          className="w-full mt-5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition"
-        >
-          Add to Cart
-        </button>
-
         {/* Try On */}
-        <div className="mt-3">
+        <div className="mt-5">
           <TryOnButton
             product={{
               id: product.id,

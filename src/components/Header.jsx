@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles, ShoppingCart } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 export default function Header() {
   return (
@@ -26,7 +26,6 @@ export default function Header() {
   </button>
 </Link>
 
-  <ShoppingCart className="w-5 h-5 text-black cursor-pointer hover:text-violet-600" />
 </div>
       </div>
     </header>

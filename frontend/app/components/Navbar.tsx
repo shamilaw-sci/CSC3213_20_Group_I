@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu as AccountMenu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Menu, User, X } from "lucide-react";
-import CartButton from "@/features/cart/components/CartButton";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import CustomerSidebar from "../dashboard/CustomerSidebar";
 
@@ -47,7 +46,7 @@ export default function Navbar() {
           { label: "Merchant Analytics", href: "/merchant/analytics" },
         ]
       : [{ label: "Admin", href: "/admin" }];
-  const customerWorkspace = role === "CUSTOMER" && ["/dashboard", "/profile", "/favorites", "/recommendations", "/help", "/plan", "/support"].some((route) => pathname === route || pathname.startsWith(`${route}/`));
+  const customerWorkspace = role === "CUSTOMER" && ["/dashboard", "/profile", "/favorites", "/comparisons", "/recommendations", "/help", "/plan", "/support"].some((route) => pathname === route || pathname.startsWith(`${route}/`));
 
   function isActive(href: string) {
     const target = href.split("#")[0];
@@ -75,8 +74,6 @@ export default function Navbar() {
     try {
       await logout();
       setMenuOpen(false);
-      router.replace("/");
-      router.refresh();
     } catch {
       setAuthError("Could not log out. Please try again.");
     } finally {
@@ -116,8 +113,6 @@ export default function Navbar() {
               )}
             </div>
           )}
-
-          <CartButton />
 
           {ready && user && (
             <AccountMenu as="div" className="relative">

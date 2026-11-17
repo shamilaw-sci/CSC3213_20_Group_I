@@ -80,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setIsGuest(false);
     setGuestConversionError("");
+    window.location.assign("/");
   }
 
   async function startGuest() {

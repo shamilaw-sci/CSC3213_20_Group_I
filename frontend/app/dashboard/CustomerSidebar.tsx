@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import {
-  ChevronLeft, ChevronRight, CircleHelp, CreditCard, Heart, History,
+  ChevronLeft, ChevronRight, CircleHelp, CreditCard, GitCompareArrows, Heart, History,
   House, LifeBuoy, LogOut, Menu, Ruler, Settings, Shirt, Sparkles, X,
   type LucideIcon,
 } from "lucide-react";
@@ -20,6 +20,7 @@ const mainItems: SidebarItem[] = [
   { label: "My Measurements", href: "/profile?tab=measurements", icon: Ruler },
   { label: "Virtual Try-On History", href: "/profile/try-on-history", icon: History },
   { label: "My Favorites", href: "/favorites", icon: Heart },
+  { label: "Comparisons", href: "/comparisons", icon: GitCompareArrows },
   { label: "Recommended For You", href: "/recommendations", icon: Sparkles },
 ];
 
@@ -87,7 +88,6 @@ function SidebarBody({ collapsed, pathname, activeTab, loggingOut, error, onNavi
 
 export default function CustomerSidebar({ embedded = false }: { embedded?: boolean }) {
   const { logout } = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
   const activeTab = typeof window === "undefined"
     ? null
@@ -104,8 +104,6 @@ export default function CustomerSidebar({ embedded = false }: { embedded?: boole
     try {
       await logout();
       setMobileOpen(false);
-      router.replace("/");
-      router.refresh();
     } catch {
       setError("Could not log out. Please try again.");
       setLoggingOut(false);

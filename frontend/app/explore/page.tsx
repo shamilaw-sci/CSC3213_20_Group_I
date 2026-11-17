@@ -38,6 +38,7 @@ export default function ExplorePage() {
   const [compareMessage, setCompareMessage] = useState("");
   const [savingComparison, setSavingComparison] = useState(false);
   const [savedComparison, setSavedComparison] = useState<{ id: string; name: string } | null>(null);
+  const [editingComparisonId, setEditingComparisonId] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -50,6 +51,23 @@ export default function ExplorePage() {
 
     return () => window.clearTimeout(timer);
   }, [search]);
+
+  useEffect(() => {
+    const editId = new URLSearchParams(window.location.search).get("editComparison");
+    if (!editId) return;
+    const timer = window.setTimeout(() => {
+      void fetch(`/api/v1/comparisons/${encodeURIComponent(editId)}`, { cache: "no-store" })
+        .then(async (response) => {
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.message ?? "Could not open this comparison.");
+          setEditingComparisonId(editId);
+          setCompareName(data.comparison.name ?? "");
+          setCompareProducts(data.comparison.products.map((product: { id: string; name: string; image: string | null; merchant: string; category: string; categorySlug: string; price: number }) => ({ id: product.id, title: product.name, image: product.image ?? "", store: product.merchant, category: product.category as Product["category"], categorySlug: product.categorySlug, price: product.price })));
+        })
+        .catch((reason) => setCompareMessage(reason instanceof Error ? reason.message : "Could not open this comparison."));
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     async function loadProducts() {
@@ -126,12 +144,12 @@ export default function ExplorePage() {
     setCompareMessage("");
 
     try {
-      const response = await fetch("/api/v1/products/compare", {
-        method: "POST",
+      const response = await fetch(editingComparisonId ? `/api/v1/comparisons/${encodeURIComponent(editingComparisonId)}` : "/api/v1/products/compare", {
+        method: editingComparisonId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      body: JSON.stringify({
           productIds: compareProducts.map((product) => product.id),
-          name: compareName || undefined,
+          name: compareName.trim() || (editingComparisonId ? null : undefined),
         }),
       });
       const data = await response.json();
@@ -140,11 +158,12 @@ export default function ExplorePage() {
         throw new Error(data.message ?? "Could not save comparison.");
       }
 
-      const savedId = data.comparison?.id as string | undefined;
-      if (savedId) setSavedComparison({ id: savedId, name: data.comparison.name ?? (compareName.trim() || "Saved comparison") });
-      setCompareMessage(savedId ? "Comparison saved." : "Comparison saved. Open Comparisons to review it.");
+      const savedId = editingComparisonId ?? (data.comparison?.id as string | undefined);
+      if (savedId) setSavedComparison({ id: savedId, name: data.comparison?.name ?? (compareName.trim() || "Saved comparison") });
+      setCompareMessage(savedId ? (editingComparisonId ? "Comparison updated." : "Comparison saved.") : "Comparison saved. Open Comparisons to review it.");
       setCompareProducts([]);
       setCompareName("");
+      setEditingComparisonId(null);
     } catch (reason) {
       setCompareMessage(reason instanceof Error ? reason.message : "Could not save comparison.");
     } finally {
@@ -181,7 +200,7 @@ export default function ExplorePage() {
         />
 
         {savedComparison && (
-          <Link href={`/comparisons?comparisonId=${encodeURIComponent(savedComparison.id)}`} className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-2xl border border-indigo-200 bg-white p-4 shadow-2xl transition hover:-translate-y-0.5 hover:border-indigo-400 hover:shadow-indigo-200">
+          <Link href={`/comparisons/${encodeURIComponent(savedComparison.id)}`} className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-2xl border border-indigo-200 bg-white p-4 shadow-2xl transition hover:-translate-y-0.5 hover:border-indigo-400 hover:shadow-indigo-200">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700" aria-hidden="true">↗</span>
             <span><span className="block text-xs font-semibold uppercase tracking-wide text-indigo-600">Comparison saved</span><span className="block max-w-52 truncate font-bold text-slate-950">View {savedComparison.name}</span></span>
           </Link>
@@ -212,8 +231,8 @@ export default function ExplorePage() {
           <div className="fixed inset-x-4 bottom-4 z-40 mx-auto max-w-4xl rounded-2xl border border-indigo-100 bg-white p-4 shadow-2xl">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="font-bold text-slate-950">Compare selected products</p>
-                <p className="text-sm text-slate-500">{compareProducts.length} selected · choose 2 to 4 products</p>
+                <p className="font-bold text-slate-950">{editingComparisonId ? "Update comparison" : "Compare selected products"}</p>
+                <p className="text-sm text-slate-500">{compareProducts.length} selected · choose {editingComparisonId ? "1 to 4" : "2 to 4"} products</p>
               </div>
               <button
                 onClick={() => {
@@ -243,10 +262,10 @@ export default function ExplorePage() {
               />
               <button
                 onClick={() => void saveComparison()}
-                disabled={compareProducts.length < 2 || savingComparison}
+                disabled={compareProducts.length < (editingComparisonId ? 1 : 2) || savingComparison}
                 className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-bold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {savingComparison ? "Saving..." : "Save comparison"}
+                {savingComparison ? "Saving..." : editingComparisonId ? "Update comparison" : "Save comparison"}
               </button>
             </div>
 
